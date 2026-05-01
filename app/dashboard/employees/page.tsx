@@ -7,12 +7,12 @@ export default async function EmployeesPage() {
   const employee = await getSessionEmployee();
   if (!employee) return null;
 
-  if (employee.role !== 'admin') {
+  if (!['admin', 'hr'].includes(employee.role)) {
     return (
       <div className="text-center py-16">
         <Lock className="size-12 mx-auto mb-4 text-muted-foreground" />
         <h2 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>Access Restricted</h2>
-        <p className="text-muted-foreground mt-2">Employee directory is available to Admin users only.</p>
+        <p className="text-muted-foreground mt-2">Employee directory is available to Admin and HR only.</p>
       </div>
     );
   }
