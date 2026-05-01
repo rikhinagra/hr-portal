@@ -309,7 +309,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                 <InfoField label="Full Name" value={employee.name}
                   editing={isAdmin && editing} editValue={form.name} onEdit={set('name')} placeholder="Full Name" />
                 <InfoField label="Date of Birth" value={fmt(employee.dob)}
-                  editing={isAdmin && editing} editValue={form.dob} onEdit={set('dob')} type="date" />
+                  editing={editing} editValue={form.dob} onEdit={set('dob')} type="date" />
                 <InfoField label="Work Email" value={employee.email}
                   editing={isAdmin && editing} editValue={form.email} onEdit={set('email')} type="email" placeholder="work@aadhcode.com" />
                 <InfoField label="Phone Number" value={employee.phone}

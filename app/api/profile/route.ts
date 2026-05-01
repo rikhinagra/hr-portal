@@ -26,12 +26,12 @@ export async function PATCH(request: NextRequest) {
       current_address: body.current_address || null,
       emergency_contact_name: body.emergency_contact_name || null,
       emergency_contact_phone: body.emergency_contact_phone || null,
+      ...(body.dob !== undefined && body.dob !== '' ? { dob: body.dob } : {}),
     };
 
     // Admin-only fields — full control over all employee details
     if (me.role === 'admin') {
       if (body.name !== undefined && body.name !== '') updateData.name = body.name;
-      if (body.dob !== undefined && body.dob !== '') updateData.dob = body.dob;
       if (body.email !== undefined && body.email !== '') updateData.email = body.email;
       if (body.employee_code !== undefined && body.employee_code !== '') updateData.employee_code = body.employee_code.toUpperCase();
       if (body.designation !== undefined && body.designation !== '') updateData.designation = body.designation;
