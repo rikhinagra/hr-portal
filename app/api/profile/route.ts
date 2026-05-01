@@ -29,8 +29,8 @@ export async function PATCH(request: NextRequest) {
       ...(body.dob !== undefined && body.dob !== '' ? { dob: body.dob } : {}),
     };
 
-    // Admin-only fields — full control over all employee details
-    if (me.role === 'admin') {
+    // Admin and HR fields — full control over all employee details
+    if (['admin', 'hr'].includes(me.role)) {
       if (body.name !== undefined && body.name !== '') updateData.name = body.name;
       if (body.email !== undefined && body.email !== '') updateData.email = body.email;
       if (body.employee_code !== undefined && body.employee_code !== '') updateData.employee_code = body.employee_code.toUpperCase();

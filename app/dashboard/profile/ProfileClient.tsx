@@ -44,6 +44,7 @@ const roleLabel: Record<string, string> = { admin: 'Administrator', hr: 'HR Mana
 export default function ProfileClient({ employee: initialEmployee, documents: initialDocs, equipment = [], canEdit, isOwnProfile, viewerRole }: Props) {
   const router = useRouter();
   const isAdmin = viewerRole === 'admin';
+  const isPrivileged = viewerRole === 'admin' || viewerRole === 'hr';
 
   const [employee, setEmployee] = useState(initialEmployee);
   const [documents, setDocuments] = useState(initialDocs);
@@ -223,10 +224,10 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
         {editing && editButtons}
       </div>
 
-      {isAdmin && editing && (
+      {isPrivileged && editing && (
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
           style={{ background: 'rgba(200,152,94,0.08)', border: '1px solid rgba(200,152,94,0.25)', color: '#c8985e' }}>
-          Admin mode — all fields are editable
+          {isAdmin ? 'Admin' : 'HR'} mode — all fields are editable
         </div>
       )}
 
@@ -307,17 +308,17 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
             <CardContent className="pt-5">
               <div className="grid grid-cols-2 gap-4 detail-grid">
                 <InfoField label="Full Name" value={employee.name}
-                  editing={isAdmin && editing} editValue={form.name} onEdit={set('name')} placeholder="Full Name" />
+                  editing={isPrivileged && editing} editValue={form.name} onEdit={set('name')} placeholder="Full Name" />
                 <InfoField label="Date of Birth" value={fmt(employee.dob)}
                   editing={editing} editValue={form.dob} onEdit={set('dob')} type="date" />
                 <InfoField label="Work Email" value={employee.email}
-                  editing={isAdmin && editing} editValue={form.email} onEdit={set('email')} type="email" placeholder="work@aadhcode.com" />
+                  editing={isPrivileged && editing} editValue={form.email} onEdit={set('email')} type="email" placeholder="work@aadhcode.com" />
                 <InfoField label="Phone Number" value={employee.phone}
                   editing={editing} editValue={form.phone} onEdit={set('phone')} placeholder="+91 98765 43210" />
                 <InfoField label="Personal Email" value={employee.personal_email}
                   editing={editing} editValue={form.personal_email} onEdit={set('personal_email')} placeholder="personal@email.com" type="email" />
                 <InfoField label="Reporting Manager" value={employee.reporting_manager_email ?? '—'}
-                  editing={isAdmin && editing} editValue={form.reporting_manager_email} onEdit={set('reporting_manager_email')} type="email" placeholder="manager@aadhcode.com" />
+                  editing={isPrivileged && editing} editValue={form.reporting_manager_email} onEdit={set('reporting_manager_email')} type="email" placeholder="manager@aadhcode.com" />
                 <InfoField label="Emergency Contact" value={employee.emergency_contact_name}
                   editing={editing} editValue={form.emergency_contact_name} onEdit={set('emergency_contact_name')} placeholder="Name" />
                 <InfoField label="Emergency Phone" value={employee.emergency_contact_phone}
@@ -335,22 +336,22 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
             <CardHeader className="pb-0">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Employment Information</h3>
-                {isAdmin && editing && (
+                {isPrivileged && editing && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                    style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>Admin editable</span>
+                    style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>{isAdmin ? 'Admin' : 'HR'} editable</span>
                 )}
               </div>
             </CardHeader>
             <CardContent className="pt-5">
               <div className="grid grid-cols-2 gap-4 detail-grid">
                 <InfoField label="Employee Code" value={employee.employee_code} mono
-                  editing={isAdmin && editing} editValue={form.employee_code} onEdit={v => set('employee_code')(v.toUpperCase())} placeholder="AC001" />
+                  editing={isPrivileged && editing} editValue={form.employee_code} onEdit={v => set('employee_code')(v.toUpperCase())} placeholder="AC001" />
                 <InfoField label="Designation" value={employee.designation}
-                  editing={isAdmin && editing} editValue={form.designation} onEdit={set('designation')} placeholder="Software Engineer" />
+                  editing={isPrivileged && editing} editValue={form.designation} onEdit={set('designation')} placeholder="Software Engineer" />
                 <InfoField label="Department" value={employee.department}
-                  editing={isAdmin && editing} editValue={form.department} onEdit={set('department')} placeholder="Engineering" />
+                  editing={isPrivileged && editing} editValue={form.department} onEdit={set('department')} placeholder="Engineering" />
                 <InfoField label="Role / Access" value={roleLabel[employee.role] ?? employee.role}
-                  editing={isAdmin && editing} editValue={form.role} onEdit={set('role')}
+                  editing={isPrivileged && editing} editValue={form.role} onEdit={set('role')}
                   options={[
                     { value: 'admin', label: 'Administrator' },
                     { value: 'hr', label: 'HR Manager' },
@@ -358,11 +359,11 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                     { value: 'employee', label: 'Employee' },
                   ]} />
                 <InfoField label="Date of Joining" value={fmt(employee.join_date)}
-                  editing={isAdmin && editing} editValue={form.join_date} onEdit={set('join_date')} type="date" />
+                  editing={isPrivileged && editing} editValue={form.join_date} onEdit={set('join_date')} type="date" />
                 <InfoField label="Employment Status"
                   value={employee.is_active ? 'Active' : 'Inactive'}
                   valueColor={employee.is_active ? '#16a34a' : '#dc2626'}
-                  editing={isAdmin && editing}
+                  editing={isPrivileged && editing}
                   editValue={String(form.is_active)}
                   onEdit={v => setForm(f => ({ ...f, is_active: v === 'true' }))}
                   options={[
