@@ -6,12 +6,12 @@ import { toast } from 'sonner';
 import { Paperclip, FolderOpen, Pencil, ChevronDown, ExternalLink, Monitor } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Employee, EmployeeDocument } from '@/types';
+import type { Employee, EmployeeDocument, EquipmentRequest } from '@/types';
 
 interface Props {
   employee: Employee;
   documents: EmployeeDocument[];
-  equipment?: any[];
+  equipment?: EquipmentRequest[];
   canEdit: boolean;
   isOwnProfile: boolean;
   viewerRole: string;
