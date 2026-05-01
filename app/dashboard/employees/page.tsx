@@ -23,5 +23,5 @@ export default async function EmployeesPage() {
     .select('id, employee_code, name, department, designation, role, email, join_date, is_active, created_at, photo_url')
     .order('employee_code');
 
-  return <EmployeesClient employees={employees ?? []} />;
+  return <EmployeesClient employees={employees ?? []} viewerRole={employee.role} />;
 }

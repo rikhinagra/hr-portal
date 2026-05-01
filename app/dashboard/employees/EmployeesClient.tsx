@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EmpRow {
@@ -24,15 +24,20 @@ function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 }
 
-export default function EmployeesClient({ employees: initialEmployees }: { employees: EmpRow[] }) {
+export default function EmployeesClient({ employees: initialEmployees, viewerRole }: { employees: EmpRow[]; viewerRole: string }) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const pageSize = isMobile ? 8 : 10;
+
+  const isAdmin = viewerRole === 'admin';
 
   const [employees, setEmployees] = useState(initialEmployees);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EmpRow | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   // Reset to page 1 when screen size changes (mobile ↔ desktop)
   useEffect(() => { setPage(1); }, [isMobile]);
@@ -69,6 +74,29 @@ export default function EmployeesClient({ employees: initialEmployees }: { emplo
       toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
     } finally {
       setToggling(null);
+    }
+  };
+
+  const openDeleteModal = (emp: EmpRow) => {
+    setDeleteTarget(emp);
+    setDeleteConfirmText('');
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || deleteConfirmText !== deleteTarget.name) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/employees/${deleteTarget.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setEmployees(prev => prev.filter(e => e.id !== deleteTarget.id));
+      toast.success(`${deleteTarget.name} permanently deleted.`);
+      setDeleteTarget(null);
+      setDeleteConfirmText('');
+    } catch (err: unknown) {
+      toast.error('Delete failed', { description: err instanceof Error ? err.message : 'Something went wrong.' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -171,6 +199,14 @@ export default function EmployeesClient({ employees: initialEmployees }: { emplo
                             }}>
                             {emp.is_active ? 'Deactivate' : 'Activate'}
                           </button>
+                          {isAdmin && (
+                            <button onClick={() => openDeleteModal(emp)}
+                              className="px-2 py-1 rounded-md text-xs font-semibold"
+                              style={{ background: 'rgba(220,38,38,.06)', color: '#dc2626', border: '1px solid rgba(220,38,38,.2)' }}
+                              title="Permanently delete employee">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -245,12 +281,77 @@ export default function EmployeesClient({ employees: initialEmployees }: { emplo
                     }}>
                     {emp.is_active ? 'Deactivate' : 'Activate'}
                   </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => openDeleteModal(emp)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                      style={{ background: 'rgba(220,38,38,.06)', color: '#dc2626', border: '1px solid rgba(220,38,38,.2)' }}
+                      title="Permanently delete employee">
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-background rounded-2xl p-6 max-w-md w-full shadow-2xl border border-border">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center justify-center size-10 rounded-full flex-shrink-0"
+                style={{ background: 'rgba(220,38,38,0.12)' }}>
+                <Trash2 className="size-5" style={{ color: '#dc2626' }} />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground">Permanently Delete Employee</h3>
+                <p className="text-xs text-muted-foreground">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl p-3 mb-5 text-sm"
+              style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)' }}>
+              <p className="text-foreground">
+                This will permanently delete <strong>{deleteTarget.name}</strong> ({deleteTarget.employee_code}) and all their data —
+                documents, leave history, equipment records, and login access.
+              </p>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-1.5">
+              Type <strong className="text-foreground">{deleteTarget.name}</strong> to confirm:
+            </p>
+            <input
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder={deleteTarget.name}
+              className="w-full px-3 py-2 rounded-lg border text-sm bg-background text-foreground mb-4"
+              autoFocus
+            />
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold border text-muted-foreground">
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteConfirmText !== deleteTarget.name || deleting}
+                className="flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all"
+                style={{
+                  background: deleteConfirmText === deleteTarget.name ? '#dc2626' : 'rgba(220,38,38,0.3)',
+                  cursor: deleteConfirmText === deleteTarget.name && !deleting ? 'pointer' : 'not-allowed',
+                }}>
+                {deleting ? 'Deleting…' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
