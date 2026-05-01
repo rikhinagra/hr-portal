@@ -25,5 +25,6 @@ export default async function ProfilePage() {
     .eq('employee_id', employee.id)
     .order('created_at', { ascending: false });
 
-  return <ProfileClient employee={fullEmployee ?? employee} documents={documents ?? []} equipment={equipment ?? []} canEdit={true} isOwnProfile={true} viewerRole={employee.role} />;
+  const canEdit = ['admin', 'hr'].includes(employee.role);
+  return <ProfileClient employee={fullEmployee ?? employee} documents={documents ?? []} equipment={equipment ?? []} canEdit={canEdit} isOwnProfile={true} viewerRole={employee.role} />;
 }
