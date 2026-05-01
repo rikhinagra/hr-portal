@@ -164,7 +164,7 @@ export async function sendOnboardingWelcomeEmail({
       <table style="width:100%;font-size:.9rem;border-collapse:collapse">
         <tr><td style="padding:7px 0;color:#8a8a8a;width:160px">Portal Link</td><td style="padding:7px 0"><a href="${portalUrl}" style="color:${gold};font-weight:600">${portalUrl}</a></td></tr>
         <tr><td style="padding:7px 0;color:#8a8a8a">Login ID</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${employeeCode}</td></tr>
-        <tr><td style="padding:7px 0;color:#8a8a8a">Password</td><td style="padding:7px 0;font-family:monospace;white-space:nowrap">${dob} <span style="font-size:.75rem;color:#8a8a8a">(Date of Birth, change after first login)</span></td></tr>
+        <tr><td style="padding:7px 0;color:#8a8a8a">Date of Birth</td><td style="padding:7px 0;font-family:monospace;white-space:nowrap">${dob} <span style="font-size:.75rem;color:#8a8a8a">(Used as your portal login password — keep this confidential)</span></td></tr>
       </table>
     </div>
 
