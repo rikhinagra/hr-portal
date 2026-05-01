@@ -57,20 +57,34 @@ export async function POST(request: NextRequest) {
     if (signInError) {
       // If user doesn't exist yet, create them (first login)
       if (signInError.message.includes('Invalid login credentials')) {
-        const { data: signUpData, error: signUpError } = await serviceClient.auth.admin.createUser({
-          email: authEmail,
-          password: authPassword,
-          email_confirm: true,
-        });
+        // Check if auth user already exists (e.g. orphaned from a previous attempt)
+        const { data: userList } = await serviceClient.auth.admin.listUsers();
+        const existingAuthUser = userList?.users?.find(u => u.email === authEmail);
 
-        if (signUpError) {
-          return NextResponse.json({ error: 'Authentication error. Please contact IT.' }, { status: 500 });
+        let authUserId: string | null = existingAuthUser?.id ?? null;
+
+        if (!authUserId) {
+          const { data: signUpData, error: signUpError } = await serviceClient.auth.admin.createUser({
+            email: authEmail,
+            password: authPassword,
+            email_confirm: true,
+          });
+
+          if (signUpError) {
+            console.error('Auth user creation failed:', signUpError.message, signUpError);
+            return NextResponse.json({ error: 'Authentication error. Please contact IT.' }, { status: 500 });
+          }
+
+          authUserId = signUpData.user.id;
+        } else {
+          // Auth user exists but password may be out of sync (e.g. DOB was changed) — reset it
+          await serviceClient.auth.admin.updateUserById(authUserId, { password: authPassword });
         }
 
         // Link auth user to employee record
         await serviceClient
           .from('employees')
-          .update({ auth_user_id: signUpData.user.id })
+          .update({ auth_user_id: authUserId })
           .eq('id', employee.id);
 
         // Now sign in
@@ -80,6 +94,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (retryError) {
+          console.error('Retry sign-in failed:', retryError.message, retryError);
           return NextResponse.json({ error: 'Authentication error. Please contact IT.' }, { status: 500 });
         }
       } else {

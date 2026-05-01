@@ -42,8 +42,21 @@ export async function PATCH(request: NextRequest) {
       if (body.reporting_manager_email !== undefined) updateData.reporting_manager_email = body.reporting_manager_email || null;
     }
 
+    const { data: targetEmployee } = await serviceClient
+      .from('employees')
+      .select('auth_user_id')
+      .eq('id', employee_id)
+      .single();
+
     const { error } = await serviceClient.from('employees').update(updateData).eq('id', employee_id);
     if (error) throw error;
+
+    // Keep auth password in sync when DOB changes (DOB is the login password)
+    if (body.dob && body.dob !== '' && targetEmployee?.auth_user_id) {
+      await serviceClient.auth.admin.updateUserById(targetEmployee.auth_user_id, {
+        password: body.dob,
+      });
+    }
 
     await serviceClient.from('activity_log').insert({
       action: 'profile_updated',
