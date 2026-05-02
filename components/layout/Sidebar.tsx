@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, User, Calendar, BookOpen, FileText,
@@ -79,16 +80,15 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
+                      asChild
                       isActive={isActive}
                       tooltip={item.label}
-                      onClick={() => {
-                        router.push(item.href);
-                        setOpenMobile(false);
-                      }}
                       className="cursor-pointer py-3 h-auto"
                     >
-                      <item.icon className="size-6 shrink-0" />
-                      <span>{item.label}</span>
+                      <Link href={item.href} onClick={() => setOpenMobile(false)}>
+                        <item.icon className="size-6 shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -101,19 +101,9 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
       {/* User Footer — plain div to avoid SidebarFooter's forced gap-2/p-2 classes */}
       <div data-sidebar="footer" style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 8px 8px' }}>
         {/* Profile row */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => {
-            router.push('/dashboard/profile');
-            setOpenMobile(false);
-          }}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              router.push('/dashboard/profile');
-              setOpenMobile(false);
-            }
-          }}
+        <Link
+          href="/dashboard/profile"
+          onClick={() => setOpenMobile(false)}
           title={employee.name}
           style={{
             display: 'flex',
@@ -125,6 +115,7 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
             cursor: 'pointer',
             width: '100%',
             boxSizing: 'border-box',
+            textDecoration: 'none',
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -151,7 +142,7 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
               <div style={{ color: roleColor[employee.role] ?? '#6b7280', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{employee.role}</div>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Sign Out */}
         <SidebarMenu className="px-1">
