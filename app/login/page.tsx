@@ -53,13 +53,18 @@ export default function LoginPage() {
         <div style={{ position: 'absolute', bottom: -70, left: -70, width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(200,152,94,.05)', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <img src="/sachhsoft_logo.png" alt="SACHHSOFT" style={{ width: 120, height: 'auto', objectFit: 'contain', marginBottom: 12 }} />
-          <div style={{ fontSize: '0.625rem', letterSpacing: '0.18em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700, marginBottom: 3 }}>
+          <div style={{
+            width: 120, height: 32, marginBottom: 12,
+            backgroundColor: '#fff',
+            WebkitMaskImage: 'url(/sachhsoft_logo.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'left center',
+            maskImage: 'url(/sachhsoft_logo.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'left center'
+          }} />
+          <div style={{ fontSize: '0.625rem', letterSpacing: '0.18em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700, marginBottom: 3, WebkitUserSelect: 'none', userSelect: 'none' }}>
             AadhCode Solutions Pvt. Ltd.
           </div>
-          <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,.3)', marginBottom: 30 }}>HR Portal</div>
+          <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,.3)', marginBottom: 30, WebkitUserSelect: 'none', userSelect: 'none' }}>HR Portal</div>
 
-          <h1 style={{ fontFamily: 'var(--font-playfair), Georgia, serif', fontSize: '2rem', color: '#fff', lineHeight: 1.2, fontWeight: 700, marginBottom: 36 }}>
+          <h1 style={{ fontFamily: 'var(--font-playfair), Georgia, serif', fontSize: '2rem', color: '#fff', lineHeight: 1.2, fontWeight: 700, marginBottom: 36, WebkitUserSelect: 'none', userSelect: 'none' }}>
             Your Workplace,<br /><span style={{ color: '#c8985e' }}>All in One Place</span>
           </h1>
 
@@ -140,7 +145,12 @@ export default function LoginPage() {
         <div style={{ position: 'absolute', bottom: -80, left: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(200,152,94,.06)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, marginBottom: 52 }}>
-            <img src="/sachhsoft_logo.png" alt="SACHHSOFT" style={{ width: '140px', height: 'auto', objectFit: 'contain' }} />
+            <div style={{
+              width: 140, height: 38,
+              backgroundColor: '#fff',
+              WebkitMaskImage: 'url(/sachhsoft_logo.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'left center',
+              maskImage: 'url(/sachhsoft_logo.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'left center'
+            }} />
             <div>
               <div style={{ fontSize: '0.6875rem', letterSpacing: '0.18em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700 }}>AadhCode Solutions Pvt. Ltd.</div>
               <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,.4)', marginTop: 3 }}>HR Portal</div>
