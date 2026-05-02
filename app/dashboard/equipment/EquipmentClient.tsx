@@ -54,7 +54,7 @@ export default function EquipmentClient({ employee, initialRequests }: Equipment
                 <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}
                   className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
                   <option>Laptop</option><option>Monitor</option><option>Keyboard</option>
-                  <option>Mouse</option><option>Headset</option><option>Software License</option><option>Other</option>
+                  <option>Mouse</option><option>Headset</option><option>Mobile</option><option>Software License</option><option>Other</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               </div>
