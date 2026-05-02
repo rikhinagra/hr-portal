@@ -76,16 +76,21 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="mobile-label">Date of Birth</label>
               <div style={{ position: 'relative' }}>
                 <input
-                  type="date" value={dob}
+                  type="date"
+                  value={dob}
                   onChange={e => { setDob(e.target.value); setError(''); }}
                   className="mobile-input mobile-date"
-                  style={{ color: dob ? '#fff' : 'rgba(255,255,255,0.28)' }}
+                  style={{ color: dob ? '#fff' : 'transparent' }}
                   onFocus={e => (e.target.style.borderColor = '#c8985e')}
                   onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
                 />
+                {!dob && (
+                  <span style={{ position: 'absolute', left: 17, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', fontSize: '1rem', pointerEvents: 'none' }}>
+                    YYYY-MM-DD
+                  </span>
+                )}
                 <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
             </div>
@@ -186,13 +191,20 @@ export default function LoginPage() {
                 Date of Birth
               </label>
               <div style={{ position: 'relative' }}>
-                <input type="date" value={dob}
+                <input 
+                  type="date"
+                  value={dob}
                   onChange={e => { setDob(e.target.value); setError(''); }}
                   className="desktop-date"
-                  style={{ width: '100%', padding: '13px 44px 13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: dob ? '#1f2937' : '#9ca3af', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s' }}
+                  style={{ width: '100%', padding: '13px 44px 13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: dob ? '#1f2937' : 'transparent', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s' }}
                   onFocus={e => (e.target.style.borderColor = '#c8985e')}
                   onBlur={e => (e.target.style.borderColor = '#e5e7eb')}
                 />
+                {!dob && (
+                  <span style={{ position: 'absolute', left: 17, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '1rem', pointerEvents: 'none' }}>
+                    YYYY-MM-DD
+                  </span>
+                )}
                 <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
             </div>
@@ -239,8 +251,23 @@ export default function LoginPage() {
           transition: border-color .15s;
         }
         .mobile-input::placeholder { color: rgba(255,255,255,0.2); }
-        .mobile-date::-webkit-calendar-picker-indicator { opacity: 0; }
-        .desktop-date { position: relative; }
+        .mobile-date {
+          position: relative;
+          appearance: none;
+          -webkit-appearance: none;
+        }
+        .mobile-date::-webkit-calendar-picker-indicator {
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          opacity: 0;
+          cursor: pointer;
+        }
+        .desktop-date {
+          position: relative;
+          appearance: none;
+          -webkit-appearance: none;
+        }
         .desktop-date::-webkit-calendar-picker-indicator {
           position: absolute;
           top: 0; left: 0;

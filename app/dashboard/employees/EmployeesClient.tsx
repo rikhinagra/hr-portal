@@ -331,17 +331,17 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
               autoFocus
             />
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold border text-muted-foreground">
+                className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold border text-muted-foreground transition-colors hover:bg-muted/50">
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleteConfirmText !== deleteTarget.name || deleting}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all"
+                className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold text-white transition-all whitespace-nowrap"
                 style={{
                   background: deleteConfirmText === deleteTarget.name ? '#dc2626' : 'rgba(220,38,38,0.3)',
                   cursor: deleteConfirmText === deleteTarget.name && !deleting ? 'pointer' : 'not-allowed',

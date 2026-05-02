@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import {
   Hash, Mail, Send, MessageCircle, Laptop, BookOpen,
   ClipboardList, Monitor, Calendar, Handshake, Lock,
-  Rocket, CheckCircle2, Loader2, ChevronDown
+  Rocket, CheckCircle2, Loader2, ChevronDown, CalendarDays
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Employee } from '@/types';
@@ -139,8 +139,23 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
               </div>
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">Date of Birth (for login)</label>
-                <input type="date" value={newHire.dob} onChange={e => setNewHire({ ...newHire, dob: e.target.value })}
-                  className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
+                <div className="relative">
+                  <input type="date" value={newHire.dob} onChange={e => setNewHire({ ...newHire, dob: e.target.value })}
+                    className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
+                    style={{ color: newHire.dob ? 'inherit' : 'transparent', WebkitAppearance: 'none' }}
+                  />
+                  {!newHire.dob && (
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+                      YYYY-MM-DD
+                    </span>
+                  )}
+                  <style>{`
+                    input[type="date"]::-webkit-calendar-picker-indicator {
+                      position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+                    }
+                  `}</style>
+                  <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                </div>
               </div>
             </div>
 

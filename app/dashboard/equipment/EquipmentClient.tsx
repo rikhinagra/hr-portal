@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Mail, ClipboardList } from 'lucide-react';
+import { Mail, ClipboardList, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Employee, EquipmentRequest } from '@/types';
 
@@ -50,11 +50,14 @@ export default function EquipmentClient({ employee, initialRequests }: Equipment
           <CardContent className="pt-5 space-y-4">
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Equipment Type</label>
-              <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground">
-                <option>Laptop</option><option>Monitor</option><option>Keyboard</option>
-                <option>Mouse</option><option>Headset</option><option>Software License</option><option>Other</option>
-              </select>
+              <div className="relative">
+                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}
+                  className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
+                  <option>Laptop</option><option>Monitor</option><option>Keyboard</option>
+                  <option>Mouse</option><option>Headset</option><option>Software License</option><option>Other</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Specifications / Details *</label>
@@ -64,10 +67,13 @@ export default function EquipmentClient({ employee, initialRequests }: Equipment
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Urgency</label>
-              <select value={formData.urgency} onChange={e => setFormData({ ...formData, urgency: e.target.value })}
-                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground">
-                <option>Low</option><option>Normal</option><option>High</option><option>Critical</option>
-              </select>
+              <div className="relative">
+                <select value={formData.urgency} onChange={e => setFormData({ ...formData, urgency: e.target.value })}
+                  className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
+                  <option>Low</option><option>Normal</option><option>High</option><option>Critical</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Additional Notes</label>

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Paperclip, FolderOpen, Pencil, ChevronDown, ExternalLink, Monitor } from 'lucide-react';
+import { Paperclip, FolderOpen, Pencil, ChevronDown, ExternalLink, Monitor, CalendarDays } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Employee, EmployeeDocument, EquipmentRequest } from '@/types';
@@ -565,6 +565,24 @@ function InfoField({ label, value, editing, editValue, onEdit, placeholder, text
         ) : textarea ? (
           <textarea value={editValue} onChange={e => onEdit(e.target.value)} placeholder={placeholder} rows={2}
             className="w-full px-3 py-2 border rounded-lg text-sm bg-background text-foreground resize-vertical" />
+        ) : type === 'date' ? (
+          <div className="relative">
+            <input type="date" value={editValue} onChange={e => onEdit(e.target.value)}
+              className="w-full pl-3 pr-9 py-2 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
+              style={{ color: editValue ? 'inherit' : 'transparent', WebkitAppearance: 'none' }}
+            />
+            {!editValue && (
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+                YYYY-MM-DD
+              </span>
+            )}
+            <style>{`
+              input[type="date"]::-webkit-calendar-picker-indicator {
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+              }
+            `}</style>
+            <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          </div>
         ) : (
           <input type={type ?? 'text'} value={editValue} onChange={e => onEdit(e.target.value)} placeholder={placeholder}
             className="w-full px-3 py-2 border rounded-lg text-sm bg-background text-foreground" />

@@ -35,7 +35,7 @@ const roleColor: Record<string, string> = {
 export default function AppSidebar({ employee }: { employee: Employee }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
   const handleLogout = async () => {
@@ -81,7 +81,10 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.label}
-                      onClick={() => router.push(item.href)}
+                      onClick={() => {
+                        router.push(item.href);
+                        setOpenMobile(false);
+                      }}
                       className="cursor-pointer py-3 h-auto"
                     >
                       <item.icon className="size-6 shrink-0" />
@@ -101,8 +104,16 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => router.push('/dashboard/profile')}
-          onKeyDown={e => e.key === 'Enter' && router.push('/dashboard/profile')}
+          onClick={() => {
+            router.push('/dashboard/profile');
+            setOpenMobile(false);
+          }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              router.push('/dashboard/profile');
+              setOpenMobile(false);
+            }
+          }}
           title={employee.name}
           style={{
             display: 'flex',
