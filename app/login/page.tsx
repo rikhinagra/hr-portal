@@ -77,14 +77,17 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mobile-label">Date of Birth</label>
-              <input
-                type="date" value={dob}
-                onChange={e => { setDob(e.target.value); setError(''); }}
-                className="mobile-input mobile-date"
-                style={{ color: dob ? '#fff' : 'rgba(255,255,255,0.28)' }}
-                onFocus={e => (e.target.style.borderColor = '#c8985e')}
-                onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="date" value={dob}
+                  onChange={e => { setDob(e.target.value); setError(''); }}
+                  className="mobile-input mobile-date"
+                  style={{ color: dob ? '#fff' : 'rgba(255,255,255,0.28)' }}
+                  onFocus={e => (e.target.style.borderColor = '#c8985e')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
+                />
+                <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              </div>
             </div>
 
             {error && (
@@ -236,6 +239,7 @@ export default function LoginPage() {
           transition: border-color .15s;
         }
         .mobile-input::placeholder { color: rgba(255,255,255,0.2); }
+        .mobile-date::-webkit-calendar-picker-indicator { opacity: 0; }
         .desktop-date { position: relative; }
         .desktop-date::-webkit-calendar-picker-indicator {
           position: absolute;
