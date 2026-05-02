@@ -112,7 +112,7 @@ export default function HandbookClient({ employee, existingAck }: HandbookClient
             cursor: scrolledToBottom && !acknowledged ? 'pointer' : 'not-allowed',
             opacity: acknowledged ? 0.6 : 1,
           }}>
-          {acknowledged ? 'Acknowledged ✓' : 'I Acknowledge'}
+          {acknowledged ? <span className="flex items-center gap-1.5"><Check className="size-3.5" />Acknowledged</span> : 'I Acknowledge'}
         </button>
       </div>
 

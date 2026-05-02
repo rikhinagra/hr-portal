@@ -25,9 +25,9 @@ export const HANDBOOK_CHAPTERS = [
     title: 'Welcome to SACHHSOFT',
     content: `Dear Team Member,
 
-Welcome to the SACHHSOFT family! Whether you are joining us from Jammu, working remotely from anywhere in India, or collaborating with our partner team in the United States — you are now part of a team that believes in building technology with purpose, integrity, and excellence.
+Welcome to the SACHHSOFT family! Whether you are joining us from Jammu, working remotely from anywhere in India, or collaborating with our partner team in the United States, you are now part of a team that believes in building technology with purpose, integrity, and excellence.
 
-This handbook is your go-to guide for everything — from your first day to your long-term growth. We operate with a simple philosophy: treat every colleague with respect, show up with intention, communicate openly, and take pride in the work you deliver.
+This handbook is your go-to guide for everything, from your first day to your long-term growth. We operate with a simple philosophy: treat every colleague with respect, show up with intention, communicate openly, and take pride in the work you deliver.
 
 We are glad you are here. Let's build something great together.
 
@@ -36,10 +36,10 @@ The SACHHSOFT Leadership Team`,
   },
   {
     num: 2,
-    title: 'About Us — Organization & Culture',
+    title: 'About Us: Organization & Culture',
     content: `AadhCode Solutions Pvt. Ltd. operates globally under the brand SACHHSOFT. We specialize in custom software development across HealthTech, FinTech, and E-commerce. We partner with startups as co-builders, investing expertise alongside capital to create products that matter.
 
-Our Values: Quality First — We build products with empathy and craftsmanship. Transparency — We say what we mean, share what we know, and flag what worries us. Accountability — We take ownership of our work, our timelines, and our commitments. Respect — Every teammate deserves kindness, patience, and professional courtesy. Growth Mindset — We adapt, learn, and improve — processes, skills, and products.
+Our Values: Quality First: We build products with empathy and craftsmanship. Transparency: We say what we mean, share what we know, and flag what worries us. Accountability: We take ownership of our work, our timelines, and our commitments. Respect: Every teammate deserves kindness, patience, and professional courtesy. Growth Mindset: We adapt, learn, and improve across processes, skills, and products.
 
 Organization Structure: Business Head / Founder → CTO → HR Head | Operations Manager → HR Team → IT / Infrastructure → Admin & Compliance → Finance | Team Leads / PMs → Developers & Engineers → QA / Testing → Design.
 
@@ -49,12 +49,12 @@ Sister entities: AadhCode (India), LexgoSolution (legal tech, Jammu office), and
   },
   {
     num: 3,
-    title: 'Your Employment — Brand Identity',
-    content: `You are an employee of AadhCode Solutions Pvt. Ltd., working under the brand SACHHSOFT. When allocated to a client project, you work on behalf of SACHHSOFT. You remain our employee at all times. Our policies, appraisals, leaves, and values govern your journey — not the client's.
+    title: 'Your Employment: Brand Identity',
+    content: `You are an employee of AadhCode Solutions Pvt. Ltd., working under the brand SACHHSOFT. When allocated to a client project, you work on behalf of SACHHSOFT. You remain our employee at all times. Our policies, appraisals, leaves, and values govern your journey, not the client's.
 
-What This Means: Your contract, salary, appraisals, and career growth are managed by SACHHSOFT. Client allocations are project-based — they do not change your employer. You represent SACHHSOFT on every call, email, and deliverable. You follow SACHHSOFT policies regardless of which project you are on.
+What This Means: Your contract, salary, appraisals, and career growth are managed by SACHHSOFT. Client allocations are project-based and do not change your employer. You represent SACHHSOFT on every call, email, and deliverable. You follow SACHHSOFT policies regardless of which project you are on.
 
-Team Locations: Jammu (HQ) — AadhCode core team, Work from Office. Jammu Office — LexgoSolution (under Saheb), Work from Office. Pan-India — Remote developers, Remote (WFH policy). Palatine, IL, USA — SACHHSOFT partner office, US operations.
+Team Locations: Jammu (HQ): AadhCode core team, Work from Office. Jammu Office: LexgoSolution (under Saheb), Work from Office. Pan-India: Remote developers, Work from Home policy. Palatine, IL, USA: SACHHSOFT partner office, US operations.
 
 Brand Engagement: Follow and engage with SACHHSOFT on LinkedIn, Twitter/X, and Instagram. Join the SACHHSOFT WhatsApp community channel. Share company milestones and project wins on your social channels. Team Leads shall actively encourage brand participation within their teams.
 
@@ -65,33 +65,33 @@ Your visibility strengthens our brand. When you share and engage, you help the e
     title: 'Onboarding & Induction Process',
     content: `Your first few days set the tone for your entire journey. Our onboarding is structured in two clear phases so nothing falls through the cracks.
 
-Phase 1: HR Onboarding (Pre-Joining to Day 3): HR handles all backend work — documentation, verification, system setup, and channel activation. Tasks include: Offer letter issued and signed copy received (Pre-joining). Document collection — ID, education, PAN/Aadhaar, experience (Pre-joining). Background verification initiated and completed (Day 1–Week 1). Employment letter issued and acknowledged (Day 1). All company policies shared and explained (Day 1). Company email created at aadhcode.com (Day 1 — Priority). Added to company WhatsApp groups and community (Day 1). Added to company Slack workspace (Day 1). Laptop/equipment configured and handed over (Day 1). Welcome call — culture, values, handbook walkthrough (Day 1–2).
+Phase 1: HR Onboarding (Pre-Joining to Day 3): HR handles all backend work including documentation, verification, system setup, and channel activation. Tasks include: Offer letter issued and signed copy received (Pre-joining). Document collection: ID, education, PAN/Aadhaar, experience (Pre-joining). Background verification initiated and completed (Day 1 to Week 1). Employment letter issued and acknowledged (Day 1). All company policies shared and explained (Day 1). Company email created at aadhcode.com (Day 1, Priority). Added to company WhatsApp groups and community (Day 1). Added to company Slack workspace (Day 1). Laptop/equipment configured and handed over (Day 1). Welcome call covering culture, values, and handbook walkthrough (Day 1 to 2).
 
-Phase 2: Team Onboarding & Project Handover: Once HR onboarding is complete, you are formally handed over to your Team Lead / PM for project integration. Introduction to team and stakeholders (Day 1). Added to project Slack channels and WhatsApp groups (Day 1). Access to repos, tools, docs — GitHub, Jira, Figma (Day 1–2). Project overview and codebase walkthrough (Week 1). Initial tasks with clear expectations (Week 1). 30-day check-in scheduled (Scheduled Day 1).`,
+Phase 2: Team Onboarding & Project Handover: Once HR onboarding is complete, you are formally handed over to your Team Lead / PM for project integration. Introduction to team and stakeholders (Day 1). Added to project Slack channels and WhatsApp groups (Day 1). Access to repos, tools, and docs including GitHub, Jira, and Figma (Day 1 to 2). Project overview and codebase walkthrough (Week 1). Initial tasks with clear expectations (Week 1). 30-day check-in scheduled (Scheduled Day 1).`,
   },
   {
     num: 5,
     title: 'Working Hours, Shifts & Time Zones',
     content: `We serve clients across multiple time zones. Your working hours depend on the project you are allocated to. Flexibility and discipline go hand in hand.
 
-Standard Shifts: Day Shift (India) — 10:00 AM to 7:00 PM IST — Standard India projects. US Overlap — 6:00 PM to 3:00 AM IST — US EST/CST aligned projects. Night Shift — 9:00 PM to 6:00 AM IST — US clients. Flexible / Split — As communicated — TL + Ops approved.
+Standard Shifts: Day Shift (India): 10:00 AM to 7:00 PM IST, Standard India projects. US Overlap: 6:00 PM to 3:00 AM IST, US EST/CST aligned projects. Night Shift: 9:00 PM to 6:00 AM IST, US clients. Flexible/Split: As communicated, TL and Ops approved.
 
 Key Expectations: Shift timing is communicated at project allocation and must be followed strictly. Timings apply equally for office and remote work. If your project requires time zone overlap, you must be available during those hours. The company may modify shifts based on business needs with reasonable notice.
 
 Availability during the client's working hours is a professional commitment and reflects directly on SACHHSOFT's reputation.
 
-Punctuality is non-negotiable — repeated late log-ins affect performance evaluations.`,
+Punctuality is non-negotiable. Repeated late log-ins affect performance evaluations.`,
   },
   {
     num: 6,
     title: 'Work From Home Policy',
-    content: `SACHHSOFT follows a Work-From-Office (WFO) model. WFH is permitted under specific conditions.
+    content: `SACHHSOFT follows a Work From Office (WFO) model. WFH is permitted under specific conditions.
 
 Eligibility: WFO employees may avail 1 WFH day per month, with prior approval from Reporting Manager and HR notification. Requests beyond the limit are only under exceptional circumstances with management approval. Unapproved remote work is treated as unauthorized absence.
 
-Remote Employees: Same discipline standards as in-office — punctual login, full availability, professional communication. Comply with all attendance and reporting systems.
+Remote Employees: Same discipline standards as in-office apply: punctual login, full availability, and professional communication. Comply with all attendance and reporting systems.
 
-Performance During WFH: Assessed on identical standards as in-office work — timely login/logout, task completion, productivity, responsiveness, and team coordination.
+Performance During WFH: Assessed on identical standards as in-office work including timely login/logout, task completion, productivity, responsiveness, and team coordination.
 
 WFH utilization and attendance discipline form part of your overall performance assessment. Repeated late log-ins or irregular attendance during WFH will be documented.`,
   },
@@ -100,11 +100,11 @@ WFH utilization and attendance discipline form part of your overall performance 
     title: 'Communication Standards & Response Times',
     content: `Communication is a core professional responsibility at SACHHSOFT. How you communicate reflects on you, your team, and the entire organization.
 
-NO GHOSTING. Ever. Ignoring messages on Slack, WhatsApp, email, or any channel is unacceptable. If you have seen a message, acknowledge it — even if you need time to respond in full.
+NO GHOSTING. Ever. Ignoring messages on Slack, WhatsApp, email, or any channel is unacceptable. If you have seen a message, acknowledge it, even if you need time to respond in full.
 
-Response Time Expectations: Slack DM — Within 1 hour during working hours, Maximum: Same working day. Slack Channel — Within 2 hours if tagged, Maximum: Same working day. Email — Within 4 hours, Maximum: Same working day. WhatsApp (Work) — Within 1 hour, Maximum: Same working day. Client Comms — Acknowledge within 30 min, Full response within 4 hours.
+Response Time Expectations: Slack DM: Within 1 hour during working hours, maximum same working day. Slack Channel: Within 2 hours if tagged, maximum same working day. Email: Within 4 hours, maximum same working day. WhatsApp (Work): Within 1 hour, maximum same working day. Client Comms: Acknowledge within 30 minutes, full response within 4 hours.
 
-Communication Etiquette: Always acknowledge — a simple "Got it, will revert by [time]" is enough. Keep messages professional, concise, and respectful. Use appropriate channels — project discussions on project channels. Do not leave people hanging; if you need time, say so. For urgent matters, call after messaging.
+Communication Etiquette: Always acknowledge, a simple "Got it, will revert by [time]" is enough. Keep messages professional, concise, and respectful. Use appropriate channels, project discussions go on project channels. Do not leave people hanging; if you need time, say so. For urgent matters, call after messaging.
 
 If you are unable to respond due to a genuine emergency, inform your Team Lead or a colleague as soon as possible.`,
   },
@@ -113,9 +113,9 @@ If you are unable to respond due to a genuine emergency, inform your Team Lead o
     title: 'Professional Conduct & Code of Behaviour',
     content: `We believe in mutual respect, accountability, and professionalism. Every interaction should reflect the values we stand for.
 
-Expected Standards: Treat every colleague with respect regardless of role or seniority. Disagreements are healthy; disrespect is not — challenge ideas, not people. Be punctual for meetings, standups, and deadlines. Take ownership — if you commit to a deadline, deliver. Be transparent about blockers — asking for help is strength. Maintain confidentiality of internal and client information. Support new team members generously.
+Expected Standards: Treat every colleague with respect regardless of role or seniority. Disagreements are healthy; disrespect is not. Challenge ideas, not people. Be punctual for meetings, standups, and deadlines. Take ownership: if you commit to a deadline, deliver. Be transparent about blockers; asking for help is strength. Maintain confidentiality of internal and client information. Support new team members generously.
 
-Client & Cross-Team Interactions: You represent SACHHSOFT — be professional, prepared, and courteous. Respect different working styles and time zones. Give constructive feedback focused on work, not the person. Celebrate wins publicly; address concerns privately.
+Client & Cross-Team Interactions: You represent SACHHSOFT. Be professional, prepared, and courteous. Respect different working styles and time zones. Give constructive feedback focused on work, not the person. Celebrate wins publicly; address concerns privately.
 
 Harassment, bullying, discrimination, verbal abuse, or any form of intimidation is not tolerated. This includes written communication. Violations fall under our Zero Tolerance Policy (Chapter 16).`,
   },
@@ -126,7 +126,7 @@ Harassment, bullying, discrimination, verbal abuse, or any form of intimidation 
 
 You don't need to wear a suit. But you should look like someone a client trusts to build their product.
 
-Virtual Call Guidelines: Wear clean, presentable clothing — neat casuals are fine. Avoid pyjamas, gym wear, or overly casual attire on client or team calls. Ensure a clean, professional background (virtual backgrounds work too). Good lighting and a stable internet connection matter. Camera on during client calls unless told otherwise. Be well-groomed — first impressions count, even on a screen. Mute when not speaking; minimize background noise.
+Virtual Call Guidelines: Wear clean, presentable clothing; neat casuals are fine. Avoid pyjamas, gym wear, or overly casual attire on client or team calls. Ensure a clean, professional background (virtual backgrounds work too). Good lighting and a stable internet connection matter. Camera on during client calls unless told otherwise. Be well-groomed; first impressions count, even on a screen. Mute when not speaking; minimize background noise.
 
 Your Virtual Setup: Quiet, distraction-free workspace. Reliable internet (minimum 10 Mbps recommended). Working microphone and camera. Professional email signature with SACHHSOFT / AadhCode designation.
 
@@ -137,22 +137,22 @@ You are the face of SACHHSOFT on every call. Looking good and prepared is about 
     title: 'Standup Meetings & Daily Rituals',
     content: `Daily standups are non-negotiable. They keep projects on track, surface blockers early, and ensure accountability.
 
-Expectations: Attendance — Mandatory unless on approved leave. Punctuality — Join on time, the meeting starts at the scheduled time. Preparation — Come prepared: what you did, what you are doing, any blockers. Conciseness — Keep it concise, standups are not for deep-dive discussions.
+Expectations: Attendance: Mandatory unless on approved leave. Punctuality: Join on time, the meeting starts at the scheduled time. Preparation: Come prepared with what you did, what you are doing, and any blockers. Conciseness: Keep it concise, standups are not for deep-dive discussions.
 
 No-shows without prior communication and last-minute cancellations are taken seriously. These directly impact project delivery, team morale, and your performance evaluation.
 
-Impact on Appraisal: Repeated no-shows without notice — Documented; negatively impacts rating. Last-minute cancellation / denial — Reviewed as pattern in quarterly check-ins. Consistently joining late — Flagged in attendance discipline record. Not prepared with updates — Reflects on accountability in scorecard.
+Impact on Appraisal: Repeated no-shows without notice: Documented and negatively impacts rating. Last-minute cancellation or denial: Reviewed as a pattern in quarterly check-ins. Consistently joining late: Flagged in attendance discipline record. Not prepared with updates: Reflects on accountability in scorecard.
 
 If you cannot attend, inform your Team Lead before the meeting and share your update asynchronously on the project channel. This is professionalism, not bureaucracy.`,
   },
   {
     num: 11,
     title: 'Leave Policy & Application Process',
-    content: `Leave Entitlement: Earned (Annual) — 12 days / year — Full pay; plan in advance. Sick Leave — 7 days / year — Medical certificate for 2+ days. Public Holidays — Per company calendar — Not counted against balance. Comp-Off — As earned — Use within 1 month; no carry-forward.
+    content: `Leave Entitlement: Earned (Annual): 12 days per year, full pay, plan in advance. Sick Leave: 7 days per year, medical certificate required for 2 or more days. Public Holidays: Per company calendar, not counted against balance. Comp-Off: As earned, use within 1 month, no carry-forward.
 
-Application Process: Step 1 — Submit Request: Email your Reporting Manager with leave type, dates, total days, reason; CC hrdesk@aadhcode.com. Step 2 — Manager Review: Manager reviews and replies all — "Approved" or "Not Approved" with reason. Step 3 — HR Confirmation: HR checks balance/compliance, confirms "Leave Approved and recorded." Step 4 — System Update: HR updates the leave tracking system.
+Application Process: Step 1: Submit Request: Email your Reporting Manager with leave type, dates, total days, and reason; CC hrdesk@aadhcode.com. Step 2: Manager Review: Manager reviews and replies all with "Approved" or "Not Approved" and reason. Step 3: HR Confirmation: HR checks balance and compliance, confirms "Leave Approved and recorded." Step 4: System Update: HR updates the leave tracking system.
 
-Notice Requirements: 1–2 days — At least 1 week in advance. More than 2 days — 15–20 days in advance. Emergency / Sick — As early as possible; documentation required.
+Notice Requirements: 1 to 2 days: At least 1 week in advance. More than 2 days: 15 to 20 days in advance. Emergency or Sick Leave: As early as possible, documentation required.
 
 Repeated unplanned leaves or non-compliant patterns may be reviewed during performance discussions.`,
   },
@@ -161,9 +161,9 @@ Repeated unplanned leaves or non-compliant patterns may be reviewed during perfo
     title: 'Performance Reviews & Appraisals',
     content: `Appraisals involve highly sensitive and confidential information. They follow a structured, never ad hoc, process.
 
-Review Cycle: Probation — 30, 60, and 90 days — Team Lead + HR. Quarterly — Every 3 months — Team Lead + Employee. Annual — Once per year — TL + HR + Management.
+Review Cycle: Probation: 30, 60, and 90 days, reviewed by Team Lead and HR. Quarterly: Every 3 months, reviewed by Team Lead and Employee. Annual: Once per year, reviewed by TL, HR, and Management.
 
-HR Scorecard: Technical Skill & Quality — 30% — Assessed by Team Lead. Task Completion & Deadlines — 20% — Assessed by Team Lead. Communication & Collaboration — 15% — Assessed by TL + Peers. Attendance & Punctuality — 15% — Assessed by HR. Initiative & Growth — 10% — Assessed by TL + Self. Culture & Brand Engagement — 10% — Assessed by HR + Management.
+HR Scorecard: Technical Skill and Quality: 30%, assessed by Team Lead. Task Completion and Deadlines: 20%, assessed by Team Lead. Communication and Collaboration: 15%, assessed by TL and Peers. Attendance and Punctuality: 15%, assessed by HR. Initiative and Growth: 10%, assessed by TL and self. Culture and Brand Engagement: 10%, assessed by HR and Management.
 
 All appraisal data is shared only between the employee, their manager, HR, and management. No discussions in open channels or with peers.`,
   },
@@ -185,7 +185,7 @@ Company equipment is for professional use only. Unauthorized software installati
   {
     num: 14,
     title: 'Data Security & Confidentiality',
-    content: `All client and company data is strictly confidential. Do not share code, designs, or client information outside the authorized team. Use company-approved tools only — no personal accounts for work files. Lock your screen when stepping away from your workstation. No sensitive data on personal devices or unauthorized cloud services. Report suspected breaches immediately to your Team Lead and IT.
+    content: `All client and company data is strictly confidential. Do not share code, designs, or client information outside the authorized team. Use company-approved tools only; no personal accounts for work files. Lock your screen when stepping away from your workstation. No sensitive data on personal devices or unauthorized cloud services. Report suspected breaches immediately to your Team Lead and IT.
 
 A breach of data confidentiality is a serious offence and may result in disciplinary action up to termination, plus legal consequences.
 
@@ -202,7 +202,7 @@ For Work-Related Issues: Speak directly with your Team Lead. For Interpersonal o
 
 All grievances are acknowledged within 24 hours and investigated promptly. There is no retaliation for raising legitimate concerns in good faith.
 
-Process: Step 1 — Raise the issue through the appropriate channel. Step 2 — HR / Team Lead acknowledges within 24 hours. Step 3 — Investigation or discussion conducted confidentially. Step 4 — Resolution communicated to all parties. Step 5 — Follow-up after 30 days to ensure resolution holds.
+Process: Step 1: Raise the issue through the appropriate channel. Step 2: HR or Team Lead acknowledges within 24 hours. Step 3: Investigation or discussion conducted confidentially. Step 4: Resolution communicated to all parties. Step 5: Follow-up after 30 days to ensure resolution holds.
 
 If something does not feel right, talk to us. Early conversations prevent bigger problems.`,
   },
@@ -211,7 +211,7 @@ If something does not feel right, talk to us. Early conversations prevent bigger
     title: 'Zero Tolerance Policy',
     content: `SACHHSOFT has a strict zero tolerance policy for the following. Any substantiated instance leads to immediate disciplinary action, potentially including termination.
 
-Prohibited Conduct and Consequences: Sexual harassment or any harassment — Investigation; termination if substantiated. Bullying, intimidation, verbal abuse — Warning to termination per severity. Discrimination based on gender, religion, caste, or region — Investigation; termination if substantiated. Theft of company or client property — Termination plus legal action. Intentional data breach or unauthorized sharing — Termination plus legal proceedings. Physical violence or threats — Immediate termination. Fraudulent claims including leave, expenses, or credentials — Termination. Substance abuse during work hours — Warning to termination per severity. Repeated ghosting on communication channels — PIP to termination. Persistent no-shows on standups without notice — Impacts appraisal; repeated instances lead to PIP.
+Prohibited Conduct and Consequences: Sexual harassment or any harassment: Investigation, termination if substantiated. Bullying, intimidation, or verbal abuse: Warning to termination per severity. Discrimination based on gender, religion, caste, or region: Investigation, termination if substantiated. Theft of company or client property: Termination plus legal action. Intentional data breach or unauthorized sharing: Termination plus legal proceedings. Physical violence or threats: Immediate termination. Fraudulent claims including leave, expenses, or credentials: Termination. Substance abuse during work hours: Warning to termination per severity. Repeated ghosting on communication channels: PIP to termination. Persistent no-shows on standups without notice: Impacts appraisal, repeated instances lead to PIP.
 
 This policy protects everyone and ensures SACHHSOFT remains a safe, respectful, and professional workplace.`,
   },
