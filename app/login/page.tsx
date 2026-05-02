@@ -8,7 +8,7 @@ const features = [
   { Icon: ClipboardList, text: 'Leave management with real-time approvals' },
   { Icon: BookOpen, text: 'Employee handbook with acknowledgement tracking' },
   { Icon: Monitor, text: 'Equipment requests routed to IT automatically' },
-  { Icon: Rocket, text: '10-step automated onboarding for new hires' },
+  { Icon: Rocket, text: '4-step automated onboarding for new hires' },
 ];
 
 export default function LoginPage() {

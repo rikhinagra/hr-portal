@@ -80,15 +80,13 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
-                      asChild
+                      render={<Link href={item.href} onClick={() => setOpenMobile(false)} />}
                       isActive={isActive}
                       tooltip={item.label}
                       className="cursor-pointer py-3 h-auto"
                     >
-                      <Link href={item.href} onClick={() => setOpenMobile(false)}>
-                        <item.icon className="size-6 shrink-0" />
-                        <span>{item.label}</span>
-                      </Link>
+                      <item.icon className="size-6 shrink-0" />
+                      <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
