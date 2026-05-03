@@ -210,9 +210,9 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
                         style={{ background: activityDot[a.action_type] ?? '#2563eb' }} />
                       <div className="flex-1 min-w-0 text-sm">
                         {a.performer ? (
-                          <span className="font-medium text-white">{a.performer.name}</span>
+                          <span className="font-medium text-foreground">{a.performer.name}</span>
                         ) : (
-                          <span className="font-medium text-white">System</span>
+                          <span className="font-medium text-foreground">System</span>
                         )}
                         <span className="text-muted-foreground mx-2">•</span>
                         <span className="text-muted-foreground">{a.description}</span>
