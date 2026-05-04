@@ -52,7 +52,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await serviceClient.from('activity_log').delete()
       .or(`target_employee_id.eq.${id},performed_by.eq.${id}`);
 
-    await serviceClient.from('handbook_acknowledgments').delete().eq('employee_id', id);
+    await serviceClient.from('handbook_acknowledgements').delete().eq('employee_id', id);
     await serviceClient.from('employee_documents').delete().eq('employee_id', id);
     await serviceClient.from('leave_requests').delete().eq('employee_id', id);
     await serviceClient.from('equipment_requests').delete().eq('employee_id', id);
