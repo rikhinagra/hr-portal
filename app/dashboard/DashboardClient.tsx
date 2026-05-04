@@ -64,15 +64,21 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
     }
   };
 
+  const isAdmin = employee.role === 'admin';
+
   const stats = [
-    { label: 'Earned Leave', value: employee.leave_balance_earned, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
-    { label: 'Sick Leave', value: employee.leave_balance_sick, sub: 'of 7 days', icon: Heart, iconBg: 'rgba(234,88,12,0.1)', iconColor: '#ea580c' },
+    ...(!isAdmin ? [
+      { label: 'Earned Leave', value: employee.leave_balance_earned, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
+      { label: 'Sick Leave', value: employee.leave_balance_sick, sub: 'of 7 days', icon: Heart, iconBg: 'rgba(234,88,12,0.1)', iconColor: '#ea580c' },
+    ] : []),
     { label: 'Policies', value: policiesCount, sub: 'documents', icon: FileText, iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
     { label: 'Team Size', value: teamCount, sub: 'active members', icon: Users, iconBg: 'rgba(200,152,94,0.1)', iconColor: '#c8985e' },
   ];
 
   const quickActions = [
-    { label: 'Apply for Leave', sub: 'Submit leave request', icon: Calendar, href: '/dashboard/leave', iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
+    ...(!isAdmin ? [
+      { label: 'Apply for Leave', sub: 'Submit leave request', icon: Calendar, href: '/dashboard/leave', iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
+    ] : []),
     { label: 'Request Equipment', sub: 'Hardware or software', icon: Monitor, href: '/dashboard/equipment', iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
     { label: 'Read Handbook', sub: handbookAck ? 'Acknowledged' : 'Pending acknowledgement', icon: BookOpen, href: '/dashboard/handbook', iconBg: handbookAck ? 'rgba(22,163,74,0.1)' : 'rgba(234,88,12,0.1)', iconColor: handbookAck ? '#16a34a' : '#ea580c' },
     { label: 'View Policies', sub: `${policiesCount} documents`, icon: FileText, href: '/dashboard/policies', iconBg: 'rgba(124,58,237,0.1)', iconColor: '#7c3aed' },

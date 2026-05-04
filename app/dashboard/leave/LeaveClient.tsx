@@ -84,17 +84,21 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
       </div>
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-3 gap-4 leave-balance-grid">
-        <Card><CardContent className="p-6">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Earned Leave</div>
-          <div className="text-3xl font-bold" style={{ color: '#3a7bd5' }}>{employee.leave_balance_earned}</div>
-          <div className="text-xs text-muted-foreground mt-1">of 12 days remaining</div>
-        </CardContent></Card>
-        <Card><CardContent className="p-6">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Sick Leave</div>
-          <div className="text-3xl font-bold" style={{ color: '#e67e22' }}>{employee.leave_balance_sick}</div>
-          <div className="text-xs text-muted-foreground mt-1">of 7 days remaining</div>
-        </CardContent></Card>
+      <div className={`grid gap-4 leave-balance-grid ${isAdmin ? 'grid-cols-1 max-w-xs' : 'grid-cols-3'}`}>
+        {!isAdmin && (
+          <>
+            <Card><CardContent className="p-6">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Earned Leave</div>
+              <div className="text-3xl font-bold" style={{ color: '#3a7bd5' }}>{employee.leave_balance_earned}</div>
+              <div className="text-xs text-muted-foreground mt-1">of 12 days remaining</div>
+            </CardContent></Card>
+            <Card><CardContent className="p-6">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Sick Leave</div>
+              <div className="text-3xl font-bold" style={{ color: '#e67e22' }}>{employee.leave_balance_sick}</div>
+              <div className="text-xs text-muted-foreground mt-1">of 7 days remaining</div>
+            </CardContent></Card>
+          </>
+        )}
         <Card><CardContent className="p-6">
           <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Pending Requests</div>
           <div className="text-3xl font-bold" style={{ color: '#b33a3a' }}>{pendingCount}</div>
@@ -267,7 +271,9 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
               </div>
               <div className="rounded-lg p-3 text-xs text-muted-foreground flex items-center gap-2" style={{ background: 'rgba(200,152,94,0.1)' }}>
                 <Mail className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
-                Email will be sent to your Reporting Manager, CC: HR Desk
+                {employee.role === 'hr'
+                  ? 'Email will be sent directly to all Admins for approval'
+                  : 'Email will be sent to HR. Admins will be notified.'}
               </div>
               <button onClick={submitLeave} disabled={submitting}
                 className="w-full py-3 rounded-lg font-semibold text-sm"
