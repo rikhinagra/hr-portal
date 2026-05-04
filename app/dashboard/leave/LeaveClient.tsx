@@ -64,6 +64,10 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
         body: JSON.stringify({ status: action }),
       });
       const data = await res.json();
+      if (res.status === 409) {
+        toast.error('Already Actioned', { description: `${data.error} Please refresh the page.` });
+        return;
+      }
       if (!res.ok) throw new Error(data.error);
       setLeaves(leaves.map(l => l.id === leaveId ? { ...l, status: action } : l));
       toast.success(`Leave ${action === 'approved' ? 'Approved' : 'Rejected'}`, { description: 'Employee notified via email.' });
@@ -191,7 +195,7 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
               </div>
 
               {/* Reason */}
-              <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{l.reason}</p>
+              <p className="text-xs text-muted-foreground mb-3" style={{ wordBreak: 'break-word' }}>{l.reason}</p>
 
               {/* Admin actions */}
               {isAdminOrHr && l.status === 'pending' && (
