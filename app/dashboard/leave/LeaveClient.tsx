@@ -11,6 +11,12 @@ interface LeaveClientProps {
   initialLeaves: Array<LeaveRequest & { employee: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'email' | 'reporting_manager_email'> | null }>;
 }
 
+function formatLeaveType(type: string): string {
+  if (type === 'earned') return 'Earned (Annual)';
+  if (type === 'sick') return 'Sick Leave';
+  return type;
+}
+
 export default function LeaveClient({ employee, initialLeaves }: LeaveClientProps) {
   const [leaves, setLeaves] = useState(initialLeaves);
   const [showForm, setShowForm] = useState(false);
@@ -124,12 +130,12 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
                 ) : leaves.map(l => (
                   <tr key={l.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{l.employee?.name ?? 'Unknown'}</td>
-                    <td className="px-4 py-3 capitalize text-foreground">{l.leave_type}</td>
+                    <td className="px-4 py-3 text-foreground">{formatLeaveType(l.leave_type)}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-foreground">
                       <span className="flex items-center gap-1.5">{new Date(l.start_date).toLocaleDateString('en-IN')} <ArrowRight className="size-3 flex-shrink-0 text-muted-foreground" /> {new Date(l.end_date).toLocaleDateString('en-IN')}</span>
                     </td>
                     <td className="px-4 py-3 font-semibold text-foreground">{l.days}</td>
-                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{l.reason}</td>
+                    <td className="px-4 py-3 text-muted-foreground" style={{ maxWidth: '240px', wordBreak: 'break-word', whiteSpace: 'normal' }}>{l.reason}</td>
                     <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
                     {isAdminOrHr && (
                       <td className="px-4 py-3">
@@ -170,9 +176,9 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
 
               {/* Type + days */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="capitalize text-xs font-semibold px-2 py-0.5 rounded-full"
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>
-                  {l.leave_type}
+                  {formatLeaveType(l.leave_type)}
                 </span>
                 <span className="text-xs text-muted-foreground">{l.days} day{l.days !== 1 ? 's' : ''}</span>
               </div>
