@@ -241,7 +241,10 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Start Date</label>
                   <div className="relative">
-                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                    <input type="date" value={startDate} onChange={e => {
+                        setStartDate(e.target.value);
+                        if (endDate && e.target.value > endDate) setEndDate('');
+                      }}
                       className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
                       style={{ color: startDate ? 'inherit' : 'transparent', WebkitAppearance: 'none' }}
                     />
@@ -261,7 +264,8 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">End Date</label>
                   <div className="relative">
-                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                    <input type="date" value={endDate} min={startDate || undefined}
+                      onChange={e => setEndDate(e.target.value)}
                       className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
                       style={{ color: endDate ? 'inherit' : 'transparent', WebkitAppearance: 'none' }}
                     />
