@@ -43,6 +43,11 @@ export async function POST(request: NextRequest) {
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
+    // Admin cannot apply for leave
+    if (employee.role === 'admin') {
+      return NextResponse.json({ error: 'Admins cannot apply for leave.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { leave_type, start_date, end_date, reason } = body;
 
@@ -50,8 +55,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
+    if (!['earned', 'sick'].includes(leave_type)) {
+      return NextResponse.json({ error: 'Invalid leave type.' }, { status: 400 });
+    }
+
     const days = Math.ceil((new Date(end_date).getTime() - new Date(start_date).getTime()) / 86400000) + 1;
     if (days < 1) return NextResponse.json({ error: 'End date must be after start date.' }, { status: 400 });
+
+    // Balance check before allowing submission
+    if (leave_type === 'earned' && employee.leave_balance_earned < days) {
+      return NextResponse.json({
+        error: `Insufficient earned leave balance. You have ${employee.leave_balance_earned} day(s) remaining but requested ${days}.`,
+      }, { status: 400 });
+    }
+    if (leave_type === 'sick' && employee.leave_balance_sick < days) {
+      return NextResponse.json({
+        error: `Insufficient sick leave balance. You have ${employee.leave_balance_sick} day(s) remaining but requested ${days}.`,
+      }, { status: 400 });
+    }
 
     const { data: leave, error: insertError } = await serviceClient
       .from('leave_requests')
@@ -69,19 +90,48 @@ export async function POST(request: NextRequest) {
       action_type: 'info',
     });
 
-    // Send email
+    // Smart email routing
     try {
-      const managerEmail = employee.reporting_manager_email ?? process.env.EMAIL_REPORTING_MANAGER!;
-      await sendLeaveRequestEmail({
-        employeeName: employee.name,
-        department: employee.department,
-        leaveType: leave_type,
-        startDate: start_date,
-        endDate: end_date,
-        days,
-        reason,
-        managerEmail,
-      });
+      const { data: admins } = await serviceClient
+        .from('employees')
+        .select('email')
+        .eq('role', 'admin')
+        .eq('is_active', true);
+
+      const adminEmails = (admins ?? []).map((a: { email: string }) => a.email).filter(Boolean) as string[];
+      const fallbackAdmin = process.env.EMAIL_REPORTING_MANAGER!;
+      const toAdmins = adminEmails.length > 0 ? adminEmails : [fallbackAdmin];
+
+      if (employee.role === 'hr') {
+        // HR applying → email goes directly to all admins
+        await sendLeaveRequestEmail({
+          employeeName: employee.name,
+          department: employee.department,
+          leaveType: leave_type,
+          startDate: start_date,
+          endDate: end_date,
+          days,
+          reason,
+          toEmails: toAdmins,
+          ccEmails: [],
+          isHrApplying: true,
+        });
+      } else {
+        // Employee / IT applying → email goes to HR desk, all admins in CC
+        const hrDeskEmail = process.env.EMAIL_HR_DESK!;
+        await sendLeaveRequestEmail({
+          employeeName: employee.name,
+          department: employee.department,
+          leaveType: leave_type,
+          startDate: start_date,
+          endDate: end_date,
+          days,
+          reason,
+          toEmails: [hrDeskEmail],
+          ccEmails: toAdmins,
+          isHrApplying: false,
+        });
+      }
     } catch (emailErr) {
       console.error('Email send failed (non-fatal):', emailErr);
     }

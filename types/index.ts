@@ -1,5 +1,5 @@
 export type EmployeeRole = 'admin' | 'hr' | 'employee' | 'it';
-export type LeaveType = 'earned' | 'sick' | 'compoff';
+export type LeaveType = 'earned' | 'sick';
 export type LeaveStatus = 'pending' | 'approved' | 'rejected';
 export type EquipmentStatus = 'pending' | 'approved' | 'delivered' | 'rejected';
 export type Urgency = 'Low' | 'Normal' | 'High' | 'Critical';

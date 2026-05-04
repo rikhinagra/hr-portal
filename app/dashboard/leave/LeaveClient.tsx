@@ -14,14 +14,16 @@ interface LeaveClientProps {
 export default function LeaveClient({ employee, initialLeaves }: LeaveClientProps) {
   const [leaves, setLeaves] = useState(initialLeaves);
   const [showForm, setShowForm] = useState(false);
-  const [leaveType, setLeaveType] = useState<'earned' | 'sick' | 'compoff'>('earned');
+  const [leaveType, setLeaveType] = useState<'earned' | 'sick'>('earned');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  const isAdmin = employee.role === 'admin';
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
+  const canApply = employee.role !== 'admin';
   const pendingCount = leaves.filter(l => l.status === 'pending').length;
 
   const submitLeave = async () => {
@@ -72,11 +74,13 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
           <h1 className="page-heading text-2xl">Leave Management</h1>
           <p className="text-sm text-muted-foreground mt-1">Apply, track, and manage leave requests</p>
         </div>
-        <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold"
-          style={{ background: '#c8985e', color: '#0f1a2e' }}>
-          + Apply for Leave
-        </button>
+        {canApply && (
+          <button onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold"
+            style={{ background: '#c8985e', color: '#0f1a2e' }}>
+            + Apply for Leave
+          </button>
+        )}
       </div>
 
       {/* Balance Cards */}
@@ -200,7 +204,7 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
       </div>
 
       {/* Modal */}
-      {showForm && (
+      {showForm && canApply && (
         <div className="fixed inset-0 flex items-center justify-center z-50 px-4" style={{ background: 'rgba(0,0,0,.55)' }}>
           <div className="rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl bg-card text-foreground border">
             <div className="flex justify-between items-center mb-6">
@@ -215,7 +219,6 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
                     className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
                     <option value="earned">Earned (Annual)</option>
                     <option value="sick">Sick Leave</option>
-                    <option value="compoff">Comp-Off</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 </div>

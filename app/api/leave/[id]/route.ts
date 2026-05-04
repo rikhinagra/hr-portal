@@ -29,14 +29,30 @@ export async function PATCH(
       return NextResponse.json({ error: 'Status must be approved or rejected.' }, { status: 400 });
     }
 
-    // Get the leave request with employee details
+    // Fetch the leave request with employee details
     const { data: leave } = await serviceClient
       .from('leave_requests')
-      .select('*, employee:employee_id(name, email, employee_code)')
+      .select('*, employee:employee_id(name, email, employee_code, leave_balance_earned, leave_balance_sick)')
       .eq('id', id)
       .single();
 
     if (!leave) return NextResponse.json({ error: 'Leave request not found.' }, { status: 404 });
+
+    // Conflict protection — check if already actioned
+    if (leave.status !== 'pending') {
+      let approverName = 'another admin';
+      if (leave.approved_by) {
+        const { data: prevApprover } = await serviceClient
+          .from('employees')
+          .select('name')
+          .eq('id', leave.approved_by)
+          .single();
+        if (prevApprover) approverName = prevApprover.name;
+      }
+      return NextResponse.json({
+        error: `This leave has already been ${leave.status} by ${approverName}.`,
+      }, { status: 409 });
+    }
 
     const { data: updated, error: updateError } = await serviceClient
       .from('leave_requests')
@@ -46,6 +62,27 @@ export async function PATCH(
       .single();
 
     if (updateError) throw updateError;
+
+    // Deduct leave balance on approval
+    if (status === 'approved') {
+      const balanceField = leave.leave_type === 'earned' ? 'leave_balance_earned' : 'leave_balance_sick';
+      const { data: empData } = await serviceClient
+        .from('employees')
+        .select('leave_balance_earned, leave_balance_sick')
+        .eq('id', leave.employee_id)
+        .single();
+
+      if (empData) {
+        const currentBalance = balanceField === 'leave_balance_earned'
+          ? empData.leave_balance_earned
+          : empData.leave_balance_sick;
+        const newBalance = Math.max(0, currentBalance - leave.days);
+        await serviceClient
+          .from('employees')
+          .update({ [balanceField]: newBalance })
+          .eq('id', leave.employee_id);
+      }
+    }
 
     // Log activity
     await serviceClient.from('activity_log').insert({

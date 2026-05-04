@@ -22,14 +22,16 @@ function emailWrapper(body: string): string {
 }
 
 export async function sendLeaveRequestEmail({
-  employeeName, department, leaveType, startDate, endDate, days, reason, managerEmail,
+  employeeName, department, leaveType, startDate, endDate, days, reason, toEmails, ccEmails = [], isHrApplying = false,
 }: {
   employeeName: string; department: string; leaveType: string;
-  startDate: string; endDate: string; days: number; reason: string; managerEmail: string;
+  startDate: string; endDate: string; days: number; reason: string;
+  toEmails: string[]; ccEmails?: string[]; isHrApplying?: boolean;
 }) {
   const body = `
-    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">Leave Request Submitted</h2>
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">${isHrApplying ? 'HR Leave Request' : 'Leave Request Submitted'}</h2>
     <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
+    ${isHrApplying ? `<p style="font-size:.85rem;color:#5a5a5a;margin-bottom:16px">An HR team member has submitted a leave request and requires your approval.</p>` : ''}
     <table style="width:100%;font-size:.9rem;border-collapse:collapse">
       <tr><td style="padding:8px 0;color:#8a8a8a;width:140px">Employee</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Department</td><td style="padding:8px 0">${department}</td></tr>
@@ -40,14 +42,16 @@ export async function sendLeaveRequestEmail({
       <tr><td style="padding:8px 0;color:#8a8a8a">Reason</td><td style="padding:8px 0">${reason}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:rgba(200,152,94,.1);border-radius:8px;border-left:4px solid ${gold};font-size:.85rem;color:#5a5a5a">
-      Please review this request and update the HR leave tracker accordingly.
+      Please review this request and approve or reject it in the HR Portal.
     </div>`;
 
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
-    to: managerEmail,
-    cc: process.env.EMAIL_HR_DESK,
-    subject: `Leave Request — ${employeeName} — ${leaveType} — ${days} day(s)`,
+    to: toEmails,
+    cc: ccEmails.length > 0 ? ccEmails : undefined,
+    subject: isHrApplying
+      ? `[HR Leave Request] ${employeeName} — ${leaveType} — ${days} day(s)`
+      : `Leave Request — ${employeeName} — ${leaveType} — ${days} day(s)`,
     html: emailWrapper(body),
   });
 }
