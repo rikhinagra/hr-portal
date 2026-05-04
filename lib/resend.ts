@@ -21,6 +21,16 @@ function emailWrapper(body: string): string {
 </div></body></html>`;
 }
 
+function formatLeaveType(leaveType: string): string {
+  if (leaveType === 'earned') return 'Earned (Annual Leave)';
+  if (leaveType === 'sick') return 'Sick Leave';
+  return leaveType;
+}
+
+function formatLeaveDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 export async function sendLeaveRequestEmail({
   employeeName, department, leaveType, startDate, endDate, days, reason, toEmails, ccEmails = [], isHrApplying = false,
 }: {
@@ -28,6 +38,10 @@ export async function sendLeaveRequestEmail({
   startDate: string; endDate: string; days: number; reason: string;
   toEmails: string[]; ccEmails?: string[]; isHrApplying?: boolean;
 }) {
+  const leaveTypeLabel = formatLeaveType(leaveType);
+  const formattedStart = formatLeaveDate(startDate);
+  const formattedEnd = formatLeaveDate(endDate);
+
   const body = `
     <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">${isHrApplying ? 'HR Leave Request' : 'Leave Request Submitted'}</h2>
     <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
@@ -35,10 +49,10 @@ export async function sendLeaveRequestEmail({
     <table style="width:100%;font-size:.9rem;border-collapse:collapse">
       <tr><td style="padding:8px 0;color:#8a8a8a;width:140px">Employee</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Department</td><td style="padding:8px 0">${department}</td></tr>
-      <tr><td style="padding:8px 0;color:#8a8a8a">Leave Type</td><td style="padding:8px 0;text-transform:capitalize">${leaveType}</td></tr>
-      <tr><td style="padding:8px 0;color:#8a8a8a">Start Date</td><td style="padding:8px 0">${startDate}</td></tr>
-      <tr><td style="padding:8px 0;color:#8a8a8a">End Date</td><td style="padding:8px 0">${endDate}</td></tr>
-      <tr><td style="padding:8px 0;color:#8a8a8a">Total Days</td><td style="padding:8px 0;font-weight:700;color:${navy}">${days} day(s)</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Leave Type</td><td style="padding:8px 0">${leaveTypeLabel}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Start Date</td><td style="padding:8px 0">${formattedStart}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">End Date</td><td style="padding:8px 0">${formattedEnd}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Total Days</td><td style="padding:8px 0;font-weight:700;color:${navy}">${days} Day${days > 1 ? 's' : ''}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Reason</td><td style="padding:8px 0">${reason}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:rgba(200,152,94,.1);border-radius:8px;border-left:4px solid ${gold};font-size:.85rem;color:#5a5a5a">
@@ -50,8 +64,8 @@ export async function sendLeaveRequestEmail({
     to: toEmails,
     cc: ccEmails.length > 0 ? ccEmails : undefined,
     subject: isHrApplying
-      ? `[HR Leave Request] ${employeeName} — ${leaveType} — ${days} day(s)`
-      : `Leave Request — ${employeeName} — ${leaveType} — ${days} day(s)`,
+      ? `HR Leave Request: ${employeeName} (${leaveTypeLabel}) — ${days} Day${days > 1 ? 's' : ''}`
+      : `Leave Request: ${employeeName} (${leaveTypeLabel}) — ${days} Day${days > 1 ? 's' : ''}`,
     html: emailWrapper(body),
   });
 }
