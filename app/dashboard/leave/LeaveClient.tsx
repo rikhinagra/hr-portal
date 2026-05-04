@@ -72,7 +72,7 @@ export default function LeaveClient({ employee, initialLeaves }: LeaveClientProp
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="page-heading text-2xl">Leave Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">Apply, track, and manage leave requests</p>
+          <p className="text-sm text-muted-foreground mt-1">{isAdmin ? 'Track and manage leave requests' : 'Apply, track, and manage leave requests'}</p>
         </div>
         {canApply && (
           <button onClick={() => setShowForm(true)}
