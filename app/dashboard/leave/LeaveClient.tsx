@@ -472,7 +472,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               </div>
               <button onClick={submitClaim} disabled={claimSubmitting}
                 className="w-full py-3 rounded-lg font-semibold text-sm"
-                style={{ background: claimSubmitting ? '#ccc' : '#16a34a', color: claimSubmitting ? '#888' : '#fff' }}>
+                style={{ background: claimSubmitting ? '#ccc' : '#16a34a', color: claimSubmitting ? '#0f1a2e' : '#fff' }}>
                 {claimSubmitting ? 'Submitting…' : 'Submit Comp-Off Claim'}
               </button>
             </div>
