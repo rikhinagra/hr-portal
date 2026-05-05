@@ -397,7 +397,6 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                       style={{ color: startDate ? 'inherit' : 'transparent', WebkitAppearance: 'none' }}
                     />
                     {!startDate && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">YYYY-MM-DD</span>}
-                    <style>{`input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}`}</style>
                     <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   </div>
                 </div>
@@ -484,6 +483,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       <style>{`
         @media(max-width:768px){.leave-balance-grid{grid-template-columns:1fr 1fr!important}}
         @media(max-width:480px){.leave-balance-grid{grid-template-columns:1fr!important}}
+        input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}
       `}</style>
     </div>
   );
