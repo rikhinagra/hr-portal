@@ -42,7 +42,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
   const isAdmin = employee.role === 'admin';
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
   const canApply = employee.role !== 'admin';
-  const pendingCount = leaves.filter(l => l.status === 'pending').length;
+  const pendingCount = leaves.filter(l => l.status === 'pending').length + claims.filter(c => c.status === 'pending').length;
 
   const today = new Date().toISOString().split('T')[0];
 
