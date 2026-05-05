@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
-    if (!['earned', 'sick'].includes(leave_type)) {
+    if (!['earned', 'sick', 'compoff'].includes(leave_type)) {
       return NextResponse.json({ error: 'Invalid leave type.' }, { status: 400 });
     }
 
@@ -71,6 +71,11 @@ export async function POST(request: NextRequest) {
     if (leave_type === 'sick' && employee.leave_balance_sick < days) {
       return NextResponse.json({
         error: `Insufficient sick leave balance. You have ${employee.leave_balance_sick} day(s) remaining but requested ${days}.`,
+      }, { status: 400 });
+    }
+    if (leave_type === 'compoff' && employee.leave_balance_compoff < days) {
+      return NextResponse.json({
+        error: `Insufficient comp-off balance. You have ${employee.leave_balance_compoff} day(s) available but requested ${days}.`,
       }, { status: 400 });
     }
 

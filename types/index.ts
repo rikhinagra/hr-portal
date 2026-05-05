@@ -1,5 +1,5 @@
 export type EmployeeRole = 'admin' | 'hr' | 'employee' | 'it';
-export type LeaveType = 'earned' | 'sick';
+export type LeaveType = 'earned' | 'sick' | 'compoff';
 export type LeaveStatus = 'pending' | 'approved' | 'rejected';
 export type EquipmentStatus = 'pending' | 'approved' | 'delivered' | 'rejected';
 export type Urgency = 'Low' | 'Normal' | 'High' | 'Critical';
@@ -17,6 +17,7 @@ export interface Employee {
   join_date: string;
   leave_balance_earned: number;
   leave_balance_sick: number;
+  leave_balance_compoff: number;
   photo_url: string | null;
   reporting_manager_email: string | null;
   is_active: boolean;
@@ -55,6 +56,18 @@ export interface LeaveRequest {
   approved_at: string | null;
   created_at: string;
   employee?: Employee;
+}
+
+export interface CompOffClaim {
+  id: string;
+  employee_id: string;
+  work_date: string;
+  reason: string;
+  status: LeaveStatus;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  employee?: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'email'> | null;
 }
 
 export interface EquipmentRequest {

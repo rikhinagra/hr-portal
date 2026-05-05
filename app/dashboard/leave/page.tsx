@@ -7,19 +7,23 @@ export default async function LeavePage() {
   if (!employee) return null;
 
   const supabase = createServiceClient();
-
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
 
-  const query = supabase
+  const leaveQuery = supabase
     .from('leave_requests')
     .select('*, employee:employee_id(id, name, employee_code, department, email, reporting_manager_email)')
     .order('created_at', { ascending: false });
 
-  if (!isAdminOrHr) {
-    query.eq('employee_id', employee.id);
-  }
+  if (!isAdminOrHr) leaveQuery.eq('employee_id', employee.id);
 
-  const { data: leaves } = await query;
+  const claimsQuery = supabase
+    .from('compoff_claims')
+    .select('*, employee:employee_id(id, name, employee_code, department, email)')
+    .order('created_at', { ascending: false });
 
-  return <LeaveClient employee={employee} initialLeaves={leaves ?? []} />;
+  if (!isAdminOrHr) claimsQuery.eq('employee_id', employee.id);
+
+  const [{ data: leaves }, { data: claims }] = await Promise.all([leaveQuery, claimsQuery]);
+
+  return <LeaveClient employee={employee} initialLeaves={leaves ?? []} initialClaims={claims ?? []} />;
 }

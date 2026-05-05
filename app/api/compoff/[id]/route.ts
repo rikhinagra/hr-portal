@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createServiceClient } from '@/lib/supabase/server';
-import { sendLeaveStatusEmail } from '@/lib/resend';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { sendCompOffClaimStatusEmail } from '@/lib/resend';
 
 export async function PATCH(
   request: NextRequest,
@@ -29,33 +28,29 @@ export async function PATCH(
       return NextResponse.json({ error: 'Status must be approved or rejected.' }, { status: 400 });
     }
 
-    // Fetch the leave request with employee details
-    const { data: leave } = await serviceClient
-      .from('leave_requests')
-      .select('*, employee:employee_id(name, email, employee_code, leave_balance_earned, leave_balance_sick)')
+    const { data: claim } = await serviceClient
+      .from('compoff_claims')
+      .select('*, employee:employee_id(id, name, email, leave_balance_compoff)')
       .eq('id', id)
       .single();
 
-    if (!leave) return NextResponse.json({ error: 'Leave request not found.' }, { status: 404 });
+    if (!claim) return NextResponse.json({ error: 'Comp-off claim not found.' }, { status: 404 });
 
-    // Conflict protection — check if already actioned
-    if (leave.status !== 'pending') {
+    // Conflict protection
+    if (claim.status !== 'pending') {
       let approverName = 'another admin';
-      if (leave.approved_by) {
+      if (claim.approved_by) {
         const { data: prevApprover } = await serviceClient
-          .from('employees')
-          .select('name')
-          .eq('id', leave.approved_by)
-          .single();
+          .from('employees').select('name').eq('id', claim.approved_by).single();
         if (prevApprover) approverName = prevApprover.name;
       }
       return NextResponse.json({
-        error: `This leave has already been ${leave.status} by ${approverName}.`,
+        error: `This claim has already been ${claim.status} by ${approverName}.`,
       }, { status: 409 });
     }
 
     const { data: updated, error: updateError } = await serviceClient
-      .from('leave_requests')
+      .from('compoff_claims')
       .update({ status, approved_by: approver.id, approved_at: new Date().toISOString() })
       .eq('id', id)
       .select()
@@ -63,55 +58,43 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // Deduct leave balance on approval
+    // Add +1 comp-off balance on approval
     if (status === 'approved') {
-      const balanceField =
-        leave.leave_type === 'earned' ? 'leave_balance_earned' :
-        leave.leave_type === 'sick' ? 'leave_balance_sick' : 'leave_balance_compoff';
-
       const { data: empData } = await serviceClient
-        .from('employees')
-        .select('leave_balance_earned, leave_balance_sick, leave_balance_compoff')
-        .eq('id', leave.employee_id)
-        .single();
+        .from('employees').select('leave_balance_compoff').eq('id', claim.employee_id).single();
 
       if (empData) {
-        const currentBalance = empData[balanceField as keyof typeof empData] as number;
-        const newBalance = Math.max(0, currentBalance - leave.days);
         await serviceClient
           .from('employees')
-          .update({ [balanceField]: newBalance })
-          .eq('id', leave.employee_id);
+          .update({ leave_balance_compoff: empData.leave_balance_compoff + 1 })
+          .eq('id', claim.employee_id);
       }
     }
 
-    // Log activity
     await serviceClient.from('activity_log').insert({
-      action: `leave_${status}`,
-      description: `${approver.name} ${status} leave request for ${leave.employee?.name ?? 'Unknown'}`,
+      action: `compoff_${status}`,
+      description: `${approver.name} ${status} comp-off claim for ${claim.employee?.name ?? 'Unknown'} (worked on ${claim.work_date})`,
       performed_by: approver.id,
-      target_employee_id: leave.employee_id,
+      target_employee_id: claim.employee_id,
       action_type: status === 'approved' ? 'success' : 'warning',
     });
 
-    // Send email to employee
     try {
-      if (leave.employee?.email) {
-        await sendLeaveStatusEmail({
-          employeeEmail: leave.employee.email,
-          employeeName: leave.employee.name,
+      if (claim.employee?.email) {
+        await sendCompOffClaimStatusEmail({
+          employeeEmail: claim.employee.email,
+          employeeName: claim.employee.name,
           status,
-          startDate: leave.start_date,
-          endDate: leave.end_date,
+          workDate: claim.work_date,
         });
       }
     } catch (emailErr) {
       console.error('Email send failed (non-fatal):', emailErr);
     }
 
-    return NextResponse.json({ success: true, leave: updated });
+    return NextResponse.json({ success: true, claim: updated });
   } catch (err) {
-    console.error('Leave PATCH error:', err);
+    console.error('Compoff PATCH error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

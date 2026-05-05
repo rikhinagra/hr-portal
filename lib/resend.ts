@@ -24,6 +24,7 @@ function emailWrapper(body: string): string {
 function formatLeaveType(leaveType: string): string {
   if (leaveType === 'earned') return 'Earned (Annual Leave)';
   if (leaveType === 'sick') return 'Sick Leave';
+  if (leaveType === 'compoff') return 'Comp-Off';
   return leaveType;
 }
 
@@ -198,6 +199,66 @@ export async function sendOnboardingWelcomeEmail({
     to: personalEmail,
     cc: process.env.EMAIL_HR_DESK,
     subject: `🎉 Welcome to SACHHSOFT, ${newHireName}! Your onboarding details inside.`,
+    html: emailWrapper(body),
+  });
+}
+
+export async function sendCompOffClaimEmail({
+  employeeName, department, workDate, reason, toEmails, ccEmails = [], isHrClaiming = false,
+}: {
+  employeeName: string; department: string; workDate: string;
+  reason: string; toEmails: string[]; ccEmails?: string[]; isHrClaiming?: boolean;
+}) {
+  const formattedDate = formatLeaveDate(workDate);
+  const body = `
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">${isHrClaiming ? 'HR Comp-Off Claim' : 'Comp-Off Claim Submitted'}</h2>
+    <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
+    ${isHrClaiming ? `<p style="font-size:.85rem;color:#5a5a5a;margin-bottom:16px">An HR team member has submitted a comp-off claim and requires your approval.</p>` : ''}
+    <table style="width:100%;font-size:.9rem;border-collapse:collapse">
+      <tr><td style="padding:8px 0;color:#8a8a8a;width:140px">Employee</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Department</td><td style="padding:8px 0">${department}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Date Worked</td><td style="padding:8px 0;font-weight:700;color:${navy}">${formattedDate}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Reason</td><td style="padding:8px 0">${reason}</td></tr>
+    </table>
+    <div style="margin-top:24px;padding:16px;background:rgba(22,163,74,0.08);border-radius:8px;border-left:4px solid #16a34a;font-size:.85rem;color:#5a5a5a">
+      If approved, 1 Comp-Off day will be automatically added to the employee's balance. Please review in the HR Portal.
+    </div>`;
+
+  return resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: toEmails,
+    cc: ccEmails.length > 0 ? ccEmails : undefined,
+    subject: isHrClaiming
+      ? `HR Comp-Off Claim: ${employeeName} — Worked on ${formattedDate}`
+      : `Comp-Off Claim: ${employeeName} — Worked on ${formattedDate}`,
+    html: emailWrapper(body),
+  });
+}
+
+export async function sendCompOffClaimStatusEmail({
+  employeeEmail, employeeName, status, workDate,
+}: {
+  employeeEmail: string; employeeName: string; status: 'approved' | 'rejected'; workDate: string;
+}) {
+  const isApproved = status === 'approved';
+  const formattedDate = formatLeaveDate(workDate);
+  const body = `
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">
+      ${isApproved ? 'Comp-Off Claim Approved' : 'Comp-Off Claim Not Approved'}
+    </h2>
+    <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
+    <p style="font-size:.9rem;color:#5a5a5a">Dear ${employeeName},</p>
+    <p style="font-size:.9rem;color:#5a5a5a">
+      Your comp-off claim for working on <strong>${formattedDate}</strong> has been <strong>${status}</strong>.
+    </p>
+    ${isApproved
+      ? `<div style="margin-top:20px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">1 Comp-Off day has been added to your leave balance. You can use it by applying for Comp-Off leave via the HR Portal.</div>`
+      : `<div style="margin-top:20px;padding:16px;background:#fdf0f0;border-radius:8px;border-left:4px solid #b33a3a;font-size:.85rem;color:#b33a3a">Your comp-off claim was not approved. Please contact HR for more details.</div>`}`;
+
+  return resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: employeeEmail,
+    subject: `${isApproved ? '✅' : '❌'} Comp-Off Claim ${isApproved ? 'Approved' : 'Not Approved'} — Worked on ${formattedDate}`,
     html: emailWrapper(body),
   });
 }

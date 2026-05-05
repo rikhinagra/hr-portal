@@ -148,7 +148,7 @@ If you cannot attend, inform your Team Lead before the meeting and share your up
   {
     num: 11,
     title: 'Leave Policy & Application Process',
-    content: `Leave Entitlement: Earned (Annual): 12 days per year, full pay, plan in advance. Sick Leave: 7 days per year, medical certificate required for 2 or more days. Public Holidays: Per company calendar, not counted against balance. Comp-Off: As earned, use within 1 month, no carry-forward.
+    content: `Leave Entitlement: Earned (Annual): 12 days per year, full pay, plan in advance. Sick Leave: 7 days per year, medical certificate required for 2 or more days. Public Holidays: Per company calendar, not counted against balance. Comp-Off: Earned when you work on a public holiday or weekend. Submit a Comp-Off Claim via the HR Portal with the date you worked and a brief description. Once approved by HR or Admin, 1 day is automatically added to your balance. You can then apply for Comp-Off leave using that balance. No carry-forward — use within 1 month of approval.
 
 Application Process: Step 1: Submit Request: Email your Reporting Manager with leave type, dates, total days, and reason; CC hrdesk@aadhcode.com. Step 2: Manager Review: Manager reviews and replies all with "Approved" or "Not Approved" and reason. Step 3: HR Confirmation: HR checks balance and compliance, confirms "Leave Approved and recorded." Step 4: System Update: HR updates the leave tracking system.
 
