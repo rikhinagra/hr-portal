@@ -319,7 +319,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
               </button>
               <button onClick={handleAcknowledge} disabled={loading}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold"
-                style={{ background: loading ? '#ccc' : '#c8985e', color: loading ? '#888' : '#0f1a2e', cursor: loading ? 'wait' : 'pointer' }}>
+                style={{ background: loading ? '#ccc' : '#c8985e', color: '#0f1a2e', cursor: loading ? 'wait' : 'pointer' }}>
                 {loading ? 'Saving...' : 'Confirm & Notify HR'}
               </button>
             </div>
