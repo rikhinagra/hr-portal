@@ -27,9 +27,23 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: `${process.env.NEXT_PUBLIC_BRAND_NAME || 'SACHHSOFT'} — Employee Portal`,
-  description: `${process.env.NEXT_PUBLIC_COMPANY_NAME || 'AadhCode Solutions Pvt. Ltd.'} Employee Portal`,
-  icons: { icon: '/sachhsoft_logo.png' },
+  title: 'SACHHSOFT — Employee Portal',
+  description: 'Official HR Management Portal for SACHHSOFT employees. Manage leaves, equipment, handbooks, and more.',
+  icons: {
+    icon: '/sachhsoft-favicon.png',
+    apple: '/sachhsoft-favicon.png',
+  },
+  openGraph: {
+    title: 'SACHHSOFT — Employee Portal',
+    description: 'Official HR Management Portal for SACHHSOFT employees.',
+    type: 'website',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'SACHHSOFT Employee Portal' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SACHHSOFT — Employee Portal',
+    description: 'Official HR Management Portal for SACHHSOFT employees.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
