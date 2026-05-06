@@ -64,21 +64,12 @@ export default function OGImage() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
             marginBottom: '32px',
           }}
         >
-          <div
-            style={{
-              width: '32px',
-              height: '2px',
-              background: '#c8985e',
-              display: 'flex',
-            }}
-          />
           <span
             style={{
-              fontSize: '14px',
+              fontSize: '22px',
               letterSpacing: '4px',
               color: '#c8985e',
               textTransform: 'uppercase',
@@ -143,8 +134,8 @@ export default function OGImage() {
         >
           <span
             style={{
-              fontSize: '14px',
-              color: 'rgba(255,255,255,0.3)',
+              fontSize: '22px',
+              color: 'rgba(255,255,255,0.4)',
               letterSpacing: '2px',
               textTransform: 'uppercase',
             }}
@@ -153,8 +144,8 @@ export default function OGImage() {
           </span>
           <span
             style={{
-              fontSize: '14px',
-              color: 'rgba(200,152,94,0.6)',
+              fontSize: '22px',
+              color: 'rgba(200,152,94,0.7)',
               letterSpacing: '1px',
             }}
           >
