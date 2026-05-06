@@ -96,7 +96,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
           </h2>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-5">
                 <div className="flex items-center gap-3">
