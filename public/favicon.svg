@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="c">
+      <circle cx="50" cy="50" r="49"/>
+    </clipPath>
+  </defs>
+  <!-- Dark circular background -->
+  <circle cx="50" cy="50" r="50" fill="#141414"/>
+  <g clip-path="url(#c)">
+    <!-- Top block: right-aligned with concave S-cut on bottom-left -->
+    <path d="M 33 13 H 83 Q 87 13 87 17 V 42 Q 87 46 83 46 H 52 Q 33 46 33 30 V 13 Z" fill="white"/>
+    <!-- Bottom block: left-aligned with concave S-cut on top-right -->
+    <path d="M 13 54 H 48 Q 67 54 67 70 V 83 Q 67 87 63 87 H 17 Q 13 87 13 83 V 54 Z" fill="white"/>
+  </g>
+</svg>

@@ -30,7 +30,10 @@ export const metadata: Metadata = {
   title: 'SACHHSOFT — Employee Portal',
   description: 'Official HR Management Portal for SACHHSOFT employees. Manage leaves, equipment, handbooks, and more.',
   icons: {
-    icon: '/sachhsoft-favicon.png',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/sachhsoft-favicon.png', type: 'image/png' },
+    ],
     apple: '/sachhsoft-favicon.png',
   },
   openGraph: {
