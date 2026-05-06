@@ -69,7 +69,7 @@ export default function OGImage() {
         >
           <span
             style={{
-              fontSize: '22px',
+              fontSize: '30px',
               letterSpacing: '4px',
               color: '#c8985e',
               textTransform: 'uppercase',
@@ -134,7 +134,7 @@ export default function OGImage() {
         >
           <span
             style={{
-              fontSize: '22px',
+              fontSize: '30px',
               color: 'rgba(255,255,255,0.4)',
               letterSpacing: '2px',
               textTransform: 'uppercase',
@@ -144,7 +144,7 @@ export default function OGImage() {
           </span>
           <span
             style={{
-              fontSize: '22px',
+              fontSize: '30px',
               color: 'rgba(200,152,94,0.7)',
               letterSpacing: '1px',
             }}
