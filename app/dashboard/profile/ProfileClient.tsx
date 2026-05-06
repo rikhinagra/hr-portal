@@ -279,22 +279,24 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
             </CardContent>
           </Card>
 
-          {/* Leave Balance */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Leave Balance</div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(37,99,235,0.1)' }}>
-                  <div className="text-2xl font-bold" style={{ color: '#2563eb' }}>{employee.leave_balance_earned}</div>
-                  <div className="text-xs text-muted-foreground mt-1">Earned</div>
+          {/* Leave Balance — hidden for Admin */}
+          {employee.role !== 'admin' && (
+            <Card>
+              <CardContent className="p-5">
+                <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Leave Balance</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(37,99,235,0.1)' }}>
+                    <div className="text-2xl font-bold" style={{ color: '#2563eb' }}>{employee.leave_balance_earned}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Earned</div>
+                  </div>
+                  <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(234,88,12,0.1)' }}>
+                    <div className="text-2xl font-bold" style={{ color: '#ea580c' }}>{employee.leave_balance_sick}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Sick</div>
+                  </div>
                 </div>
-                <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(234,88,12,0.1)' }}>
-                  <div className="text-2xl font-bold" style={{ color: '#ea580c' }}>{employee.leave_balance_sick}</div>
-                  <div className="text-xs text-muted-foreground mt-1">Sick</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right Column */}
