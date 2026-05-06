@@ -11,7 +11,7 @@ export default async function EquipmentPage() {
 
   const query = supabase
     .from('equipment_requests')
-    .select('*, employee:employee_id(name, employee_code, department)')
+    .select('*, employee:employee_id(id, name, email, employee_code, department)')
     .order('created_at', { ascending: false });
 
   if (!isPrivileged) query.eq('employee_id', employee.id);

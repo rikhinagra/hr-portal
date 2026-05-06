@@ -124,10 +124,10 @@ export async function sendHandbookAckEmail({
 }
 
 export async function sendEquipmentRequestEmail({
-  employeeName, employeeCode, equipmentType, specifications, urgency, notes,
+  employeeName, employeeCode, equipmentType, specifications, urgency, notes, ccEmails = [],
 }: {
   employeeName: string; employeeCode: string; equipmentType: string;
-  specifications: string; urgency: string; notes?: string | null;
+  specifications: string; urgency: string; notes?: string | null; ccEmails?: string[];
 }) {
   const urgencyColors: Record<string, string> = { Critical: '#b33a3a', High: '#e67e22', Normal: '#3a7bd5', Low: '#2e7d32' };
   const uc = urgencyColors[urgency] ?? '#3a7bd5';
@@ -148,7 +148,42 @@ export async function sendEquipmentRequestEmail({
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: process.env.EMAIL_IT_ADMIN!,
+    cc: ccEmails.length > 0 ? ccEmails : undefined,
     subject: `🖥️ Equipment Request — ${equipmentType} — ${urgency} — ${employeeName}`,
+    html: emailWrapper(body),
+  });
+}
+
+export async function sendEquipmentStatusEmail({
+  employeeEmail, employeeName, equipmentType, status,
+}: {
+  employeeEmail: string; employeeName: string; equipmentType: string; status: 'approved' | 'rejected' | 'delivered';
+}) {
+  const labels = { approved: 'Approved', rejected: 'Not Approved', delivered: 'Delivered' };
+  const colors = { approved: '#2e7d32', rejected: '#b33a3a', delivered: '#3a7bd5' };
+  const bgColors = { approved: '#f0f7ee', rejected: '#fdf0f0', delivered: '#f0f4ff' };
+  const messages = {
+    approved: 'Your equipment request has been approved. The IT team will contact you regarding delivery details.',
+    rejected: 'Your equipment request was not approved. Please contact your HR team or IT team for more information.',
+    delivered: 'Your equipment has been marked as delivered. Please confirm receipt with your IT team.',
+  };
+
+  const body = `
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">Equipment Request ${labels[status]}</h2>
+    <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
+    <p style="font-size:.9rem;color:#5a5a5a">Dear ${employeeName},</p>
+    <table style="width:100%;font-size:.9rem;border-collapse:collapse;margin-bottom:20px">
+      <tr><td style="padding:8px 0;color:#8a8a8a;width:160px">Equipment Type</td><td style="padding:8px 0;font-weight:600">${equipmentType}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Status</td><td style="padding:8px 0;font-weight:700;color:${colors[status]}">${labels[status]}</td></tr>
+    </table>
+    <div style="padding:16px;background:${bgColors[status]};border-radius:8px;border-left:4px solid ${colors[status]};font-size:.85rem;color:${colors[status]}">
+      ${messages[status]}
+    </div>`;
+
+  return resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: employeeEmail,
+    subject: `${status === 'approved' ? '✅' : status === 'rejected' ? '❌' : '📦'} Equipment Request ${labels[status]} — ${equipmentType}`,
     html: emailWrapper(body),
   });
 }

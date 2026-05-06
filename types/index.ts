@@ -78,8 +78,10 @@ export interface EquipmentRequest {
   urgency: Urgency;
   notes: string | null;
   status: EquipmentStatus;
+  approved_by: string | null;
+  approved_at: string | null;
   created_at: string;
-  employee?: Employee;
+  employee?: Pick<Employee, 'id' | 'name' | 'email' | 'employee_code' | 'department'> | null;
 }
 
 export interface HandbookAcknowledgement {

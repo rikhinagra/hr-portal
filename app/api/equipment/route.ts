@@ -43,6 +43,10 @@ export async function POST(request: NextRequest) {
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
+    if (employee.role === 'admin') {
+      return NextResponse.json({ error: 'Admins cannot submit equipment requests.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { equipment_type, specifications, urgency, notes } = body;
 
@@ -73,6 +77,8 @@ export async function POST(request: NextRequest) {
     });
 
     try {
+      const ccEmails: string[] = [];
+      if (process.env.EMAIL_HR_DESK) ccEmails.push(process.env.EMAIL_HR_DESK);
       await sendEquipmentRequestEmail({
         employeeName: employee.name,
         employeeCode: employee.employee_code,
@@ -80,6 +86,7 @@ export async function POST(request: NextRequest) {
         specifications,
         urgency: urgency ?? 'Normal',
         notes,
+        ccEmails,
       });
     } catch (emailErr) {
       console.error('Email send failed (non-fatal):', emailErr);
