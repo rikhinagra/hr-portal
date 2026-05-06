@@ -149,7 +149,7 @@ export async function sendEquipmentRequestEmail({
     from: process.env.EMAIL_FROM!,
     to: process.env.EMAIL_IT_ADMIN!,
     cc: ccEmails.length > 0 ? ccEmails : undefined,
-    subject: `🖥️ Equipment Request — ${equipmentType} — ${urgency} — ${employeeName}`,
+    subject: `Equipment Request: ${equipmentType} (${urgency}) — ${employeeName}`,
     html: emailWrapper(body),
   });
 }
