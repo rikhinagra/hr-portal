@@ -31,6 +31,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
   const [search, setSearch] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const isAdmin = employee.role === 'admin';
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
 
   const handleScroll = useCallback(() => {
@@ -96,7 +97,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
           </h2>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-5">
                 <div className="flex items-center gap-3">
@@ -243,13 +244,12 @@ export default function HandbookClient({ employee, existingAck, complianceData }
         </div>
       )}
 
-      {/* Handbook Content */}
-      <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+      {/* Handbook Content — hidden for Admin */}
+      {!isAdmin && <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>
         {isAdminOrHr ? 'Handbook Content' : ''}
-      </h2>
+      </h2>}
 
-      {/* Chapter Scroll Container */}
-      <Card>
+      {!isAdmin && <><Card>
         <CardContent className="p-0">
           <div ref={contentRef} onScroll={handleScroll} className="max-h-[65vh] overflow-y-auto">
             {HANDBOOK_CHAPTERS.map((ch, i) => (
@@ -326,6 +326,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
           </div>
         </div>
       )}
+      </>}
     </div>
   );
 }
