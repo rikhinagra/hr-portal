@@ -109,7 +109,7 @@ export async function sendHandbookAckEmail({
     <table style="width:100%;font-size:.9rem;border-collapse:collapse">
       <tr><td style="padding:8px 0;color:#8a8a8a;width:140px">Employee</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Employee Code</td><td style="padding:8px 0">${employeeCode}</td></tr>
-      <tr><td style="padding:8px 0;color:#8a8a8a">Acknowledged At</td><td style="padding:8px 0">${new Date(acknowledgedAt).toLocaleString('en-IN')}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Acknowledged At</td><td style="padding:8px 0">${new Date(acknowledgedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })} IST</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">
       The employee has confirmed they have read and understood the SACHHSOFT Employee Handbook.
