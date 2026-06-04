@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
     const authEmail = `${newCode.toLowerCase()}@portal.internal`;
     const authPassword = empDob;
 
+    // Clean up any orphaned auth user with this email (from a previous failed onboarding attempt)
+    const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
+    const orphan = existingUsers?.users?.find((u: { email?: string }) => u.email === authEmail);
+    if (orphan) {
+      await serviceClient.auth.admin.deleteUser(orphan.id);
+    }
+
     // Create auth user
     const { data: authUser, error: authErr } = await serviceClient.auth.admin.createUser({
       email: authEmail,
@@ -78,6 +85,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (empErr) {
+      // Clean up the auth user we just created so it doesn't become an orphan
+      await serviceClient.auth.admin.deleteUser(authUser.user.id);
       return NextResponse.json({ error: `Employee record creation failed: ${empErr.message}` }, { status: 500 });
     }
 

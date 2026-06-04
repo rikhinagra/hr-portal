@@ -13,8 +13,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { data: admin } = await serviceClient
       .from('employees').select('id, role').eq('auth_user_id', user.id).single();
 
-    if (!admin || admin.role !== 'admin') {
-      return NextResponse.json({ error: 'Access denied. Admin only.' }, { status: 403 });
+    if (!admin || !['admin', 'hr'].includes(admin.role)) {
+      return NextResponse.json({ error: 'Access denied. Admin or HR only.' }, { status: 403 });
     }
 
     if (id === admin.id) {

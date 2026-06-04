@@ -216,9 +216,9 @@ export async function sendOnboardingWelcomeEmail({
       <div style="font-size:.7rem;letter-spacing:2px;color:${gold};text-transform:uppercase;margin-bottom:12px">HR Portal Login</div>
       <p style="font-size:.85rem;color:#5a5a5a;margin-bottom:12px">You can access your Employee Handbook, Company Policies, Leave Management, and more on the SACHHSOFT HR Portal.</p>
       <table style="width:100%;font-size:.9rem;border-collapse:collapse">
-        <tr><td style="padding:7px 0;color:#8a8a8a;width:160px">Portal Link</td><td style="padding:7px 0"><a href="${portalUrl}" style="color:${gold};font-weight:600">${portalUrl}</a></td></tr>
-        <tr><td style="padding:7px 0;color:#8a8a8a">Login ID</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${employeeCode}</td></tr>
-        <tr><td style="padding:7px 0;color:#8a8a8a">Date of Birth</td><td style="padding:7px 0;font-family:monospace;white-space:nowrap">${dob} <span style="font-size:.75rem;color:#8a8a8a">(Used as your portal login password — keep this confidential)</span></td></tr>
+        <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Portal Link</td><td style="padding:7px 0"><a href="${portalUrl}" style="color:${gold};font-weight:600">${portalUrl}</a></td></tr>
+        <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Login ID</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${employeeCode}</td></tr>
+        <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Password</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${dob} <span style="font-size:.75rem;color:#8a8a8a;font-weight:400">(Your date of birth — used as login password)</span></td></tr>
       </table>
     </div>
 

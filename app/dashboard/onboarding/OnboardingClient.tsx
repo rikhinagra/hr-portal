@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Employee } from '@/types';
+import OnboardingLoading from './loading';
 
 const ONBOARDING_STEPS: { label: string; Icon: React.ElementType; detail: string }[] = [
   { label: 'Generate Employee Code', Icon: Hash, detail: 'New code auto-assigned' },
@@ -27,6 +28,7 @@ interface StepState {
 export default function OnboardingClient({ employee }: { employee: Employee }) {
   const [newHire, setNewHire] = useState({ name: '', personalEmail: '', workEmail: '', designation: '', dept: 'Engineering', dob: '' });
   const [running, setRunning] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [steps, setSteps] = useState<StepState[]>([]);
   const [currentStep, setCurrentStep] = useState(-1);
   const [assignedCode, setAssignedCode] = useState('');
@@ -38,6 +40,8 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
       toast.error('Missing Fields', { description: 'Please fill all required fields.' });
       return;
     }
+
+    setSubmitting(true);
 
     try {
       const res = await fetch('/api/onboarding', {
@@ -57,9 +61,11 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
 
       setAssignedCode(data.employee_code);
       setSteps(ONBOARDING_STEPS.map(s => ({ ...s, status: 'pending' })));
+      setSubmitting(false);
       setRunning(true);
       setCurrentStep(0);
     } catch (err: unknown) {
+      setSubmitting(false);
       toast.error('Onboarding Failed', { description: err instanceof Error ? err.message : 'Something went wrong.' });
     }
   };
@@ -83,6 +89,8 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
 
     return () => clearTimeout(timer);
   }, [currentStep]);
+
+  if (submitting) return <OnboardingLoading />;
 
   if (!isAdminOrHr) {
     return (
@@ -133,7 +141,7 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
                 <select value={newHire.dept} onChange={e => setNewHire({ ...newHire, dept: e.target.value })}
                   className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
                   <option>Engineering</option><option>Design</option><option>QA</option>
-                  <option>Business Dev</option><option>HR</option><option>LexgoSolution</option>
+                  <option>Business Dev</option><option>HR</option><option>IT</option><option>LexgoSolution</option>
                 </select>
                 <ChevronDown className="absolute right-3 bottom-3 size-4 text-muted-foreground pointer-events-none" />
               </div>

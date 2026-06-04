@@ -29,7 +29,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
   const isMobile = useIsMobile();
   const pageSize = isMobile ? 8 : 10;
 
-  const isAdmin = viewerRole === 'admin';
+  const isAdminOrHr = viewerRole === 'admin' || viewerRole === 'hr';
 
   const [employees, setEmployees] = useState(initialEmployees);
   const [search, setSearch] = useState('');
@@ -199,7 +199,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                             }}>
                             {emp.is_active ? 'Deactivate' : 'Activate'}
                           </button>
-                          {isAdmin && (
+                          {isAdminOrHr && (
                             <button onClick={() => openDeleteModal(emp)}
                               className="px-2 py-1 rounded-md text-xs font-semibold"
                               style={{ background: 'rgba(220,38,38,.06)', color: '#dc2626', border: '1px solid rgba(220,38,38,.2)' }}
@@ -281,7 +281,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                     }}>
                     {emp.is_active ? 'Deactivate' : 'Activate'}
                   </button>
-                  {isAdmin && (
+                  {isAdminOrHr && (
                     <button
                       onClick={() => openDeleteModal(emp)}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold"
