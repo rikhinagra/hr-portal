@@ -73,6 +73,7 @@ export default function LoginPage() {
               <label className="mobile-label">Employee Code</label>
               <input
                 type="text" placeholder="e.g. AC001" value={code}
+                id="m-code" name="username" autoComplete="username"
                 onChange={e => { setCode(e.target.value); setError(''); }}
                 className="mobile-input"
                 style={{ fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em' }}
@@ -84,6 +85,7 @@ export default function LoginPage() {
               <div style={{ position: 'relative' }}>
                 <input
                   type="date"
+                  id="m-dob" name="password" autoComplete="current-password"
                   value={dob}
                   onChange={e => { setDob(e.target.value); setError(''); }}
                   className="mobile-input mobile-date"
@@ -190,6 +192,7 @@ export default function LoginPage() {
                 Employee Code
               </label>
               <input type="text" placeholder="e.g. AC001" value={code}
+                id="d-code" name="username" autoComplete="username"
                 onChange={e => { setCode(e.target.value); setError(''); }}
                 style={{ width: '100%', padding: '13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: '#1f2937', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s', fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em' }}
                 onFocus={e => (e.target.style.borderColor = '#c8985e')}
@@ -203,6 +206,7 @@ export default function LoginPage() {
               <div style={{ position: 'relative' }}>
                 <input
                   type="date"
+                  id="d-dob" name="password" autoComplete="current-password"
                   value={dob}
                   onChange={e => { setDob(e.target.value); setError(''); }}
                   className="desktop-date"
@@ -279,6 +283,20 @@ export default function LoginPage() {
           width: 44px; height: 100%;
           opacity: 0;
           cursor: pointer;
+        }
+        #d-code:-webkit-autofill,
+        #d-code:-webkit-autofill:hover,
+        #d-code:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+          -webkit-text-fill-color: #1f2937;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+        #m-code:-webkit-autofill,
+        #m-code:-webkit-autofill:hover,
+        #m-code:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0px 1000px #0d1828 inset;
+          -webkit-text-fill-color: #fff;
+          transition: background-color 5000s ease-in-out 0s;
         }
       `}</style>
     </div>
