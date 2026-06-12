@@ -100,6 +100,60 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
     }
   };
 
+  // Team Directory — simplified view for regular employees and IT
+  if (!isAdminOrHr) {
+    const directoryItems = employees
+      .filter(e => e.is_active && e.role === 'employee')
+      .filter(e =>
+        !search ||
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        e.department.toLowerCase().includes(search.toLowerCase())
+      );
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="page-heading text-2xl">Team Directory</h1>
+            <p className="text-sm text-muted-foreground mt-1">{directoryItems.length} team member{directoryItems.length !== 1 ? 's' : ''}</p>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name or department..."
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+            className="px-4 py-2.5 border rounded-xl text-sm bg-background text-foreground w-full sm:w-72"
+          />
+        </div>
+
+        {directoryItems.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground text-sm">No team members found.</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+            {directoryItems.map(emp => (
+              <Card key={emp.id}>
+                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                  {emp.photo_url ? (
+                    <img src={emp.photo_url} alt={emp.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #0f1a2e, #1c2d4a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8985e', fontWeight: 700, fontSize: '1.25rem', flexShrink: 0 }}>
+                      {getInitials(emp.name)}
+                    </div>
+                  )}
+                  <div style={{ width: '100%' }}>
+                    <div className="font-semibold text-foreground text-sm">{emp.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{emp.department}</div>
+                    <div className="text-xs mt-2" style={{ color: '#c8985e', wordBreak: 'break-all' }}>{emp.email}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}

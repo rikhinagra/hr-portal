@@ -22,7 +22,7 @@ const navItems = [
   { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false, roles: null },
   { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: null },
   { href: '/dashboard/onboarding', icon: Rocket, label: 'Onboarding', exact: false, roles: ['admin', 'hr'] },
-  { href: '/dashboard/employees', icon: Users, label: 'Employees', exact: false, roles: ['admin', 'hr'] },
+  { href: '/dashboard/employees', icon: Users, label: 'Employees', exact: false, roles: null },
 ];
 
 function getInitials(name: string) {
