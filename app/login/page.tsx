@@ -15,6 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [code, setCode] = useState('');
   const [dob, setDob] = useState('');
+  const [dobFocused, setDobFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -86,13 +87,13 @@ export default function LoginPage() {
                   value={dob}
                   onChange={e => { setDob(e.target.value); setError(''); }}
                   className="mobile-input mobile-date"
-                  style={{ color: dob ? '#fff' : 'transparent' }}
+                  style={{ color: dob ? '#fff' : 'transparent', paddingRight: '44px' }}
                   onFocus={e => (e.target.style.borderColor = '#c8985e')}
                   onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
                 />
                 {!dob && (
-                  <span style={{ position: 'absolute', left: 17, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', fontSize: '1rem', pointerEvents: 'none' }}>
-                    YYYY-MM-DD
+                  <span style={{ position: 'absolute', left: 17, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '1rem', pointerEvents: 'none', letterSpacing: '0.05em' }}>
+                    DD/MM/YYYY
                   </span>
                 )}
                 <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -200,20 +201,15 @@ export default function LoginPage() {
                 Date of Birth
               </label>
               <div style={{ position: 'relative' }}>
-                <input 
+                <input
                   type="date"
                   value={dob}
                   onChange={e => { setDob(e.target.value); setError(''); }}
                   className="desktop-date"
-                  style={{ width: '100%', padding: '13px 44px 13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: dob ? '#1f2937' : 'transparent', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s' }}
-                  onFocus={e => (e.target.style.borderColor = '#c8985e')}
-                  onBlur={e => (e.target.style.borderColor = '#e5e7eb')}
+                  style={{ width: '100%', padding: '13px 44px 13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: (dobFocused || dob) ? '#1f2937' : '#9ca3af', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s' }}
+                  onFocus={e => { e.target.style.borderColor = '#c8985e'; setDobFocused(true); }}
+                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; setDobFocused(false); }}
                 />
-                {!dob && (
-                  <span style={{ position: 'absolute', left: 17, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '1rem', pointerEvents: 'none' }}>
-                    YYYY-MM-DD
-                  </span>
-                )}
                 <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
             </div>
@@ -267,8 +263,8 @@ export default function LoginPage() {
         }
         .mobile-date::-webkit-calendar-picker-indicator {
           position: absolute;
-          top: 0; left: 0;
-          width: 100%; height: 100%;
+          top: 0; right: 0;
+          width: 44px; height: 100%;
           opacity: 0;
           cursor: pointer;
         }
@@ -279,8 +275,8 @@ export default function LoginPage() {
         }
         .desktop-date::-webkit-calendar-picker-indicator {
           position: absolute;
-          top: 0; left: 0;
-          width: 100%; height: 100%;
+          top: 0; right: 0;
+          width: 44px; height: 100%;
           opacity: 0;
           cursor: pointer;
         }

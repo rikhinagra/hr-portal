@@ -15,14 +15,14 @@ import {
 import type { Employee } from '@/types';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-  { href: '/dashboard/profile', icon: User, label: 'My Profile', exact: false },
-  { href: '/dashboard/leave', icon: Calendar, label: 'Leave', exact: false },
-  { href: '/dashboard/handbook', icon: BookOpen, label: 'Handbook', exact: false },
-  { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false },
-  { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false },
-  { href: '/dashboard/onboarding', icon: Rocket, label: 'Onboarding', exact: false },
-  { href: '/dashboard/employees', icon: Users, label: 'Employees', exact: false },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true, roles: null },
+  { href: '/dashboard/profile', icon: User, label: 'My Profile', exact: false, roles: null },
+  { href: '/dashboard/leave', icon: Calendar, label: 'Leave', exact: false, roles: null },
+  { href: '/dashboard/handbook', icon: BookOpen, label: 'Handbook', exact: false, roles: null },
+  { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false, roles: null },
+  { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: null },
+  { href: '/dashboard/onboarding', icon: Rocket, label: 'Onboarding', exact: false, roles: ['admin', 'hr'] },
+  { href: '/dashboard/employees', icon: Users, label: 'Employees', exact: false, roles: ['admin', 'hr'] },
 ];
 
 function getInitials(name: string) {
@@ -73,7 +73,7 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5 px-1">
-              {navItems.map(item => {
+              {navItems.filter(item => !item.roles || item.roles.includes(employee.role)).map(item => {
                 const isActive = item.exact
                   ? pathname === item.href
                   : pathname === item.href || pathname.startsWith(item.href + '/');
