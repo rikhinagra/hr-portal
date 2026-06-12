@@ -33,7 +33,7 @@ const roleColor: Record<string, string> = {
   admin: '#c8985e', hr: '#3b82f6', it: '#10b981', employee: '#6b7280',
 };
 
-export default function AppSidebar({ employee }: { employee: Employee }) {
+export default function AppSidebar({ employee, pendingCount = 0 }: { employee: Employee; pendingCount?: number }) {
   const pathname = usePathname();
   const router = useRouter();
   const { state, setOpenMobile } = useSidebar();
@@ -87,6 +87,17 @@ export default function AppSidebar({ employee }: { employee: Employee }) {
                     >
                       <item.icon className="size-6 shrink-0" />
                       <span>{item.label}</span>
+                      {item.href === '/dashboard/leave' && pendingCount > 0 && (employee.role === 'admin' || employee.role === 'hr') && (
+                        <span style={{
+                          marginLeft: 'auto', minWidth: 18, height: 18, borderRadius: 9,
+                          background: '#dc2626', color: '#fff',
+                          fontSize: '0.625rem', fontWeight: 700,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: '0 4px', lineHeight: 1, flexShrink: 0,
+                        }}>
+                          {pendingCount > 9 ? '9+' : pendingCount}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
