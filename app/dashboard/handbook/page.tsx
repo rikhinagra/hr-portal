@@ -24,6 +24,7 @@ export default async function HandbookPage() {
         .from('employees')
         .select('id, name, employee_code, department, designation')
         .eq('is_active', true)
+        .in('role', ['employee', 'it'])
         .order('name'),
       supabase
         .from('handbook_acknowledgements')
