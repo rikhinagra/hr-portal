@@ -18,27 +18,42 @@ export async function GET() {
 
     const serviceClient = createServiceClient();
     const { data: employee } = await serviceClient
-      .from('employees').select('role').eq('auth_user_id', user.id).single();
+      .from('employees').select('role, email').eq('auth_user_id', user.id).single();
 
     if (!employee) return NextResponse.json({ notifications: [], total: 0 });
 
     const role = employee.role;
     const isAdminOrHr = ['admin', 'hr'].includes(role);
     const isIT = role === 'it';
+    const isManager = role === 'manager';
 
-    if (!isAdminOrHr && !isIT) {
+    if (!isAdminOrHr && !isIT && !isManager) {
       return NextResponse.json({ notifications: [], total: 0 });
     }
 
     const items: NotificationItem[] = [];
 
-    // 1. Pending leave requests — admin/hr only
-    if (isAdminOrHr) {
-      const { data: leaves } = await serviceClient
+    // 1. Pending leave requests — admin/hr see all, manager sees team's
+    if (isAdminOrHr || isManager) {
+      const leaveQuery = serviceClient
         .from('leave_requests')
         .select('id, leave_type, days, created_at, employee:employee_id(name)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+
+      if (isManager) {
+        const { data: teamMembers } = await serviceClient
+          .from('employees').select('id').eq('reporting_manager_email', employee.email).eq('is_active', true);
+        const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+        if (teamIds.length > 0) {
+          leaveQuery.in('employee_id', teamIds);
+        } else {
+          // No team members — skip leave notifications
+          leaveQuery.eq('employee_id', 'no-match');
+        }
+      }
+
+      const { data: leaves } = await leaveQuery;
 
       for (const l of leaves ?? []) {
         const leaveLabel = l.leave_type === 'earned' ? 'Earned Leave' : l.leave_type === 'sick' ? 'Sick Leave' : 'Comp-Off Leave';
@@ -53,13 +68,26 @@ export async function GET() {
       }
     }
 
-    // 2. Pending comp-off claims — admin/hr only
-    if (isAdminOrHr) {
-      const { data: compoffs } = await serviceClient
+    // 2. Pending comp-off claims — admin/hr see all, manager sees team's
+    if (isAdminOrHr || isManager) {
+      const compoffQuery = serviceClient
         .from('compoff_claims')
         .select('id, work_date, created_at, employee:employee_id(name)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+
+      if (isManager) {
+        const { data: teamMembers } = await serviceClient
+          .from('employees').select('id').eq('reporting_manager_email', employee.email).eq('is_active', true);
+        const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+        if (teamIds.length > 0) {
+          compoffQuery.in('employee_id', teamIds);
+        } else {
+          compoffQuery.eq('employee_id', 'no-match');
+        }
+      }
+
+      const { data: compoffs } = await compoffQuery;
 
       for (const c of compoffs ?? []) {
         const workDate = new Date(c.work_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -74,8 +102,8 @@ export async function GET() {
       }
     }
 
-    // 3. Pending equipment requests — admin, hr, and IT
-    {
+    // 3. Pending equipment requests — admin, hr, and IT only
+    if (isAdminOrHr || isIT) {
       const { data: equipment } = await serviceClient
         .from('equipment_requests')
         .select('id, equipment_type, urgency, created_at, employee:employee_id(name)')

@@ -55,7 +55,9 @@ export default function HandbookClient({ employee, existingAck, complianceData }
       setAckDate(data.acknowledged_at);
       setShowModal(false);
       toast.success('Handbook Acknowledged', {
-        description: `Confirmation sent to HR. Thank you, ${employee.name.split(' ')[0]}!`,
+        description: isAdminOrHr
+          ? `Your acknowledgement has been recorded. Thank you, ${employee.name.split(' ')[0]}!`
+          : `Confirmation sent to HR and IT. Thank you, ${employee.name.split(' ')[0]}!`,
       });
     } catch (err: unknown) {
       toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
@@ -80,7 +82,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="page-heading text-2xl">Employee Handbook</h1>
-          <p className="text-sm text-muted-foreground mt-1">Read all 17 chapters and acknowledge at the bottom</p>
+          <p className="text-sm text-muted-foreground mt-1">{isAdmin ? 'Read all 17 chapters of the employee handbook.' : 'Read all 17 chapters and acknowledge at the bottom'}</p>
         </div>
         {acknowledged && (
           <span className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#2e7d32' }}>
@@ -245,11 +247,11 @@ export default function HandbookClient({ employee, existingAck, complianceData }
       )}
 
       {/* Handbook Content — hidden for Admin */}
-      {!isAdmin && <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>
+      <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>
         {isAdminOrHr ? 'Handbook Content' : ''}
-      </h2>}
+      </h2>
 
-      {!isAdmin && <><Card>
+      <><Card>
         <CardContent className="p-0">
           <div ref={contentRef} onScroll={handleScroll} className="max-h-[65vh] overflow-y-auto">
             {HANDBOOK_CHAPTERS.map((ch, i) => (
@@ -269,6 +271,26 @@ export default function HandbookClient({ employee, existingAck, complianceData }
         </CardContent>
       </Card>
 
+      {/* Google Form — shown below Chapter 17 for employees only */}
+      {['employee', 'it', 'manager'].includes(employee.role) && process.env.NEXT_PUBLIC_EMPLOYEE_FORM_URL && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border"
+          style={{ background: 'rgba(15,26,46,0.04)', borderColor: 'rgba(200,152,94,0.3)' }}>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Employee Information Form</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Please fill in your personal details before acknowledging the handbook.</p>
+          </div>
+          <a
+            href={process.env.NEXT_PUBLIC_EMPLOYEE_FORM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 px-6 py-2.5 rounded-lg font-semibold text-sm text-center"
+            style={{ background: '#0f1a2e', color: '#c8985e', textDecoration: 'none' }}>
+            Fill Information Form →
+          </a>
+        </div>
+      )}
+
+      {!isAdmin && <>
       {/* Acknowledgement Bar */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-all ${scrolledToBottom && !acknowledged ? 'border-[#c8985e]' : 'border-border'}`}
         style={{ background: scrolledToBottom && !acknowledged ? 'rgba(200,152,94,0.08)' : 'rgba(0,0,0,0.02)' }}>
@@ -283,7 +305,7 @@ export default function HandbookClient({ employee, existingAck, complianceData }
           )}
           {acknowledged && ackDate && (
             <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: '#2e7d32' }}>
-              <Check className="size-3.5 flex-shrink-0" /> Acknowledged on {new Date(ackDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}. HR has been notified.
+              <Check className="size-3.5 flex-shrink-0" /> Acknowledged on {new Date(ackDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}.{!isAdminOrHr && ' HR and IT have been notified.'}
             </p>
           )}
         </div>
@@ -309,8 +331,8 @@ export default function HandbookClient({ employee, existingAck, complianceData }
               Confirm Acknowledgement
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-              By confirming, you acknowledge that you have read and understood the complete SACHHSOFT Employee Handbook.
-              A confirmation will be sent to HR.
+              By confirming, you acknowledge that you have read and understood the complete Aadhcode Employee Handbook.
+              {isAdminOrHr ? ' Your acknowledgement will be recorded.' : ' A confirmation will be sent to HR and IT.'}
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setShowModal(false)}
@@ -320,13 +342,14 @@ export default function HandbookClient({ employee, existingAck, complianceData }
               <button onClick={handleAcknowledge} disabled={loading}
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold"
                 style={{ background: loading ? '#ccc' : '#c8985e', color: '#0f1a2e', cursor: loading ? 'wait' : 'pointer' }}>
-                {loading ? 'Saving...' : 'Confirm & Notify HR'}
+                {loading ? 'Saving...' : isAdminOrHr ? 'Confirm' : 'Confirm & Notify HR & IT'}
               </button>
             </div>
           </div>
         </div>
       )}
       </>}
+      </>
     </div>
   );
 }

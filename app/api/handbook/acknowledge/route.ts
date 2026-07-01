@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { sendHandbookAckEmail } from '@/lib/resend';
+import { sendITWorkAccountEmail } from '@/lib/resend';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,15 +46,19 @@ export async function POST(request: NextRequest) {
       action_type: 'success',
     });
 
-    // Send email to HR (best effort — don't fail if email fails)
-    try {
-      await sendHandbookAckEmail({
-        employeeName: employee.name,
-        employeeCode: employee.employee_code,
-        acknowledgedAt: now,
-      });
-    } catch (emailErr) {
-      console.error('Email send failed (non-fatal):', emailErr);
+    // Emails only for employee, it, manager — HR and admin get no emails on their own acknowledgement
+    if (['employee', 'it', 'manager'].includes(employee.role)) {
+      try {
+        await sendITWorkAccountEmail({
+          employeeName: employee.name,
+          employeeCode: employee.employee_code,
+          department: employee.department,
+          designation: employee.designation,
+          ccEmails: [process.env.EMAIL_HR_DESK!],
+        });
+      } catch (emailErr) {
+        console.error('IT email send failed (non-fatal):', emailErr);
+      }
     }
 
     return NextResponse.json({ success: true, acknowledged_at: now });

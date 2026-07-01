@@ -27,22 +27,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SACHHSOFT — Employee Portal',
-  description: 'Official HR Management Portal for SACHHSOFT employees. Manage leaves, equipment, handbooks, and more.',
+  title: 'Aadhcode — Employee Portal',
+  description: 'Official HR Management Portal for Aadhcode employees. Manage leaves, equipment, handbooks, and more.',
   icons: {
-    icon: '/sachhsoft-favicon.png',
-    apple: '/sachhsoft-favicon.png',
+    icon: '/aadhcode-logo.webp',
+    apple: '/aadhcode-logo.webp',
   },
   openGraph: {
-    title: 'SACHHSOFT — Employee Portal',
-    description: 'Official HR Management Portal for SACHHSOFT employees.',
+    title: 'Aadhcode — Employee Portal',
+    description: 'Official HR Management Portal for Aadhcode employees.',
     type: 'website',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'SACHHSOFT Employee Portal' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Aadhcode Employee Portal' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SACHHSOFT — Employee Portal',
-    description: 'Official HR Management Portal for SACHHSOFT employees.',
+    title: 'Aadhcode — Employee Portal',
+    description: 'Official HR Management Portal for Aadhcode employees.',
   },
 };
 

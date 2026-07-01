@@ -6,17 +6,21 @@ export default async function EquipmentPage() {
   const employee = await getSessionEmployee();
   if (!employee) return null;
 
-  const supabase = createServiceClient();
-  const isPrivileged = ['admin', 'hr', 'it'].includes(employee.role);
+  if (!['admin', 'hr', 'it'].includes(employee.role)) return null;
 
-  const query = supabase
+  const supabase = createServiceClient();
+
+  const { data: requests } = await supabase
     .from('equipment_requests')
     .select('*, employee:employee_id(id, name, email, employee_code, department)')
     .order('created_at', { ascending: false });
 
-  if (!isPrivileged) query.eq('employee_id', employee.id);
+  const { data: employees } = await supabase
+    .from('employees')
+    .select('id, name, employee_code, department')
+    .eq('is_active', true)
+    .in('role', ['employee', 'manager', 'it', 'hr'])
+    .order('name');
 
-  const { data: requests } = await query;
-
-  return <EquipmentClient employee={employee} initialRequests={requests ?? []} />;
+  return <EquipmentClient employee={employee} initialRequests={requests ?? []} employees={employees ?? []} />;
 }

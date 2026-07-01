@@ -11,25 +11,28 @@ interface EmpRow {
   id: string; employee_code: string; name: string; department: string;
   designation: string; role: string; email: string; join_date: string;
   is_active: boolean; created_at: string; photo_url: string | null;
+  reporting_manager_email: string | null;
 }
 
 const roleColors: Record<string, { bg: string; color: string }> = {
   admin: { bg: 'rgba(200,152,94,.12)', color: '#c8985e' },
   hr: { bg: 'rgba(37,99,235,.1)', color: '#2563eb' },
   it: { bg: 'rgba(22,163,74,.1)', color: '#16a34a' },
-  employee: { bg: 'rgba(107,114,128,.1)', color: '#6b7280' },
+  employee: { bg: 'rgba(234,88,12,.12)', color: '#ea580c' },
+  manager: { bg: 'rgba(124,58,237,.18)', color: '#7c3aed' },
 };
 
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 }
 
-export default function EmployeesClient({ employees: initialEmployees, viewerRole }: { employees: EmpRow[]; viewerRole: string }) {
+export default function EmployeesClient({ employees: initialEmployees, viewerRole, viewerId, viewerReportingManagerEmail, viewerEmail }: { employees: EmpRow[]; viewerRole: string; viewerId: string; viewerReportingManagerEmail: string | null; viewerEmail?: string | null }) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const pageSize = isMobile ? 8 : 10;
 
   const isAdminOrHr = viewerRole === 'admin' || viewerRole === 'hr';
+  const isManager = viewerRole === 'manager';
 
   const [employees, setEmployees] = useState(initialEmployees);
   const [search, setSearch] = useState('');
@@ -69,7 +72,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setEmployees(employees.map(e => e.id === emp.id ? { ...e, is_active: !emp.is_active } : e));
-      toast.success(`${emp.name} ${!emp.is_active ? 'activated' : 'deactivated'}`);
+      toast.success(`${emp.name} ${!emp.is_active ? 'activated' : 'offboarded'}`);
     } catch (err: unknown) {
       toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
     } finally {
@@ -100,10 +103,91 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
     }
   };
 
+  // Manager — show direct reports (employees whose reporting_manager_email = manager's email)
+  if (isManager) {
+    const directReports = employees
+      .filter(e =>
+        e.is_active &&
+        e.id !== viewerId &&
+        viewerEmail && e.reporting_manager_email === viewerEmail
+      )
+      .filter(e =>
+        !search ||
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        e.department.toLowerCase().includes(search.toLowerCase())
+      );
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="page-heading text-2xl">My Team</h1>
+            <p className="text-sm text-muted-foreground mt-1">{directReports.length} direct report{directReports.length !== 1 ? 's' : ''}</p>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name or department..."
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+            className="px-4 py-2.5 border rounded-xl text-sm bg-background text-foreground w-full sm:w-72"
+          />
+        </div>
+
+        {directReports.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground text-sm border rounded-xl bg-muted/20">
+            {viewerEmail ? 'No direct reports found.' : 'Team information not available. Please contact HR.'}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+            {directReports.map(emp => (
+              <Card key={emp.id}>
+                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                  {emp.photo_url ? (
+                    <img src={emp.photo_url} alt={emp.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #0f1a2e, #1c2d4a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8985e', fontWeight: 700, fontSize: '1.25rem', flexShrink: 0 }}>
+                      {getInitials(emp.name)}
+                    </div>
+                  )}
+                  <div style={{ width: '100%' }}>
+                    <div className="font-semibold text-foreground text-sm">{emp.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{emp.department}</div>
+                    <div className="text-xs mt-1" style={{ color: '#6b7280' }}>{emp.designation}</div>
+                    <div className="text-xs mt-2" style={{ color: '#c8985e', wordBreak: 'break-all' }}>{emp.email}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // Team Directory — simplified view for regular employees and IT
   if (!isAdminOrHr) {
+    // No reporting manager assigned — cannot determine team
+    if (!viewerReportingManagerEmail) {
+      return (
+        <div className="space-y-6">
+          <div>
+            <h1 className="page-heading text-2xl">Team Directory</h1>
+            <p className="text-sm text-muted-foreground mt-1">Your team members</p>
+          </div>
+          <div className="py-16 text-center text-muted-foreground text-sm border rounded-xl bg-muted/20">
+            No reporting manager assigned yet. Please contact HR.
+          </div>
+        </div>
+      );
+    }
+
+    // Show only teammates who share the same reporting manager (excluding self)
     const directoryItems = employees
-      .filter(e => e.is_active && e.role === 'employee')
+      .filter(e =>
+        e.is_active &&
+        e.id !== viewerId &&
+        e.reporting_manager_email === viewerReportingManagerEmail
+      )
       .filter(e =>
         !search ||
         e.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -127,7 +211,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
         </div>
 
         {directoryItems.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground text-sm">No team members found.</div>
+          <div className="py-16 text-center text-muted-foreground text-sm border rounded-xl bg-muted/20">No team members found.</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
             {directoryItems.map(emp => (
@@ -218,7 +302,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                         <div className="text-xs text-muted-foreground">{emp.designation}</div>
                       </td>
                       <td className="px-4 py-3" onClick={() => router.push(`/dashboard/employees/${emp.id}`)}>
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold capitalize"
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase"
                           style={{ background: rc.bg, color: rc.color }}>{emp.role}</span>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground" onClick={() => router.push(`/dashboard/employees/${emp.id}`)}>
@@ -251,8 +335,9 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                               color: emp.is_active ? '#dc2626' : '#16a34a',
                               opacity: toggling === emp.id ? 0.6 : 1,
                             }}>
-                            {emp.is_active ? 'Deactivate' : 'Activate'}
+                            {emp.is_active ? 'Offboard' : 'Activate'}
                           </button>
+                          {/* DELETE BUTTON — hidden, uncomment to restore
                           {isAdminOrHr && (
                             <button onClick={() => openDeleteModal(emp)}
                               className="px-2 py-1 rounded-md text-xs font-semibold"
@@ -261,6 +346,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                               <Trash2 className="size-3.5" />
                             </button>
                           )}
+                          */}
                         </div>
                       </td>
                     </tr>
@@ -312,7 +398,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                   <span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">
                     {emp.department} · {emp.designation}
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold capitalize flex-shrink-0"
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase flex-shrink-0"
                     style={{ background: rc.bg, color: rc.color }}>{emp.role}</span>
                 </div>
 
@@ -333,8 +419,9 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                       color: emp.is_active ? '#dc2626' : '#16a34a',
                       opacity: toggling === emp.id ? 0.6 : 1,
                     }}>
-                    {emp.is_active ? 'Deactivate' : 'Activate'}
+                    {emp.is_active ? 'Offboard' : 'Activate'}
                   </button>
+                  {/* DELETE BUTTON — hidden, uncomment to restore
                   {isAdminOrHr && (
                     <button
                       onClick={() => openDeleteModal(emp)}
@@ -344,6 +431,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                       <Trash2 className="size-3.5" />
                     </button>
                   )}
+                  */}
                 </div>
               </CardContent>
             </Card>

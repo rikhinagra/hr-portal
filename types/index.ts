@@ -1,7 +1,7 @@
-export type EmployeeRole = 'admin' | 'hr' | 'employee' | 'it';
+export type EmployeeRole = 'admin' | 'hr' | 'employee' | 'it' | 'manager';
 export type LeaveType = 'earned' | 'sick' | 'compoff';
 export type LeaveStatus = 'pending' | 'approved' | 'rejected';
-export type EquipmentStatus = 'pending' | 'approved' | 'delivered' | 'rejected';
+export type EquipmentStatus = 'pending' | 'approved' | 'delivered' | 'rejected' | 'assigned';
 export type Urgency = 'Low' | 'Normal' | 'High' | 'Critical';
 export type ActionType = 'success' | 'info' | 'warning' | 'error';
 
@@ -29,6 +29,8 @@ export interface Employee {
   current_address: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
+  employment_type: string | null;
+  total_experience: string | null;
 }
 
 export interface EmployeeDocument {
@@ -81,6 +83,9 @@ export interface EquipmentRequest {
   approved_by: string | null;
   approved_at: string | null;
   created_at: string;
+  date_of_issue: string | null;
+  device_info: string | null;
+  total_value: number | null;
   employee?: Pick<Employee, 'id' | 'name' | 'email' | 'employee_code' | 'department'> | null;
 }
 

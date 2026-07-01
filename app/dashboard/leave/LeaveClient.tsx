@@ -29,6 +29,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
+  const [isHalfDay, setIsHalfDay] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Comp-off claim form state
@@ -41,6 +42,8 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
 
   const isAdmin = employee.role === 'admin';
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
+  const isManager = employee.role === 'manager';
+  const canManageLeave = isAdminOrHr || isManager;
   const canApply = employee.role !== 'admin';
   const pendingCount = leaves.filter(l => l.status === 'pending').length + claims.filter(c => c.status === 'pending').length;
 
@@ -53,30 +56,31 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
   };
 
   const submitLeave = async () => {
-    if (!startDate || !endDate || !reason.trim()) {
+    if (!startDate || (!isHalfDay && !endDate) || !reason.trim()) {
       toast.error('Missing Fields', { description: 'Please fill all required fields.' }); return;
     }
-    if (new Date(endDate) < new Date(startDate)) {
+    const effectiveEndDate = isHalfDay ? startDate : endDate;
+    if (!isHalfDay && new Date(endDate) < new Date(startDate)) {
       toast.error('Invalid Dates', { description: 'End date must be after start date.' }); return;
     }
     if (isWeekend(startDate)) {
       toast.error('Invalid Date', { description: 'Leave cannot start on a Saturday or Sunday.' }); return;
     }
-    if (isWeekend(endDate)) {
+    if (!isHalfDay && isWeekend(endDate)) {
       toast.error('Invalid Date', { description: 'Leave cannot end on a Saturday or Sunday.' }); return;
     }
     setSubmitting(true);
     try {
       const res = await fetch('/api/leave', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leave_type: leaveType, start_date: startDate, end_date: endDate, reason }),
+        body: JSON.stringify({ leave_type: leaveType, start_date: startDate, end_date: effectiveEndDate, reason, is_half_day: isHalfDay }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setLeaves([data.leave, ...leaves]);
       setShowForm(false);
-      setStartDate(''); setEndDate(''); setReason(''); setLeaveType('earned');
-      toast.success('Leave Request Submitted', { description: `${data.leave.days} day(s) submitted. Email sent to HR.` });
+      setStartDate(''); setEndDate(''); setReason(''); setLeaveType('earned'); setIsHalfDay(false);
+      toast.success('Leave Request Submitted', { description: `${data.leave.days === 0.5 ? 'Half day' : `${data.leave.days} day(s)`} submitted. Email sent to HR.` });
     } catch (err: unknown) {
       toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
     } finally { setSubmitting(false); }
@@ -207,14 +211,14 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: '#0f1a2e' }}>
-                  {['Employee', 'Type', 'Dates', 'Days', 'Reason', 'Status', ...(isAdminOrHr ? ['Action'] : [])].map(h => (
+                  {['Employee', 'Type', 'Dates', 'Days', 'Reason', 'Status', ...(canManageLeave ? ['Action'] : [])].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-white whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {leaves.length === 0 ? (
-                  <tr><td colSpan={isAdminOrHr ? 7 : 6} className="py-10 text-center text-muted-foreground">No leave requests yet.</td></tr>
+                  <tr><td colSpan={canManageLeave ? 7 : 6} className="py-10 text-center text-muted-foreground">No leave requests yet.</td></tr>
                 ) : leaves.map(l => (
                   <tr key={l.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{l.employee?.name ?? 'Unknown'}</td>
@@ -226,12 +230,12 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                         {new Date(l.end_date).toLocaleDateString('en-IN')}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-foreground">{l.days}</td>
+                    <td className="px-4 py-3 font-semibold text-foreground">{Number(l.days) === 0.5 ? 'Half Day' : l.days}</td>
                     <td className="px-4 py-3 text-muted-foreground" style={{ maxWidth: '240px', wordBreak: 'break-word', whiteSpace: 'normal' }}>{l.reason}</td>
                     <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
-                    {isAdminOrHr && (
+                    {canManageLeave && (
                       <td className="px-4 py-3">
-                        {l.status === 'pending' && (
+                        {l.status === 'pending' && (isAdmin || l.employee?.id !== employee.id) && (
                           <div className="flex gap-2">
                             <button onClick={() => handleAction(l.id, 'approved')} disabled={actionLoading !== null}
                               className="px-3 py-1 rounded text-xs font-semibold text-white" style={{ background: '#2e7d32' }}>
@@ -269,7 +273,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                   style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>
                   {formatLeaveType(l.leave_type)}
                 </span>
-                <span className="text-xs text-muted-foreground">{l.days} day{l.days !== 1 ? 's' : ''}</span>
+                <span className="text-xs text-muted-foreground">{Number(l.days) === 0.5 ? 'Half Day' : `${l.days} day${l.days !== 1 ? 's' : ''}`}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
                 <span>{new Date(l.start_date).toLocaleDateString('en-IN')}</span>
@@ -277,7 +281,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <span>{new Date(l.end_date).toLocaleDateString('en-IN')}</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3" style={{ wordBreak: 'break-word' }}>{l.reason}</p>
-              {isAdminOrHr && l.status === 'pending' && (
+              {canManageLeave && l.status === 'pending' && (isAdmin || l.employee?.id !== employee.id) && (
                 <div className="flex gap-2 pt-2 border-t border-border">
                   <button onClick={() => handleAction(l.id, 'approved')} disabled={actionLoading !== null}
                     className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white"
@@ -306,23 +310,23 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: '#0f1a2e' }}>
-                  {['Employee', 'Date Worked', 'Reason', 'Status', ...(isAdminOrHr ? ['Action'] : [])].map(h => (
+                  {['Employee', 'Date Worked', 'Reason', 'Status', ...(canManageLeave ? ['Action'] : [])].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-white whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {claims.length === 0 ? (
-                  <tr><td colSpan={isAdminOrHr ? 5 : 4} className="py-10 text-center text-muted-foreground">No comp-off claims yet.</td></tr>
+                  <tr><td colSpan={canManageLeave ? 5 : 4} className="py-10 text-center text-muted-foreground">No comp-off claims yet.</td></tr>
                 ) : claims.map(c => (
                   <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{c.employee?.name ?? 'Unknown'}</td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap">{new Date(c.work_date).toLocaleDateString('en-IN')}</td>
                     <td className="px-4 py-3 text-muted-foreground" style={{ maxWidth: '240px', wordBreak: 'break-word', whiteSpace: 'normal' }}>{c.reason}</td>
                     <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                    {isAdminOrHr && (
+                    {canManageLeave && (
                       <td className="px-4 py-3">
-                        {c.status === 'pending' && (
+                        {c.status === 'pending' && (isAdmin || c.employee?.id !== employee.id) && (
                           <div className="flex gap-2">
                             <button onClick={() => handleClaimAction(c.id, 'approved')} disabled={actionLoading !== null}
                               className="px-3 py-1 rounded text-xs font-semibold text-white" style={{ background: '#2e7d32' }}>
@@ -359,7 +363,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 Worked on: <span className="font-semibold text-foreground">{new Date(c.work_date).toLocaleDateString('en-IN')}</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3" style={{ wordBreak: 'break-word' }}>{c.reason}</p>
-              {isAdminOrHr && c.status === 'pending' && (
+              {canManageLeave && c.status === 'pending' && (isAdmin || c.employee?.id !== employee.id) && (
                 <div className="flex gap-2 pt-2 border-t border-border">
                   <button onClick={() => handleClaimAction(c.id, 'approved')} disabled={actionLoading !== null}
                     className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white"
@@ -384,7 +388,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
           <div className="rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl bg-card text-foreground border">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-playfair), serif' }}>Apply for Leave</h3>
-              <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
+              <button onClick={() => { setShowForm(false); setIsHalfDay(false); }} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
             </div>
             <div className="space-y-4">
               <div>
@@ -399,30 +403,50 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2.5 py-1">
+                <input type="checkbox" id="half-day" checked={isHalfDay}
+                  onChange={e => { setIsHalfDay(e.target.checked); if (e.target.checked) setEndDate(''); }}
+                  className="size-4 cursor-pointer accent-[#c8985e]" />
+                <label htmlFor="half-day" className="text-sm text-foreground cursor-pointer select-none">Half Day</label>
+              </div>
+              {isHalfDay ? (
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">Start Date</label>
+                  <label className="block text-xs text-muted-foreground mb-1.5">Date</label>
                   <div className="relative">
                     <input type="date" value={startDate} min={today}
-                      onChange={e => { setStartDate(e.target.value); if (endDate && e.target.value > endDate) setEndDate(''); }}
+                      onChange={e => { setStartDate(e.target.value); setEndDate(e.target.value); }}
                       className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
                     />
                     {!startDate && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
                     <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">End Date</label>
-                  <div className="relative">
-                    <input type="date" value={endDate} min={startDate || today}
-                      onChange={e => setEndDate(e.target.value)}
-                      className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
-                    />
-                    {!endDate && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
-                    <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">Start Date</label>
+                    <div className="relative">
+                      <input type="date" value={startDate} min={today}
+                        onChange={e => { setStartDate(e.target.value); if (endDate && e.target.value > endDate) setEndDate(''); }}
+                        className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
+                      />
+                      {!startDate && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
+                      <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">End Date</label>
+                    <div className="relative">
+                      <input type="date" value={endDate} min={startDate || today}
+                        onChange={e => setEndDate(e.target.value)}
+                        className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
+                      />
+                      {!endDate && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
+                      <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">Reason *</label>
                 <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}

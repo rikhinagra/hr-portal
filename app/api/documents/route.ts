@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     if (!file || !employeeId || !documentType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: `File too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum allowed is 5MB.` }, { status: 400 });
+    if (file.size > 50 * 1024 * 1024) {
+      return NextResponse.json({ error: `File too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum allowed is 50MB.` }, { status: 400 });
     }
 
     const timestamp = Date.now();

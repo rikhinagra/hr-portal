@@ -2,25 +2,25 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* ─── SACHHSOFT Design System ─── */
+/* ─── Aadhcode Design System ─── */
 :root {
-  --sachhsoft-navy: #0f1a2e;
-  --sachhsoft-navy-light: #162240;
-  --sachhsoft-navy-mid: #1c2d4a;
-  --sachhsoft-gold: #c8985e;
-  --sachhsoft-gold-light: #e0be8a;
-  --sachhsoft-gold-dim: rgba(200, 152, 94, 0.12);
-  --sachhsoft-cream: #faf8f5;
-  --sachhsoft-warm: #f5f0ea;
-  --sachhsoft-bg: #f0ede8;
-  --sachhsoft-text: #2a2a2a;
-  --sachhsoft-text-light: #5a5a5a;
-  --sachhsoft-text-muted: #8a8a8a;
-  --sachhsoft-border: #e2ddd6;
-  --sachhsoft-red: #b33a3a;
-  --sachhsoft-green: #2e7d32;
-  --sachhsoft-blue: #3a7bd5;
-  --sachhsoft-orange: #e67e22;
+  --aadhcode-navy: #0f1a2e;
+  --aadhcode-navy-light: #162240;
+  --aadhcode-navy-mid: #1c2d4a;
+  --aadhcode-gold: #c8985e;
+  --aadhcode-gold-light: #e0be8a;
+  --aadhcode-gold-dim: rgba(200, 152, 94, 0.12);
+  --aadhcode-cream: #faf8f5;
+  --aadhcode-warm: #f5f0ea;
+  --aadhcode-bg: #f0ede8;
+  --aadhcode-text: #2a2a2a;
+  --aadhcode-text-light: #5a5a5a;
+  --aadhcode-text-muted: #8a8a8a;
+  --aadhcode-border: #e2ddd6;
+  --aadhcode-red: #b33a3a;
+  --aadhcode-green: #2e7d32;
+  --aadhcode-blue: #3a7bd5;
+  --aadhcode-orange: #e67e22;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -153,8 +153,8 @@
     scroll-behavior: smooth;
   }
   body {
-    background: var(--sachhsoft-bg);
-    color: var(--sachhsoft-text);
+    background: var(--aadhcode-bg);
+    color: var(--aadhcode-text);
     font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 1rem;
     line-height: 1.65;
@@ -172,8 +172,8 @@
   }
   input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: var(--sachhsoft-gold) !important;
-    box-shadow: 0 0 0 3px var(--sachhsoft-gold-dim);
+    border-color: var(--aadhcode-gold) !important;
+    box-shadow: 0 0 0 3px var(--aadhcode-gold-dim);
   }
   button {
     font-family: var(--font-inter), system-ui, sans-serif;

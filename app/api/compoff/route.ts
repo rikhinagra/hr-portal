@@ -14,12 +14,25 @@ export async function GET() {
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
     const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
+    const isManager = employee.role === 'manager';
     const query = serviceClient
       .from('compoff_claims')
       .select('*, employee:employee_id(id, name, employee_code, department, email)')
       .order('created_at', { ascending: false });
 
-    if (!isAdminOrHr) query.eq('employee_id', employee.id);
+    if (isAdminOrHr) {
+      // no filter — see all
+    } else if (isManager) {
+      const { data: teamMembers } = await serviceClient
+        .from('employees')
+        .select('id')
+        .eq('reporting_manager_email', employee.email)
+        .eq('is_active', true);
+      const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+      query.in('employee_id', [...teamIds, employee.id]);
+    } else {
+      query.eq('employee_id', employee.id);
+    }
 
     const { data, error } = await query;
     if (error) throw error;
@@ -80,15 +93,26 @@ export async function POST(request: NextRequest) {
       const toAdmins = adminEmails.length > 0 ? adminEmails : [process.env.EMAIL_REPORTING_MANAGER!];
 
       if (employee.role === 'hr') {
+        // HR claiming → goes directly to all admins
         await sendCompOffClaimEmail({
           employeeName: employee.name, department: employee.department,
           workDate: work_date, reason, toEmails: toAdmins, ccEmails: [], isHrClaiming: true,
         });
-      } else {
+      } else if (employee.role === 'manager') {
+        // Manager claiming → goes to HR desk, all admins in CC
         await sendCompOffClaimEmail({
           employeeName: employee.name, department: employee.department,
           workDate: work_date, reason,
           toEmails: [process.env.EMAIL_HR_DESK!], ccEmails: toAdmins, isHrClaiming: false,
+        });
+      } else {
+        // Employee / IT claiming → goes to HR desk, admins + reporting manager in CC
+        const ccEmails = [...toAdmins];
+        if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
+        await sendCompOffClaimEmail({
+          employeeName: employee.name, department: employee.department,
+          workDate: work_date, reason,
+          toEmails: [process.env.EMAIL_HR_DESK!], ccEmails, isHrClaiming: false,
         });
       }
     } catch (emailErr) {

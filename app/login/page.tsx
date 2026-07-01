@@ -53,12 +53,7 @@ export default function LoginPage() {
         <div style={{ position: 'absolute', bottom: -70, left: -70, width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(200,152,94,.05)', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{
-            width: 120, height: 32, marginBottom: 12,
-            backgroundColor: '#fff',
-            WebkitMaskImage: 'url(/sachhsoft_logo.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'left center',
-            maskImage: 'url(/sachhsoft_logo.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'left center'
-          }} />
+          <img src="/aadhcode-logo.webp" alt="Aadhcode" style={{ width: 130, height: 'auto', objectFit: 'contain', marginBottom: 6 }} />
           <div style={{ fontSize: '0.625rem', letterSpacing: '0.18em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700, marginBottom: 3, WebkitUserSelect: 'none', userSelect: 'none' }}>
             AadhCode Solutions Pvt. Ltd.
           </div>
@@ -129,7 +124,7 @@ export default function LoginPage() {
           </div>
 
           <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,.06)' }}>
-            <div style={{ fontSize: '0.5625rem', letterSpacing: '0.22em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700 }}>SACHHSOFT</div>
+            <div style={{ fontSize: '0.5625rem', letterSpacing: '0.22em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700 }}>Aadhcode</div>
             <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,.18)', marginTop: 3 }}>Confidential · For Internal Use Only</div>
           </div>
         </div>
@@ -146,13 +141,8 @@ export default function LoginPage() {
         <div style={{ position: 'absolute', top: -50, right: -50, width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(200,152,94,.1)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -80, left: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(200,152,94,.06)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, marginBottom: 52 }}>
-            <div style={{
-              width: 140, height: 38,
-              backgroundColor: '#fff',
-              WebkitMaskImage: 'url(/sachhsoft_logo.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'left center',
-              maskImage: 'url(/sachhsoft_logo.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'left center'
-            }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0, marginBottom: 52 }}>
+            <img src="/aadhcode-logo.webp" alt="Aadhcode" style={{ width: 'clamp(120px, 12vw, 160px)', height: 'auto', objectFit: 'contain' }} />
             <div>
               <div style={{ fontSize: '0.6875rem', letterSpacing: '0.18em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700 }}>AadhCode Solutions Pvt. Ltd.</div>
               <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,.4)', marginTop: 3 }}>HR Portal</div>
@@ -173,7 +163,7 @@ export default function LoginPage() {
             ))}
           </div>
           <div style={{ marginTop: 56, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,.06)' }}>
-            <div style={{ fontSize: '0.6875rem', letterSpacing: '0.2em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700 }}>SACHHSOFT</div>
+            <div style={{ fontSize: '0.6875rem', letterSpacing: '0.2em', color: '#c8985e', textTransform: 'uppercase', fontWeight: 700 }}>Aadhcode</div>
             <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.2)', marginTop: 4 }}>Confidential · For Internal Use Only</div>
           </div>
         </div>

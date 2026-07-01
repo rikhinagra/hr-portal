@@ -20,7 +20,7 @@ const navItems = [
   { href: '/dashboard/leave', icon: Calendar, label: 'Leave', exact: false, roles: null },
   { href: '/dashboard/handbook', icon: BookOpen, label: 'Handbook', exact: false, roles: null },
   { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false, roles: null },
-  { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: null },
+  { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: ['admin', 'hr', 'it'] },
   { href: '/dashboard/onboarding', icon: Rocket, label: 'Onboarding', exact: false, roles: ['admin', 'hr'] },
   { href: '/dashboard/employees', icon: Users, label: 'Employees', exact: false, roles: null },
 ];
@@ -30,7 +30,7 @@ function getInitials(name: string) {
 }
 
 const roleColor: Record<string, string> = {
-  admin: '#c8985e', hr: '#3b82f6', it: '#10b981', employee: '#6b7280',
+  admin: '#c8985e', hr: '#3b82f6', it: '#10b981', employee: '#6b7280', manager: '#8b5cf6',
 };
 
 export default function AppSidebar({ employee, pendingCount = 0 }: { employee: Employee; pendingCount?: number }) {
@@ -53,8 +53,8 @@ export default function AppSidebar({ employee, pendingCount = 0 }: { employee: E
           {!isCollapsed && (
             <>
               <img
-                src="/sachhsoft_logo.png"
-                alt="SACHHSOFT"
+                src="/aadhcode-logo.webp"
+                alt="Aadhcode"
                 style={{ width: '140px', height: 'auto', objectFit: 'contain' }}
               />
               <span className="text-xs font-medium tracking-widest uppercase whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.14em' }}>
@@ -87,7 +87,7 @@ export default function AppSidebar({ employee, pendingCount = 0 }: { employee: E
                     >
                       <item.icon className="size-6 shrink-0" />
                       <span>{item.label}</span>
-                      {item.href === '/dashboard/leave' && pendingCount > 0 && (employee.role === 'admin' || employee.role === 'hr') && (
+                      {item.href === '/dashboard/leave' && pendingCount > 0 && (employee.role === 'admin' || employee.role === 'hr' || employee.role === 'manager') && (
                         <span style={{
                           marginLeft: 'auto', minWidth: 18, height: 18, borderRadius: 9,
                           background: '#dc2626', color: '#fff',

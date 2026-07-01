@@ -1,90 +1,96 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { sendEquipmentStatusEmail } from '@/lib/resend';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const serviceClient = createServiceClient();
     const { data: actor } = await serviceClient
-      .from('employees').select('*').eq('auth_user_id', user.id).single();
+      .from('employees').select('id, name, role').eq('auth_user_id', user.id).single();
     if (!actor) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    if (!['hr', 'it'].includes(actor.role)) {
-      return NextResponse.json({ error: 'Only HR and IT can action equipment requests.' }, { status: 403 });
+    if (!['admin', 'hr'].includes(actor.role)) {
+      return NextResponse.json({ error: 'Only HR or Admin can edit equipment records.' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { status } = body;
+    const { equipment_type, specifications, date_of_issue, device_info, total_value, status } = body;
 
-    if (!['approved', 'rejected', 'delivered'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status.' }, { status: 400 });
+    if (!equipment_type || !specifications?.trim()) {
+      return NextResponse.json({ error: 'Equipment type and specifications are required.' }, { status: 400 });
     }
 
-    const { data: equipReq, error: fetchError } = await serviceClient
-      .from('equipment_requests')
-      .select('*, employee:employee_id(id, name, email, employee_code, department)')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !equipReq) {
-      return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
+    const VALID_STATUSES = ['pending', 'approved', 'assigned', 'delivered', 'rejected'];
+    if (status && !VALID_STATUSES.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status value.' }, { status: 400 });
     }
 
-    if (status === 'delivered') {
-      if (equipReq.status !== 'approved') {
-        return NextResponse.json({ error: 'Request must be approved before marking as delivered.' }, { status: 409 });
-      }
-    } else {
-      if (equipReq.status !== 'pending') {
-        return NextResponse.json({ error: `Request is already ${equipReq.status}.` }, { status: 409 });
-      }
-    }
-
-    const { data: updated, error: updateError } = await serviceClient
+    const { data: updated, error } = await serviceClient
       .from('equipment_requests')
       .update({
-        status,
-        approved_by: actor.id,
-        approved_at: new Date().toISOString(),
+        equipment_type,
+        specifications,
+        date_of_issue: date_of_issue || null,
+        device_info: device_info?.trim() || null,
+        total_value: total_value ? Number(total_value) : null,
+        ...(status ? { status } : {}),
       })
       .eq('id', id)
       .select('*, employee:employee_id(id, name, email, employee_code, department)')
       .single();
 
-    if (updateError) throw updateError;
+    if (error) throw error;
 
-    const actionLabels: Record<string, string> = { approved: 'approved', rejected: 'rejected', delivered: 'marked as delivered' };
     await serviceClient.from('activity_log').insert({
-      action: `equipment_${status}`,
-      description: `${actor.name} ${actionLabels[status]} equipment request for ${equipReq.employee?.name ?? 'employee'} — ${equipReq.equipment_type}`,
+      action: 'equipment_updated',
+      description: `Equipment record updated: ${equipment_type}`,
       performed_by: actor.id,
-      target_employee_id: equipReq.employee_id,
-      action_type: status === 'rejected' ? 'warning' : 'success',
+      action_type: 'info',
     });
-
-    try {
-      const emp = equipReq.employee as { name: string; email: string } | null;
-      if (emp?.email) {
-        await sendEquipmentStatusEmail({
-          employeeEmail: emp.email,
-          employeeName: emp.name,
-          equipmentType: equipReq.equipment_type,
-          status: status as 'approved' | 'rejected' | 'delivered',
-        });
-      }
-    } catch (emailErr) {
-      console.error('Email send failed (non-fatal):', emailErr);
-    }
 
     return NextResponse.json({ success: true, request: updated });
   } catch (err) {
     console.error('Equipment PATCH error:', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const serviceClient = createServiceClient();
+    const { data: actor } = await serviceClient
+      .from('employees').select('id, role').eq('auth_user_id', user.id).single();
+    if (!actor) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+
+    if (!['admin', 'hr'].includes(actor.role)) {
+      return NextResponse.json({ error: 'Only HR or Admin can delete equipment records.' }, { status: 403 });
+    }
+
+    const { data: existing } = await serviceClient
+      .from('equipment_requests').select('equipment_type').eq('id', id).single();
+
+    const { error } = await serviceClient.from('equipment_requests').delete().eq('id', id);
+    if (error) throw error;
+
+    await serviceClient.from('activity_log').insert({
+      action: 'equipment_deleted',
+      description: `Equipment record deleted: ${existing?.equipment_type ?? 'Unknown'}`,
+      performed_by: actor.id,
+      action_type: 'warning',
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Equipment DELETE error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

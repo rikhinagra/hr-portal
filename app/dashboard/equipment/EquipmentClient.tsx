@@ -2,447 +2,521 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Check, X, Package, Mail, ClipboardList, ChevronDown } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Pencil, Trash2, Monitor, Package, ChevronDown, CalendarDays } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import type { Employee, EquipmentRequest } from '@/types';
 
 type EquipmentRow = EquipmentRequest & {
   employee: Pick<Employee, 'id' | 'name' | 'email' | 'employee_code' | 'department'> | null;
 };
 
-interface EquipmentClientProps {
+type EmpOption = { id: string; name: string; employee_code: string; department: string };
+
+interface Props {
   employee: Employee;
   initialRequests: EquipmentRow[];
+  employees: EmpOption[];
 }
 
-export default function EquipmentClient({ employee, initialRequests }: EquipmentClientProps) {
+const EQUIPMENT_TYPES = ['Laptop', 'Monitor', 'Keyboard', 'Mouse', 'Headset', 'Mobile', 'Tablet', 'Software License', 'Other'];
+
+const emptyAdd = { employee_id: '', equipment_type: 'Laptop', specifications: '', date_of_issue: '', device_info: '', total_value: '' };
+const emptyReq = { employee_id: '', equipment_type: 'Laptop', specifications: '', urgency: 'Normal', notes: '' };
+
+export default function EquipmentClient({ employee, initialRequests, employees }: Props) {
   const [requests, setRequests] = useState(initialRequests);
-  const [formData, setFormData] = useState({ type: 'Laptop', specs: '', urgency: 'Normal', notes: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [showRequestModal, setShowRequestModal] = useState(false);
 
-  const isAdmin = employee.role === 'admin';
-  const isHrOrIt = employee.role === 'hr' || employee.role === 'it';
-  const isPrivileged = isAdmin || isHrOrIt;
+  const isHr = employee.role === 'hr';
+  const isHrOrAdmin = employee.role === 'hr' || employee.role === 'admin';
 
-  const submitRequest = async () => {
-    if (!formData.specs.trim()) {
-      toast.error('Missing Specs', { description: 'Please provide equipment specifications.' });
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/equipment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ equipment_type: formData.type, specifications: formData.specs, urgency: formData.urgency, notes: formData.notes || null }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setRequests([data.request, ...requests]);
-      setFormData({ type: 'Laptop', specs: '', urgency: 'Normal', notes: '' });
-      setShowRequestModal(false);
-      toast.success('Equipment Request Submitted', { description: 'Email sent to IT Admin.' });
-    } catch (err: unknown) {
-      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Add Record modal
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState(emptyAdd);
 
-  const handleAction = async (reqId: string, status: 'approved' | 'rejected' | 'delivered') => {
-    const key = `${reqId}-${status}`;
-    setActionLoading(key);
-    try {
-      const res = await fetch(`/api/equipment/${reqId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: data.request.status } : r));
-      const labels: Record<string, string> = { approved: 'Approved', rejected: 'Rejected', delivered: 'Marked as Delivered' };
-      toast.success(labels[status], { description: `Equipment request has been ${labels[status].toLowerCase()}.` });
-    } catch (err: unknown) {
-      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  // Edit modal
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ equipment_type: 'Laptop', specifications: '', date_of_issue: '', device_info: '', total_value: '', status: 'pending' });
 
-  const filteredRequests = isPrivileged && search
+  // Request modal (HR only)
+  const [showRequest, setShowRequest] = useState(false);
+  const [reqForm, setReqForm] = useState(emptyReq);
+
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const filtered = search.trim()
     ? requests.filter(r =>
         r.employee?.name?.toLowerCase().includes(search.toLowerCase()) ||
         r.employee?.employee_code?.toLowerCase().includes(search.toLowerCase()) ||
         r.employee?.department?.toLowerCase().includes(search.toLowerCase()) ||
-        r.equipment_type.toLowerCase().includes(search.toLowerCase())
+        r.equipment_type.toLowerCase().includes(search.toLowerCase()) ||
+        r.device_info?.toLowerCase().includes(search.toLowerCase())
       )
     : requests;
 
-  /* ── Privileged view (admin / hr / it) ── */
-  if (isPrivileged) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="page-heading text-2xl">Equipment Requests</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isAdmin ? 'View all employee equipment requests.' : 'Review and process employee equipment requests.'}
-            </p>
-          </div>
-          {isHrOrIt && (
-            <button
-              onClick={() => setShowRequestModal(true)}
-              className="flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm"
+  const today = new Date().toISOString().split('T')[0];
+
+  const handleAdd = async () => {
+    if (!addForm.employee_id || !addForm.specifications.trim()) {
+      toast.error('Missing Fields', { description: 'Employee and specifications are required.' }); return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/equipment', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'record',
+          employee_id: addForm.employee_id,
+          equipment_type: addForm.equipment_type,
+          specifications: addForm.specifications,
+          date_of_issue: addForm.date_of_issue || null,
+          device_info: addForm.device_info || null,
+          total_value: addForm.total_value ? Number(addForm.total_value) : null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRequests(prev => [data.request, ...prev]);
+      setShowAdd(false);
+      setAddForm(emptyAdd);
+      toast.success('Equipment record added.');
+    } catch (err: unknown) {
+      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
+    } finally { setSaving(false); }
+  };
+
+  const openEdit = (r: EquipmentRow) => {
+    setEditingId(r.id);
+    setEditForm({
+      equipment_type: r.equipment_type,
+      specifications: r.specifications,
+      date_of_issue: r.date_of_issue ?? '',
+      device_info: r.device_info ?? '',
+      total_value: r.total_value != null ? String(r.total_value) : '',
+      status: r.status ?? 'pending',
+    });
+    setShowEdit(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editForm.specifications.trim()) {
+      toast.error('Missing Fields', { description: 'Specifications are required.' }); return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/equipment/${editingId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipment_type: editForm.equipment_type,
+          specifications: editForm.specifications,
+          date_of_issue: editForm.date_of_issue || null,
+          device_info: editForm.device_info || null,
+          total_value: editForm.total_value ? Number(editForm.total_value) : null,
+          status: editForm.status,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRequests(prev => prev.map(r => r.id === editingId ? data.request : r));
+      setShowEdit(false);
+      setEditingId(null);
+      toast.success('Equipment record updated.');
+    } catch (err: unknown) {
+      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
+    } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (r: EquipmentRow) => {
+    setDeletingId(r.id);
+    try {
+      const res = await fetch(`/api/equipment/${r.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRequests(prev => prev.filter(x => x.id !== r.id));
+      toast.success('Equipment record deleted.');
+    } catch (err: unknown) {
+      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
+    } finally { setDeletingId(null); }
+  };
+
+  const handleRequest = async () => {
+    if (!reqForm.employee_id || !reqForm.specifications.trim()) {
+      toast.error('Missing Fields', { description: 'Employee and specifications are required.' }); return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/equipment', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'request',
+          employee_id: reqForm.employee_id,
+          equipment_type: reqForm.equipment_type,
+          specifications: reqForm.specifications,
+          urgency: reqForm.urgency,
+          notes: reqForm.notes || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setRequests(prev => [data.request, ...prev]);
+      setShowRequest(false);
+      setReqForm(emptyReq);
+      toast.success('Equipment Requested', { description: 'Email sent to IT team.' });
+    } catch (err: unknown) {
+      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
+    } finally { setSaving(false); }
+  };
+
+  const fmtDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+  const fmtValue = (v: number | null) =>
+    v != null ? `₹${Number(v).toLocaleString('en-IN')}` : '—';
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="page-heading text-2xl">Equipment Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isHrOrAdmin ? 'Manage equipment assigned to employees.' : 'View all company equipment records.'}
+          </p>
+        </div>
+        {isHrOrAdmin && (
+          <div className="flex gap-2 flex-wrap">
+            {isHr && (
+              <button onClick={() => setShowRequest(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border"
+                style={{ background: 'rgba(58,123,213,0.1)', color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.25)' }}>
+                <Package className="size-4" /> Request Equipment
+              </button>
+            )}
+            <button onClick={() => setShowAdd(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold"
               style={{ background: '#c8985e', color: '#0f1a2e' }}>
-              + New Request
+              + Add Record
             </button>
-          )}
-        </div>
-
-        <input
-          type="text"
-          placeholder="Search by name, code, department, or equipment…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full px-4 py-2.5 border rounded-lg text-sm bg-background text-foreground outline-none focus:ring-2 focus:ring-[#c8985e]/30"
-        />
-
-        {/* Desktop Table */}
-        <Card className="hidden md:block">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ background: '#0f1a2e' }}>
-                    {['Employee', 'Code', 'Equipment', 'Specifications', 'Urgency', 'Status', 'Date', ...(isHrOrIt ? ['Actions'] : [])].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-white whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredRequests.length === 0 ? (
-                    <tr>
-                      <td colSpan={isHrOrIt ? 8 : 7} className="py-10 text-center text-muted-foreground">
-                        No requests found.
-                      </td>
-                    </tr>
-                  ) : filteredRequests.map(r => (
-                    <tr key={r.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-foreground whitespace-nowrap">{r.employee?.name ?? '—'}</div>
-                        <div className="text-xs text-muted-foreground">{r.employee?.department}</div>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{r.employee?.employee_code ?? '—'}</td>
-                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{r.equipment_type}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[200px]">
-                        <span className="line-clamp-2">{r.specifications}</span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap"><UrgencyTag urgency={r.urgency} /></td>
-                      <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={r.status} /></td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </td>
-                      {isHrOrIt && (
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <ActionButtons req={r} onAction={handleAction} actionLoading={actionLoading} />
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Mobile Cards */}
-        <div className="flex flex-col gap-3 md:hidden">
-          {filteredRequests.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">No requests found.</CardContent>
-            </Card>
-          ) : filteredRequests.map(r => (
-            <Card key={r.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <div className="font-semibold text-foreground text-sm">{r.employee?.name ?? '—'}</div>
-                    <div className="text-xs text-muted-foreground">{r.employee?.employee_code} · {r.employee?.department}</div>
-                  </div>
-                  <StatusBadge status={r.status} />
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-foreground">{r.equipment_type}</span>
-                  <span className="text-muted-foreground">·</span>
-                  <UrgencyTag urgency={r.urgency} />
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{r.specifications}</p>
-                {r.notes && <p className="text-xs text-muted-foreground mt-1 italic">{r.notes}</p>}
-                <div className="text-xs text-muted-foreground mt-2">
-                  {new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </div>
-                {isHrOrIt && (
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <ActionButtons req={r} onAction={handleAction} actionLoading={actionLoading} />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* New Request Modal — HR/IT only */}
-        {showRequestModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 px-4" style={{ background: 'rgba(0,0,0,.55)' }}>
-            <div className="rounded-2xl p-6 sm:p-8 w-full max-w-lg shadow-2xl bg-card text-foreground border animate-slide-up max-h-[90vh] overflow-y-auto">
-              <h3 className="text-lg font-semibold text-foreground mb-1" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
-                New Equipment Request
-              </h3>
-              <p className="text-sm text-muted-foreground mb-5">Submit a request for yourself. Email goes to IT Admin.</p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">Equipment Type</label>
-                  <div className="relative">
-                    <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                      <option>Laptop</option><option>Monitor</option><option>Keyboard</option>
-                      <option>Mouse</option><option>Headset</option><option>Mobile</option>
-                      <option>Software License</option><option>Other</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">Specifications / Details *</label>
-                  <textarea value={formData.specs} onChange={e => setFormData({ ...formData, specs: e.target.value })}
-                    placeholder="e.g. 16GB RAM, i7 processor, Ubuntu OS" rows={3}
-                    className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground resize-y" />
-                </div>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">Urgency</label>
-                  <div className="relative">
-                    <select value={formData.urgency} onChange={e => setFormData({ ...formData, urgency: e.target.value })}
-                      className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                      <option>Low</option><option>Normal</option><option>High</option><option>Critical</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1.5">Additional Notes</label>
-                  <input value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Optional — any extra context"
-                    className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => { setShowRequestModal(false); setFormData({ type: 'Laptop', specs: '', urgency: 'Normal', notes: '' }); }}
-                  className="px-5 py-2.5 rounded-lg text-sm border border-border text-muted-foreground bg-transparent hover:bg-muted transition-colors">
-                  Cancel
-                </button>
-                <button onClick={submitRequest} disabled={submitting}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold"
-                  style={{ background: submitting ? '#ccc' : '#c8985e', color: '#0f1a2e', cursor: submitting ? 'wait' : 'pointer' }}>
-                  {submitting ? 'Submitting…' : 'Submit Request'}
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>
-    );
-  }
 
-  /* ── Employee view ── */
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-heading text-2xl">Equipment Request</h1>
-        <p className="text-sm text-muted-foreground mt-1">Request hardware or software. Email sent to IT automatically.</p>
+      {/* Search */}
+      <input type="text" placeholder="Search by name, code, department, equipment type…"
+        value={search} onChange={e => setSearch(e.target.value)}
+        className="w-full px-4 py-2.5 border rounded-lg text-sm bg-background text-foreground outline-none focus:ring-2 focus:ring-[#c8985e]/30" />
+
+      {/* Desktop Table */}
+      <Card className="hidden md:block">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ background: '#0f1a2e' }}>
+                  {['Employee', 'Equipment', 'Specifications', 'Device Info', 'Date of Issue', 'Total Value', 'Status', ...(isHrOrAdmin ? ['Actions'] : [])].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-white whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={isHrOrAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">No equipment records found.</td>
+                  </tr>
+                ) : filtered.map(r => (
+                  <tr key={r.id} className="hover:bg-muted/40 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-foreground whitespace-nowrap">{r.employee?.name ?? '—'}</div>
+                      <div className="text-xs text-muted-foreground">{r.employee?.employee_code} · {r.employee?.department}</div>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{r.equipment_type}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px]">
+                      <span className="line-clamp-2">{r.specifications}</span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.device_info ?? '—'}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(r.date_of_issue)}</td>
+                    <td className="px-4 py-3 text-xs font-semibold text-foreground whitespace-nowrap">{fmtValue(r.total_value)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={r.status} /></td>
+                    {isHrOrAdmin && (
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <button onClick={() => openEdit(r)}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border"
+                            style={{ color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.3)' }}>
+                            <Pencil className="size-3" /> Edit
+                          </button>
+                          <button onClick={() => handleDelete(r)} disabled={deletingId === r.id}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border"
+                            style={{ color: '#b33a3a', borderColor: 'rgba(179,58,58,0.3)', opacity: deletingId === r.id ? 0.5 : 1 }}>
+                            <Trash2 className="size-3" /> {deletingId === r.id ? '…' : 'Delete'}
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mobile Cards */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {filtered.length === 0 ? (
+          <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No equipment records found.</CardContent></Card>
+        ) : filtered.map(r => (
+          <Card key={r.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <div className="font-semibold text-foreground text-sm">{r.employee?.name ?? '—'}</div>
+                  <div className="text-xs text-muted-foreground">{r.employee?.employee_code} · {r.employee?.department}</div>
+                </div>
+                <StatusBadge status={r.status} />
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <Monitor className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
+                <span className="text-sm font-medium text-foreground">{r.equipment_type}</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">{r.specifications}</p>
+              {r.device_info && <p className="text-xs text-muted-foreground mb-1">Device: {r.device_info}</p>}
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                {r.date_of_issue && <span>Issued: {fmtDate(r.date_of_issue)}</span>}
+                {r.total_value != null && <span>Value: {fmtValue(r.total_value)}</span>}
+              </div>
+              {isHrOrAdmin && (
+                <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                  <button onClick={() => openEdit(r)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
+                    style={{ color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.3)' }}>
+                    <Pencil className="size-3" /> Edit
+                  </button>
+                  <button onClick={() => handleDelete(r)} disabled={deletingId === r.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
+                    style={{ color: '#b33a3a', borderColor: 'rgba(179,58,58,0.3)', opacity: deletingId === r.id ? 0.5 : 1 }}>
+                    <Trash2 className="size-3" /> {deletingId === r.id ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid gap-6 equipment-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        {/* Form */}
-        <Card>
-          <CardHeader className="pb-0">
-            <h3 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>New Request</h3>
-          </CardHeader>
-          <CardContent className="pt-5 space-y-4">
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Equipment Type</label>
-              <div className="relative">
-                <select
-                  value={formData.type}
-                  onChange={e => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                  <option>Laptop</option>
-                  <option>Monitor</option>
-                  <option>Keyboard</option>
-                  <option>Mouse</option>
-                  <option>Headset</option>
-                  <option>Mobile</option>
-                  <option>Software License</option>
-                  <option>Other</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Specifications / Details *</label>
-              <textarea
-                value={formData.specs}
-                onChange={e => setFormData({ ...formData, specs: e.target.value })}
-                placeholder="e.g. 16GB RAM, i7 processor, Ubuntu OS"
-                rows={3}
+      {/* ── Add Record Modal ── */}
+      {showAdd && (
+        <ModalShell title="Add Equipment Record" onClose={() => { setShowAdd(false); setAddForm(emptyAdd); }}>
+          <div className="space-y-4">
+            <Field label="Employee *">
+              <EmpSelect employees={employees} value={addForm.employee_id} onChange={v => setAddForm(f => ({ ...f, employee_id: v }))} />
+            </Field>
+            <Field label="Equipment Type *">
+              <Sel value={addForm.equipment_type} onChange={v => setAddForm(f => ({ ...f, equipment_type: v }))}>
+                {EQUIPMENT_TYPES.map(t => <option key={t}>{t}</option>)}
+              </Sel>
+            </Field>
+            <Field label="Specifications *">
+              <textarea value={addForm.specifications} onChange={e => setAddForm(f => ({ ...f, specifications: e.target.value }))}
+                placeholder="e.g. Dell Inspiron, 16GB RAM, 512GB SSD" rows={2}
                 className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground resize-y" />
-            </div>
-
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Urgency</label>
-              <div className="relative">
-                <select
-                  value={formData.urgency}
-                  onChange={e => setFormData({ ...formData, urgency: e.target.value })}
-                  className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                  <option>Low</option>
-                  <option>Normal</option>
-                  <option>High</option>
-                  <option>Critical</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Additional Notes</label>
-              <input
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Optional — any extra context"
+            </Field>
+            <Field label="Date of Issue">
+              <DateInput value={addForm.date_of_issue} max={today} onChange={v => setAddForm(f => ({ ...f, date_of_issue: v }))} />
+            </Field>
+            <Field label="Device Info (Serial No. / Model)">
+              <input value={addForm.device_info} onChange={e => setAddForm(f => ({ ...f, device_info: e.target.value }))}
+                placeholder="e.g. SN: ABC123, Model: XPS 15"
                 className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
+            </Field>
+            <Field label="Total Value (₹)">
+              <input type="number" min="0" value={addForm.total_value} onChange={e => setAddForm(f => ({ ...f, total_value: e.target.value }))}
+                placeholder="e.g. 75000"
+                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
+            </Field>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => { setShowAdd(false); setAddForm(emptyAdd); }}
+                className="flex-1 py-2.5 rounded-lg text-sm border text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+              <button onClick={handleAdd} disabled={saving}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: saving ? '#ccc' : '#c8985e', color: '#0f1a2e' }}>
+                {saving ? 'Saving…' : 'Add Record'}
+              </button>
             </div>
+          </div>
+        </ModalShell>
+      )}
 
-            <div className="rounded-lg p-3 text-xs text-muted-foreground space-y-1.5" style={{ background: 'rgba(200,152,94,0.1)' }}>
-              <div className="flex items-center gap-2">
-                <Mail className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
-                Email will be sent to IT Admin and HR automatically
-              </div>
-              <div className="flex items-center gap-2">
-                <ClipboardList className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
-                Request will appear in IT dashboard for processing
-              </div>
+      {/* ── Edit Record Modal ── */}
+      {showEdit && (
+        <ModalShell title="Edit Equipment Record" onClose={() => { setShowEdit(false); setEditingId(null); }}>
+          <div className="space-y-4">
+            <Field label="Equipment Type *">
+              <Sel value={editForm.equipment_type} onChange={v => setEditForm(f => ({ ...f, equipment_type: v }))}>
+                {EQUIPMENT_TYPES.map(t => <option key={t}>{t}</option>)}
+              </Sel>
+            </Field>
+            <Field label="Specifications *">
+              <textarea value={editForm.specifications} onChange={e => setEditForm(f => ({ ...f, specifications: e.target.value }))}
+                rows={2} className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground resize-y" />
+            </Field>
+            <Field label="Date of Issue">
+              <DateInput value={editForm.date_of_issue} max={today} onChange={v => setEditForm(f => ({ ...f, date_of_issue: v }))} />
+            </Field>
+            <Field label="Device Info (Serial No. / Model)">
+              <input value={editForm.device_info} onChange={e => setEditForm(f => ({ ...f, device_info: e.target.value }))}
+                placeholder="e.g. SN: ABC123, Model: XPS 15"
+                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
+            </Field>
+            <Field label="Status *">
+              <Sel value={editForm.status} onChange={v => setEditForm(f => ({ ...f, status: v }))}>
+                <option value="pending">Requested</option>
+                <option value="approved">Approved</option>
+                <option value="assigned">Assigned</option>
+                <option value="delivered">Delivered</option>
+                <option value="rejected">Rejected</option>
+              </Sel>
+            </Field>
+            <Field label="Total Value (₹)">
+              <input type="number" min="0" value={editForm.total_value} onChange={e => setEditForm(f => ({ ...f, total_value: e.target.value }))}
+                placeholder="e.g. 75000"
+                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
+            </Field>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => { setShowEdit(false); setEditingId(null); }}
+                className="flex-1 py-2.5 rounded-lg text-sm border text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+              <button onClick={handleEdit} disabled={saving}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: saving ? '#ccc' : '#c8985e', color: '#0f1a2e' }}>
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
             </div>
+          </div>
+        </ModalShell>
+      )}
 
-            <button
-              onClick={submitRequest}
-              disabled={submitting}
-              className="w-full py-3 rounded-lg font-semibold text-sm"
-              style={{ background: submitting ? '#ccc' : '#c8985e', color: '#0f1a2e', cursor: submitting ? 'wait' : 'pointer' }}>
-              {submitting ? 'Submitting…' : 'Submit Request'}
-            </button>
-          </CardContent>
-        </Card>
-
-        {/* History */}
-        <div className="space-y-3">
-          <h3 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Request History</h3>
-          {requests.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">No equipment requests yet.</CardContent>
-            </Card>
-          ) : requests.map(r => (
-            <Card key={r.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <span className="font-semibold text-sm text-foreground">{r.equipment_type}</span>
-                  <StatusBadge status={r.status} />
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{r.specifications}</p>
-                {r.notes && <p className="text-xs text-muted-foreground mt-1 italic">{r.notes}</p>}
-                <div className="text-xs text-muted-foreground mt-2">
-                  {new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {' · '}Urgency: <UrgencyTag urgency={r.urgency} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      <style>{`@media(max-width:768px){.equipment-grid{grid-template-columns:1fr!important}}`}</style>
+      {/* ── Request Equipment Modal (HR only) ── */}
+      {showRequest && (
+        <ModalShell title="Request Equipment" onClose={() => { setShowRequest(false); setReqForm(emptyReq); }}>
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground -mt-2">An email will be sent to the IT team to procure this equipment.</p>
+            <Field label="Employee *">
+              <EmpSelect employees={employees} value={reqForm.employee_id} onChange={v => setReqForm(f => ({ ...f, employee_id: v }))} />
+            </Field>
+            <Field label="Equipment Type *">
+              <Sel value={reqForm.equipment_type} onChange={v => setReqForm(f => ({ ...f, equipment_type: v }))}>
+                {EQUIPMENT_TYPES.map(t => <option key={t}>{t}</option>)}
+              </Sel>
+            </Field>
+            <Field label="Specifications *">
+              <textarea value={reqForm.specifications} onChange={e => setReqForm(f => ({ ...f, specifications: e.target.value }))}
+                placeholder="e.g. 16GB RAM, i7 processor, Windows 11" rows={2}
+                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground resize-y" />
+            </Field>
+            <Field label="Urgency">
+              <Sel value={reqForm.urgency} onChange={v => setReqForm(f => ({ ...f, urgency: v }))}>
+                <option>Low</option><option>Normal</option><option>High</option><option>Critical</option>
+              </Sel>
+            </Field>
+            <Field label="Notes (optional)">
+              <input value={reqForm.notes} onChange={e => setReqForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Any additional context for IT"
+                className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
+            </Field>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => { setShowRequest(false); setReqForm(emptyReq); }}
+                className="flex-1 py-2.5 rounded-lg text-sm border text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+              <button onClick={handleRequest} disabled={saving}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: saving ? '#ccc' : '#3a7bd5', color: '#fff' }}>
+                {saving ? 'Sending…' : 'Send to IT'}
+              </button>
+            </div>
+          </div>
+        </ModalShell>
+      )}
     </div>
   );
 }
 
-function ActionButtons({ req, onAction, actionLoading }: {
-  req: EquipmentRow;
-  onAction: (id: string, status: 'approved' | 'rejected' | 'delivered') => void;
-  actionLoading: string | null;
-}) {
-  const isActioning = actionLoading?.startsWith(req.id) ?? false;
+/* ── Small helper components ── */
 
-  if (req.status === 'pending') {
-    return (
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => onAction(req.id, 'approved')}
-          disabled={isActioning}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-          style={{ background: 'rgba(46,125,50,0.12)', color: '#2e7d32', opacity: isActioning ? 0.6 : 1, cursor: isActioning ? 'wait' : 'pointer' }}>
-          <Check className="size-3.5" />
-          {actionLoading === `${req.id}-approved` ? 'Approving…' : 'Approve'}
-        </button>
-        <button
-          onClick={() => onAction(req.id, 'rejected')}
-          disabled={isActioning}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-          style={{ background: 'rgba(179,58,58,0.12)', color: '#b33a3a', opacity: isActioning ? 0.6 : 1, cursor: isActioning ? 'wait' : 'pointer' }}>
-          <X className="size-3.5" />
-          {actionLoading === `${req.id}-rejected` ? 'Rejecting…' : 'Reject'}
-        </button>
+function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 px-4" style={{ background: 'rgba(0,0,0,.55)' }}>
+      <div className="rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl bg-card text-foreground border max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-playfair), serif' }}>{title}</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
+        </div>
+        {children}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  if (req.status === 'approved') {
-    return (
-      <button
-        onClick={() => onAction(req.id, 'delivered')}
-        disabled={isActioning}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-        style={{ background: 'rgba(58,123,213,0.12)', color: '#3a7bd5', opacity: isActioning ? 0.6 : 1, cursor: isActioning ? 'wait' : 'pointer' }}>
-        <Package className="size-3.5" />
-        {actionLoading === `${req.id}-delivered` ? 'Saving…' : 'Mark Delivered'}
-      </button>
-    );
-  }
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs text-muted-foreground mb-1.5">{label}</label>
+      {children}
+    </div>
+  );
+}
 
-  return <span className="text-xs text-muted-foreground">—</span>;
+function EmpSelect({ employees, value, onChange }: { employees: EmpOption[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="relative">
+      <select value={value} onChange={e => onChange(e.target.value)}
+        className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
+        <option value="">— Select Employee —</option>
+        {employees.map(e => (
+          <option key={e.id} value={e.id}>{e.name} ({e.employee_code}) · {e.department}</option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+    </div>
+  );
+}
+
+function Sel({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <select value={value} onChange={e => onChange(e.target.value)}
+        className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
+        {children}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+    </div>
+  );
+}
+
+function DateInput({ value, max, onChange }: { value: string; max?: string; onChange: (v: string) => void }) {
+  return (
+    <div className="relative">
+      <input type="date" value={value} max={max} onChange={e => onChange(e.target.value)}
+        className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none" />
+      {!value && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
+      <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+      <style>{`input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;right:0;width:44px;height:100%;opacity:0;cursor:pointer}`}</style>
+    </div>
+  );
 }
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    pending:   { bg: 'rgba(230,126,34,.12)',  color: '#e67e22', label: 'Pending' },
+    assigned:  { bg: 'rgba(22,163,74,.12)',   color: '#16a34a', label: 'Assigned' },
+    pending:   { bg: 'rgba(230,126,34,.12)',  color: '#e67e22', label: 'Requested' },
     approved:  { bg: 'rgba(46,125,50,.12)',   color: '#2e7d32', label: 'Approved' },
     delivered: { bg: 'rgba(58,123,213,.12)',  color: '#3a7bd5', label: 'Delivered' },
     rejected:  { bg: 'rgba(179,58,58,.12)',   color: '#b33a3a', label: 'Rejected' },
   };
-  const s = map[status] ?? map.pending;
+  const s = map[status] ?? map.assigned;
   return (
-    <span className="px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0" style={{ background: s.bg, color: s.color }}>
+    <span className="px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 whitespace-nowrap" style={{ background: s.bg, color: s.color }}>
       {s.label}
     </span>
   );
-}
-
-function UrgencyTag({ urgency }: { urgency: string }) {
-  const colors: Record<string, string> = { Critical: '#b33a3a', High: '#e67e22', Normal: '#3a7bd5', Low: '#2e7d32' };
-  return <span className="text-xs font-semibold" style={{ color: colors[urgency] ?? '#3a7bd5' }}>{urgency}</span>;
 }

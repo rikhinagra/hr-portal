@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { sendOffboardingEmail } from '@/lib/resend';
 
 export async function GET() {
   try {
@@ -46,6 +47,12 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { id, is_active } = body;
 
+    const { data: empData } = await serviceClient
+      .from('employees')
+      .select('name, employee_code, department, designation')
+      .eq('id', id)
+      .single();
+
     const { data, error } = await serviceClient
       .from('employees')
       .update({ is_active })
@@ -57,11 +64,25 @@ export async function PATCH(request: NextRequest) {
 
     await serviceClient.from('activity_log').insert({
       action: 'employee_status_updated',
-      description: `Employee account marked as ${is_active ? 'Active' : 'Inactive'}`,
+      description: `Employee account marked as ${is_active ? 'Active' : 'Offboarded'}`,
       performed_by: admin.id,
       target_employee_id: id,
       action_type: is_active ? 'success' : 'warning',
     });
+
+    // Send offboarding email to IT when employee is deactivated (best effort)
+    if (!is_active && empData) {
+      try {
+        await sendOffboardingEmail({
+          employeeName: empData.name,
+          employeeCode: empData.employee_code,
+          department: empData.department,
+          designation: empData.designation,
+        });
+      } catch (emailErr) {
+        console.error('Offboarding email failed (non-fatal):', emailErr);
+      }
+    }
 
     return NextResponse.json({ success: true, employee: data });
   } catch (err) {

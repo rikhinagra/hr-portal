@@ -5,45 +5,65 @@ export default function EquipmentLoading() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-1.5">
-        <Skeleton className="h-7 w-44" />
-        <Skeleton className="h-4 w-72" />
-      </div>
-
-      <div className="grid gap-6 equipment-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        {/* Form */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <Skeleton className="h-5 w-28 mb-1" />
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-1.5">
-                <Skeleton className="h-3.5 w-28" />
-                <Skeleton className="h-10 w-full rounded-lg" />
-              </div>
-            ))}
-            <Skeleton className="h-12 rounded-lg w-full mt-2" />
-          </CardContent>
-        </Card>
-
-        {/* History */}
-        <div className="space-y-3">
-          <Skeleton className="h-5 w-36" />
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-                <Skeleton className="h-3.5 w-full" />
-                <Skeleton className="h-3 w-40" />
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1.5">
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-36 rounded-lg" />
+          <Skeleton className="h-10 w-28 rounded-lg" />
         </div>
       </div>
 
-      <style>{`@media(max-width:768px){.equipment-grid{grid-template-columns:1fr!important}}`}</style>
+      {/* Search */}
+      <Skeleton className="h-10 w-full rounded-lg" />
+
+      {/* Table skeleton */}
+      <Card className="hidden md:block">
+        <CardContent className="p-0">
+          <Skeleton className="h-10 w-full rounded-t-xl" />
+          <div className="divide-y">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <div className="space-y-1.5 w-36">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-32 flex-1" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-7 w-14 rounded" />
+                  <Skeleton className="h-7 w-16 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mobile cards skeleton */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-3 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

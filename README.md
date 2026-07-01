@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="public/sachhsoft_logo.png" alt="SACHHSOFT" width="160" />
+  <img src="public/aadhcode-logo.webp" alt="Aadhcode" width="160" />
   <h3>AadhCode Solutions Pvt. Ltd.</h3>
   <p>Internal HR Portal — Confidential, For Internal Use Only</p>
-  <p><strong>Live:</strong> <a href="https://portal.sachhsoft.com">portal.sachhsoft.com</a></p>
+  <p><strong>Live:</strong> <a href="https://portal.aadhcode.com">portal.aadhcode.com</a></p>
 </div>
 
 ---

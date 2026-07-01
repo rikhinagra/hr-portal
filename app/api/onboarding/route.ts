@@ -18,27 +18,29 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email: personalEmail, workEmail, designation, department, dob } = body;
+    const { name, email: personalEmail, designation, department, dob, employmentType } = body;
 
-    if (!name?.trim() || !personalEmail?.trim() || !workEmail?.trim() || !designation?.trim() || !department?.trim()) {
+    if (!name?.trim() || !personalEmail?.trim() || !designation?.trim() || !department?.trim()) {
       return NextResponse.json({ error: 'All required fields must be filled.' }, { status: 400 });
     }
 
-    // Generate next employee code
+    // Generate next employee code in format ADC{YEAR}{NNNN}
+    const currentYear = new Date().getFullYear();
+
     const { data: lastEmp } = await serviceClient
       .from('employees')
       .select('employee_code')
-      .like('employee_code', 'AC%')
+      .like('employee_code', 'ADC%')
       .order('employee_code', { ascending: false })
       .limit(1)
       .single();
 
-    let nextNum = 10;
+    let nextNum = 51; // Continues from ADC20260050 (last in company spreadsheet)
     if (lastEmp?.employee_code) {
-      const match = lastEmp.employee_code.match(/AC(\d+)/);
+      const match = lastEmp.employee_code.match(/ADC\d{4}(\d+)/);
       if (match) nextNum = parseInt(match[1]) + 1;
     }
-    const newCode = `AC${String(nextNum).padStart(3, '0')}`;
+    const newCode = `ADC${currentYear}${String(nextNum).padStart(4, '0')}`;
     const empDob = dob || '2000-01-01';
 
     // Portal login uses employee code as the auth identifier
@@ -70,8 +72,9 @@ export async function POST(request: NextRequest) {
         employee_code: newCode,
         dob: empDob,
         name: name.trim(),
-        email: workEmail.trim().toLowerCase(),      // work email stored here
-        personal_email: personalEmail.trim().toLowerCase(), // personal email stored here
+        email: null,
+        personal_email: personalEmail.trim().toLowerCase(),
+        employment_type: employmentType ?? 'Full-Time',
         role: 'employee',
         department: department.trim(),
         designation: designation.trim(),
@@ -106,7 +109,6 @@ export async function POST(request: NextRequest) {
         designation,
         department,
         personalEmail: personalEmail.trim(),
-        workEmail: workEmail.trim(),
         employeeCode: newCode,
         dob: empDob,
       });

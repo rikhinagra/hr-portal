@@ -11,11 +11,11 @@ function emailWrapper(body: string): string {
 <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
   <div style="background:${navy};padding:28px 32px">
     <div style="font-size:.65rem;letter-spacing:3px;color:${gold};text-transform:uppercase">AadhCode Solutions Pvt. Ltd.</div>
-    <div style="font-size:1.3rem;color:#fff;margin-top:4px;font-weight:600">SACHHSOFT — Employee Portal</div>
+    <div style="font-size:1.3rem;color:#fff;margin-top:4px;font-weight:600">Aadhcode — Employee Portal</div>
   </div>
   <div style="padding:32px">${body}</div>
   <div style="background:#f5f0ea;padding:20px 32px;text-align:center;font-size:.75rem;color:#8a8a8a">
-    © 2026 AadhCode Solutions Pvt. Ltd. | Brand SACHHSOFT<br>
+    © 2026 AadhCode Solutions Pvt. Ltd. | Brand Aadhcode<br>
     <em>Confidential | For Internal Use Only</em>
   </div>
 </div></body></html>`;
@@ -53,7 +53,7 @@ export async function sendLeaveRequestEmail({
       <tr><td style="padding:8px 0;color:#8a8a8a">Leave Type</td><td style="padding:8px 0">${leaveTypeLabel}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Start Date</td><td style="padding:8px 0">${formattedStart}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">End Date</td><td style="padding:8px 0">${formattedEnd}</td></tr>
-      <tr><td style="padding:8px 0;color:#8a8a8a">Total Days</td><td style="padding:8px 0;font-weight:700;color:${navy}">${days} Day${days > 1 ? 's' : ''}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Total Days</td><td style="padding:8px 0;font-weight:700;color:${navy}">${days === 0.5 ? 'Half Day' : `${days} Day${days > 1 ? 's' : ''}`}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Reason</td><td style="padding:8px 0">${reason}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:rgba(200,152,94,.1);border-radius:8px;border-left:4px solid ${gold};font-size:.85rem;color:#5a5a5a">
@@ -65,8 +65,8 @@ export async function sendLeaveRequestEmail({
     to: toEmails,
     cc: ccEmails.length > 0 ? ccEmails : undefined,
     subject: isHrApplying
-      ? `HR Leave Request: ${employeeName} (${leaveTypeLabel}) — ${days} Day${days > 1 ? 's' : ''}`
-      : `Leave Request: ${employeeName} (${leaveTypeLabel}) — ${days} Day${days > 1 ? 's' : ''}`,
+      ? `HR Leave Request: ${employeeName} (${leaveTypeLabel}), ${days === 0.5 ? 'Half Day' : `${days} Day${days > 1 ? 's' : ''}`}`
+      : `Leave Request: ${employeeName} (${leaveTypeLabel}), ${days === 0.5 ? 'Half Day' : `${days} Day${days > 1 ? 's' : ''}`}`,
     html: emailWrapper(body),
   });
 }
@@ -93,7 +93,7 @@ export async function sendLeaveStatusEmail({
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: employeeEmail,
-    subject: `${isApproved ? '✅' : '❌'} Leave ${isApproved ? 'Approved' : 'Not Approved'} — ${startDate} to ${endDate}`,
+    subject: `Leave ${isApproved ? 'Approved' : 'Not Approved'}: ${startDate} to ${endDate}`,
     html: emailWrapper(body),
   });
 }
@@ -112,13 +112,72 @@ export async function sendHandbookAckEmail({
       <tr><td style="padding:8px 0;color:#8a8a8a">Acknowledged At</td><td style="padding:8px 0">${new Date(acknowledgedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })} IST</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">
-      The employee has confirmed they have read and understood the SACHHSOFT Employee Handbook.
+      The employee has confirmed they have read and understood the Aadhcode Employee Handbook.
     </div>`;
 
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: process.env.EMAIL_HR_DESK!,
-    subject: `📖 Handbook Acknowledged — ${employeeName} (${employeeCode})`,
+    subject: `Handbook Acknowledged: ${employeeName} (${employeeCode})`,
+    html: emailWrapper(body),
+  });
+}
+
+export async function sendITWorkAccountEmail({
+  employeeName, employeeCode, department, designation, ccEmails = [],
+}: {
+  employeeName: string; employeeCode: string; department: string; designation: string; ccEmails?: string[];
+}) {
+  const body = `
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">Action Required: Create Work Account</h2>
+    <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
+    <p style="font-size:.9rem;color:#5a5a5a;margin-bottom:20px">
+      A new employee has acknowledged the Employee Handbook. Please create their official work email account and provide access to company systems.
+    </p>
+    <table style="width:100%;font-size:.9rem;border-collapse:collapse">
+      <tr><td style="padding:8px 0;color:#8a8a8a;width:160px">Employee Name</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Employee Code</td><td style="padding:8px 0;font-family:monospace;font-weight:700;color:${navy}">${employeeCode}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Department</td><td style="padding:8px 0">${department}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Designation</td><td style="padding:8px 0">${designation}</td></tr>
+    </table>
+    <div style="margin-top:24px;padding:16px;background:rgba(200,152,94,.1);border-radius:8px;border-left:4px solid ${gold};font-size:.85rem;color:#5a5a5a">
+      <strong>Action Required:</strong> Please create the official work email account for this employee and update their profile in the HR Portal once done.
+    </div>`;
+
+  return resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: process.env.EMAIL_IT_ADMIN!,
+    cc: ccEmails.length > 0 ? ccEmails : undefined,
+    subject: `Create Work Account: ${employeeName} (${employeeCode})`,
+    html: emailWrapper(body),
+  });
+}
+
+export async function sendOffboardingEmail({
+  employeeName, employeeCode, department, designation,
+}: {
+  employeeName: string; employeeCode: string; department: string; designation: string;
+}) {
+  const body = `
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">Action Required: Employee Offboarding</h2>
+    <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
+    <p style="font-size:.9rem;color:#5a5a5a;margin-bottom:20px">
+      The following employee has been offboarded from Aadhcode. Please deactivate all their accounts and revoke access to company systems immediately.
+    </p>
+    <table style="width:100%;font-size:.9rem;border-collapse:collapse">
+      <tr><td style="padding:8px 0;color:#8a8a8a;width:160px">Employee Name</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Employee Code</td><td style="padding:8px 0;font-family:monospace;font-weight:700;color:${navy}">${employeeCode}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Department</td><td style="padding:8px 0">${department}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Designation</td><td style="padding:8px 0">${designation}</td></tr>
+    </table>
+    <div style="margin-top:24px;padding:16px;background:rgba(179,58,58,.08);border-radius:8px;border-left:4px solid #b33a3a;font-size:.85rem;color:#5a5a5a">
+      <strong>Action Required:</strong> Please deactivate the following immediately — Google Workspace account, work email, internal tools access, and any other company system access for this employee.
+    </div>`;
+
+  return resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: process.env.EMAIL_IT_ADMIN!,
+    subject: `Offboarding: Deactivate All Accounts — ${employeeName} (${employeeCode})`,
     html: emailWrapper(body),
   });
 }
@@ -149,7 +208,7 @@ export async function sendEquipmentRequestEmail({
     from: process.env.EMAIL_FROM!,
     to: process.env.EMAIL_IT_ADMIN!,
     cc: ccEmails.length > 0 ? ccEmails : undefined,
-    subject: `Equipment Request: ${equipmentType} (${urgency}) — ${employeeName}`,
+    subject: `Equipment Request: ${equipmentType} (${urgency}), ${employeeName}`,
     html: emailWrapper(body),
   });
 }
@@ -183,7 +242,7 @@ export async function sendEquipmentStatusEmail({
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: employeeEmail,
-    subject: `${status === 'approved' ? '✅' : status === 'rejected' ? '❌' : '📦'} Equipment Request ${labels[status]} — ${equipmentType}`,
+    subject: `Equipment Request ${labels[status]}: ${equipmentType}`,
     html: emailWrapper(body),
   });
 }
@@ -192,21 +251,21 @@ export async function sendOnboardingWelcomeEmail({
   newHireName, designation, department, personalEmail, workEmail, employeeCode, dob,
 }: {
   newHireName: string; designation: string; department: string;
-  personalEmail: string; workEmail: string; employeeCode: string; dob: string;
+  personalEmail: string; workEmail?: string; employeeCode: string; dob: string;
 }) {
-  const portalUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://portal.sachhsoft.com';
+  const portalUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://portal.aadhcode.com';
   const body = `
-    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">Welcome to SACHHSOFT, ${newHireName}!</h2>
+    <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">Welcome to Aadhcode, ${newHireName}!</h2>
     <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
     <p style="font-size:.9rem;color:#5a5a5a;margin-bottom:20px">
-      We are thrilled to have you join the SACHHSOFT family as <strong>${designation}</strong> in the <strong>${department}</strong> team. Your official onboarding has been completed. Here are your details:
+      We are thrilled to have you join the Aadhcode family as <strong>${designation}</strong> in the <strong>${department}</strong> team. Your official onboarding has been completed. Here are your details:
     </p>
 
     <div style="background:#f5f0ea;border-radius:10px;padding:20px 24px;margin-bottom:24px">
       <div style="font-size:.7rem;letter-spacing:2px;color:${gold};text-transform:uppercase;margin-bottom:12px">Your Official Details</div>
       <table style="width:100%;font-size:.9rem;border-collapse:collapse">
         <tr><td style="padding:7px 0;color:#8a8a8a;width:160px">Employee Code</td><td style="padding:7px 0;font-weight:700;color:${navy};font-family:monospace">${employeeCode}</td></tr>
-        <tr><td style="padding:7px 0;color:#8a8a8a">Work Email</td><td style="padding:7px 0;font-weight:600"><a href="mailto:${workEmail}" style="color:#2563eb;text-decoration:none">${workEmail}</a></td></tr>
+        ${workEmail ? `<tr><td style="padding:7px 0;color:#8a8a8a">Work Email</td><td style="padding:7px 0;font-weight:600"><a href="mailto:${workEmail}" style="color:#2563eb;text-decoration:none">${workEmail}</a></td></tr>` : ''}
         <tr><td style="padding:7px 0;color:#8a8a8a">Designation</td><td style="padding:7px 0">${designation}</td></tr>
         <tr><td style="padding:7px 0;color:#8a8a8a">Department</td><td style="padding:7px 0">${department}</td></tr>
       </table>
@@ -214,7 +273,7 @@ export async function sendOnboardingWelcomeEmail({
 
     <div style="background:#fff8f0;border:1px solid ${gold};border-radius:10px;padding:20px 24px;margin-bottom:24px">
       <div style="font-size:.7rem;letter-spacing:2px;color:${gold};text-transform:uppercase;margin-bottom:12px">HR Portal Login</div>
-      <p style="font-size:.85rem;color:#5a5a5a;margin-bottom:12px">You can access your Employee Handbook, Company Policies, Leave Management, and more on the SACHHSOFT HR Portal.</p>
+      <p style="font-size:.85rem;color:#5a5a5a;margin-bottom:12px">You can access your Employee Handbook, Company Policies, Leave Management, and more on the Aadhcode HR Portal.</p>
       <table style="width:100%;font-size:.9rem;border-collapse:collapse">
         <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Portal Link</td><td style="padding:7px 0"><a href="${portalUrl}" style="color:${gold};font-weight:600">${portalUrl}</a></td></tr>
         <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Login ID</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${employeeCode}</td></tr>
@@ -233,7 +292,7 @@ export async function sendOnboardingWelcomeEmail({
     from: process.env.EMAIL_FROM!,
     to: personalEmail,
     cc: process.env.EMAIL_HR_DESK,
-    subject: `🎉 Welcome to SACHHSOFT, ${newHireName}! Your onboarding details inside.`,
+    subject: `Welcome to Aadhcode, ${newHireName}! Your onboarding details inside.`,
     html: emailWrapper(body),
   });
 }
@@ -264,8 +323,8 @@ export async function sendCompOffClaimEmail({
     to: toEmails,
     cc: ccEmails.length > 0 ? ccEmails : undefined,
     subject: isHrClaiming
-      ? `HR Comp-Off Claim: ${employeeName} — Worked on ${formattedDate}`
-      : `Comp-Off Claim: ${employeeName} — Worked on ${formattedDate}`,
+      ? `HR Comp-Off Claim: ${employeeName}, Worked on ${formattedDate}`
+      : `Comp-Off Claim: ${employeeName}, Worked on ${formattedDate}`,
     html: emailWrapper(body),
   });
 }
@@ -293,7 +352,7 @@ export async function sendCompOffClaimStatusEmail({
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: employeeEmail,
-    subject: `${isApproved ? '✅' : '❌'} Comp-Off Claim ${isApproved ? 'Approved' : 'Not Approved'} — Worked on ${formattedDate}`,
+    subject: `Comp-Off Claim ${isApproved ? 'Approved' : 'Not Approved'}: Worked on ${formattedDate}`,
     html: emailWrapper(body),
   });
 }

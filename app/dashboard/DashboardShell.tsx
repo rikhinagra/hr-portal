@@ -80,7 +80,7 @@ function NotificationBell({ employee, onUnreadChange }: NotifBellProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
 
-  const isPrivileged = ['admin', 'hr', 'it'].includes(employee.role);
+  const isPrivileged = ['admin', 'hr', 'it', 'manager'].includes(employee.role);
 
   // Fetch all notifications on mount
   useEffect(() => {
@@ -265,21 +265,23 @@ function NotificationBell({ employee, onUnreadChange }: NotifBellProps) {
               <Link
                 href="/dashboard/leave"
                 onClick={() => setIsOpen(false)}
-                style={{ flex: 1, display: 'block', padding: '11px 16px', textAlign: 'center', fontSize: '0.8125rem', fontWeight: 600, color: '#3b82f6', textDecoration: 'none', borderRight: '1px solid var(--border)' }}
+                style={{ flex: 1, display: 'block', padding: '11px 16px', textAlign: 'center', fontSize: '0.8125rem', fontWeight: 600, color: '#3b82f6', textDecoration: 'none', borderRight: employee.role !== 'manager' ? '1px solid var(--border)' : 'none' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(59,130,246,0.07)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 Leave & Comp-Off
               </Link>
-              <Link
-                href="/dashboard/equipment"
-                onClick={() => setIsOpen(false)}
-                style={{ flex: 1, display: 'block', padding: '11px 16px', textAlign: 'center', fontSize: '0.8125rem', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.07)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                Equipment
-              </Link>
+              {employee.role !== 'manager' && (
+                <Link
+                  href="/dashboard/equipment"
+                  onClick={() => setIsOpen(false)}
+                  style={{ flex: 1, display: 'block', padding: '11px 16px', textAlign: 'center', fontSize: '0.8125rem', fontWeight: 600, color: '#10b981', textDecoration: 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.07)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  Equipment
+                </Link>
+              )}
             </div>
           )}
         </div>

@@ -13,5 +13,5 @@ export default async function PoliciesPage() {
     .eq('is_active', true)
     .order('created_at');
 
-  return <PoliciesClient policies={policies ?? []} />;
+  return <PoliciesClient policies={policies ?? []} employee={employee} />;
 }

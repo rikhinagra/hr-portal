@@ -17,12 +17,6 @@ interface Props {
   viewerRole: string;
 }
 
-const DOCUMENT_TYPES = [
-  'Aadhaar Card', 'PAN Card', 'Passport', '10th Marksheet', '12th Marksheet',
-  'Degree Certificate', 'Previous Offer Letter', 'Experience / Relieving Letter',
-  'Salary Slip – Month 1', 'Salary Slip – Month 2', 'Salary Slip – Month 3',
-  'Bank Details / Cancelled Cheque', 'Address Proof', 'Appointment Letter', 'Other',
-];
 
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -38,8 +32,8 @@ function fmtSize(bytes: number | null) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const roleColor: Record<string, string> = { admin: '#c8985e', hr: '#2563eb', it: '#16a34a', employee: '#6b7280' };
-const roleLabel: Record<string, string> = { admin: 'Administrator', hr: 'HR Manager', it: 'IT Staff', employee: 'Employee' };
+const roleColor: Record<string, string> = { admin: '#c8985e', hr: '#2563eb', it: '#16a34a', employee: '#6b7280', manager: '#8b5cf6' };
+const roleLabel: Record<string, string> = { admin: 'Administrator', hr: 'HR Manager', it: 'IT Staff', employee: 'Employee', manager: 'Manager' };
 
 export default function ProfileClient({ employee: initialEmployee, documents: initialDocs, equipment = [], canEdit, isOwnProfile, viewerRole }: Props) {
   const router = useRouter();
@@ -58,9 +52,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [removingPhoto, setRemovingPhoto] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [docType, setDocType] = useState(DOCUMENT_TYPES[0]);
-  const [docLabel, setDocLabel] = useState('');
   const [showDocUpload, setShowDocUpload] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingDocId, setViewingDocId] = useState<string | null>(null);
@@ -83,6 +76,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
     role: employee.role ?? 'employee',
     join_date: employee.join_date ?? '',
     is_active: employee.is_active,
+    employment_type: employee.employment_type ?? 'Full-Time',
+    total_experience: employee.total_experience ?? '',
   });
 
   const set = (key: string) => (v: string) => setForm(f => ({ ...f, [key]: v }));
@@ -108,6 +103,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       role: employee.role ?? 'employee',
       join_date: employee.join_date ?? '',
       is_active: employee.is_active,
+      employment_type: employee.employment_type ?? 'Full-Time',
+      total_experience: employee.total_experience ?? '',
     });
   };
 
@@ -143,6 +140,19 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
     } finally { setUploadingPhoto(false); }
   };
 
+  const handlePhotoRemove = async () => {
+    setRemovingPhoto(true);
+    try {
+      const res = await fetch(`/api/profile/photo?employee_id=${employee.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setEmployee(prev => ({ ...prev, photo_url: null }));
+      toast.success('Profile photo removed.');
+    } catch (err: unknown) {
+      toast.error('Remove failed', { description: err instanceof Error ? err.message : 'Try again.' });
+    } finally { setRemovingPhoto(false); }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -163,8 +173,12 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   };
 
   const handleDocUpload = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large', { description: `Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum allowed is 5MB. Please compress or reduce the file size.` });
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      toast.error('Only ZIP files allowed', { description: 'Please compress all documents into a single ZIP file and upload that.' });
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('File too large', { description: `Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum allowed is 50MB.` });
       return;
     }
     setUploadingDoc(true);
@@ -172,15 +186,14 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       const fd = new FormData();
       fd.append('file', file);
       fd.append('employee_id', employee.id);
-      fd.append('document_type', docType);
-      fd.append('document_label', docLabel || docType);
+      fd.append('document_type', 'ZIP Archive');
+      fd.append('document_label', file.name);
       const res = await fetch('/api/documents', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setDocuments(prev => [data.document, ...prev]);
       setShowDocUpload(false);
-      setDocLabel('');
-      toast.success('Document uploaded successfully.');
+      toast.success('Documents uploaded successfully.');
     } catch (err: unknown) {
       toast.error('Upload failed', { description: err instanceof Error ? err.message : 'Try again.' });
     } finally { setUploadingDoc(false); }
@@ -247,7 +260,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
           <Card className="text-center">
             <CardContent className="p-6">
               <div className="relative inline-block mb-4">
-                <Avatar className="h-24 w-24 mx-auto border-2" style={{ borderColor: '#c8985e' }}>
+                <Avatar key={employee.photo_url ?? 'no-photo'} className="h-24 w-24 mx-auto border-2" style={{ borderColor: '#c8985e' }}>
                   {employee.photo_url && <AvatarImage src={employee.photo_url} alt={employee.name} className="object-cover object-top" />}
                   <AvatarFallback className="text-2xl font-bold"
                     style={{ background: 'linear-gradient(135deg, #0f1a2e, #1c2d4a)', color: '#c8985e' }}>
@@ -276,6 +289,16 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                 style={{ background: `${roleColor[employee.role]}15`, color: roleColor[employee.role] }}>
                 {roleLabel[employee.role] ?? employee.role}
               </span>
+
+              {(isOwnProfile || canEdit) && employee.photo_url && (
+                <div className="mt-3">
+                  <button onClick={handlePhotoRemove} disabled={removingPhoto}
+                    className="text-xs font-medium"
+                    style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', opacity: removingPhoto ? 0.5 : 1 }}>
+                    {removingPhoto ? 'Removing…' : 'Remove photo'}
+                  </button>
+                </div>
+              )}
 
               <div className="mt-5 pt-5 border-t space-y-2.5 text-left">
                 <Row label="Employee Code" value={<span style={{ fontFamily: 'var(--font-geist-mono), monospace', color: '#c8985e', fontWeight: 600 }}>{employee.employee_code}</span>} />
@@ -326,7 +349,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                   editing={editing} editValue={form.phone} onEdit={set('phone')} placeholder="+91 98765 43210" />
                 <InfoField label="Personal Email" value={employee.personal_email}
                   editing={editing} editValue={form.personal_email} onEdit={set('personal_email')} placeholder="personal@email.com" type="email" />
-                <InfoField label="Reporting Manager" value={employee.reporting_manager_email ?? '—'}
+                <InfoField label="Reporting Manager Email" value={employee.reporting_manager_email ?? '—'}
                   editing={isPrivileged && editing} editValue={form.reporting_manager_email} onEdit={set('reporting_manager_email')} type="email" placeholder="manager@aadhcode.com" />
                 <InfoField label="Emergency Contact" value={employee.emergency_contact_name}
                   editing={editing} editValue={form.emergency_contact_name} onEdit={set('emergency_contact_name')} placeholder="Name" />
@@ -363,12 +386,24 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                   editing={isPrivileged && editing} editValue={form.role} onEdit={set('role')}
                   options={[
                     { value: 'admin', label: 'Administrator' },
-                    { value: 'hr', label: 'HR Manager' },
+                    { value: 'hr', label: 'HR' },
+                    { value: 'manager', label: 'Manager' },
                     { value: 'it', label: 'IT Staff' },
                     { value: 'employee', label: 'Employee' },
                   ]} />
                 <InfoField label="Date of Joining" value={fmt(employee.join_date)}
                   editing={isPrivileged && editing} editValue={form.join_date} onEdit={set('join_date')} type="date" max={today} />
+                <InfoField label="Role Type" value={employee.employment_type ?? 'Full-Time'}
+                  editing={isPrivileged && editing} editValue={form.employment_type} onEdit={set('employment_type')}
+                  options={[
+                    { value: 'Full-Time', label: 'Full-Time' },
+                    { value: 'Part-Time', label: 'Part-Time' },
+                    { value: 'Contract', label: 'Contract' },
+                  ]} />
+                <InfoField label="Total Experience"
+                  value={employee.total_experience ?? '—'}
+                  editing={isPrivileged && editing} editValue={form.total_experience} onEdit={set('total_experience')}
+                  placeholder="e.g. 3 Years 6 Months" />
                 <InfoField label="Employment Status"
                   value={employee.is_active ? 'Active' : 'Inactive'}
                   valueColor={employee.is_active ? '#16a34a' : '#dc2626'}
@@ -403,33 +438,17 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
             <CardContent className="pt-4">
               {showDocUpload && (
                 <div className="rounded-xl border p-4 mb-4 bg-muted/40">
-                  <div className="grid grid-cols-2 gap-3 mb-3 detail-grid">
-                  <div>
-                      <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Document Type</label>
-                      <div className="relative">
-                        <select value={docType} onChange={e => setDocType(e.target.value)}
-                          className="w-full pl-3 pr-9 py-2 rounded-lg border text-sm bg-background text-foreground appearance-none cursor-pointer">
-                          {DOCUMENT_TYPES.map(t => <option key={t}>{t}</option>)}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                    {docType === 'Other' && (
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Custom Label <span className="text-muted-foreground/60 normal-case font-normal">(required for Other)</span></label>
-                      <input value={docLabel} onChange={e => setDocLabel(e.target.value)} placeholder="e.g. Marriage Certificate"
-                        className="w-full px-3 py-2 rounded-lg border text-sm bg-background text-foreground" />
-                    </div>
-                    )}
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Compress all employee documents into one ZIP folder and upload it here.
+                  </p>
                   <button onClick={() => docInputRef.current?.click()} disabled={uploadingDoc}
                     className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg"
                     style={{ background: uploadingDoc ? '#ccc' : '#c8985e', color: '#0f1a2e' }}>
-                    {uploadingDoc ? 'Uploading…' : <><Paperclip className="size-3.5" /> Select &amp; Upload File</>}
+                    {uploadingDoc ? 'Uploading…' : <><Paperclip className="size-3.5" /> Select ZIP File</>}
                   </button>
-                  <input ref={docInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden"
-                    onChange={e => { const f = e.target.files?.[0]; if (f) handleDocUpload(f); }} />
-                  <p className="text-xs text-muted-foreground mt-2">Accepted: PDF, JPG, PNG, DOC, DOCX · Max 5MB</p>
+                  <input ref={docInputRef} type="file" accept=".zip" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleDocUpload(f); e.target.value = ''; }} />
+                  <p className="text-xs text-muted-foreground mt-2">Accepted: ZIP only · Max 50MB</p>
                 </div>
               )}
 
@@ -473,7 +492,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                           disabled={viewingDocId === doc.id}
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg"
                           style={{ background: '#eff6ff', color: '#2563eb', opacity: viewingDocId === doc.id ? 0.6 : 1 }}>
-                          {viewingDocId === doc.id ? '…' : 'View'}
+                          {viewingDocId === doc.id ? '…' : doc.file_name?.toLowerCase().endsWith('.zip') ? 'Download' : 'View'}
                         </button>
                         {canEdit && (
                           <button onClick={() => handleDeleteDoc(doc.id)} disabled={deletingId === doc.id}
@@ -500,30 +519,41 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
               {equipment.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm border rounded-xl bg-muted/20">
                   <Monitor className="size-8 mx-auto mb-2 opacity-40" />
-                  No equipment taken.
+                  No equipment assigned.
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {equipment.map(eq => (
-                    <div key={eq.id} className="flex items-center gap-3 p-3 rounded-xl border bg-muted/30">
-                      <div className="flex-shrink-0 flex items-center justify-center rounded-lg size-9"
-                        style={{ background: 'rgba(22,163,74,0.1)' }}>
-                        <Monitor className="size-5" style={{ color: '#16a34a' }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-foreground truncate">{eq.equipment_type}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {eq.specifications}
+                    <div key={eq.id} className="p-3.5 rounded-xl border bg-muted/30">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 flex items-center justify-center rounded-lg size-9"
+                          style={{ background: 'rgba(22,163,74,0.1)' }}>
+                          <Monitor className="size-5" style={{ color: '#16a34a' }} />
                         </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span className="text-xs font-bold uppercase px-2.5 py-1 rounded-full tracking-wide"
-                          style={{
-                            background: eq.status === 'approved' ? 'rgba(22,163,74,0.1)' : eq.status === 'rejected' ? 'rgba(220,38,38,0.1)' : 'rgba(234,88,12,0.1)',
-                            color: eq.status === 'approved' ? '#16a34a' : eq.status === 'rejected' ? '#dc2626' : '#ea580c'
-                          }}>
-                          {eq.status}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-foreground">{eq.equipment_type}</span>
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                              style={{
+                                background: eq.status === 'assigned' ? 'rgba(22,163,74,0.12)' : eq.status === 'rejected' ? 'rgba(220,38,38,0.12)' : 'rgba(234,88,12,0.12)',
+                                color: eq.status === 'assigned' ? '#16a34a' : eq.status === 'rejected' ? '#dc2626' : '#ea580c',
+                              }}>
+                              {eq.status === 'assigned' ? 'Assigned' : eq.status === 'pending' ? 'Requested' : eq.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{eq.specifications}</p>
+                          {(eq.device_info || eq.date_of_issue || eq.total_value != null) && (
+                            <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-xs text-muted-foreground">
+                              {eq.device_info && <span>Device: {eq.device_info}</span>}
+                              {eq.date_of_issue && (
+                                <span>Issued: {new Date(eq.date_of_issue).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                              )}
+                              {eq.total_value != null && (
+                                <span>Value: ₹{Number(eq.total_value).toLocaleString('en-IN')}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

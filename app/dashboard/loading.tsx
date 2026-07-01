@@ -33,7 +33,7 @@ export default function DashboardLoading() {
       </div>
 
       {/* Quick actions + Activity */}
-      <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardContent className="p-5 space-y-3">
             <Skeleton className="h-5 w-32 mb-4" />

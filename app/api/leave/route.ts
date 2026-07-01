@@ -15,12 +15,25 @@ export async function GET() {
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
     const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
+    const isManager = employee.role === 'manager';
     const query = serviceClient
       .from('leave_requests')
       .select('*, employee:employee_id(id, name, employee_code, department, email, reporting_manager_email)')
       .order('created_at', { ascending: false });
 
-    if (!isAdminOrHr) query.eq('employee_id', employee.id);
+    if (isAdminOrHr) {
+      // no filter — see all
+    } else if (isManager) {
+      const { data: teamMembers } = await serviceClient
+        .from('employees')
+        .select('id')
+        .eq('reporting_manager_email', employee.email)
+        .eq('is_active', true);
+      const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+      query.in('employee_id', [...teamIds, employee.id]);
+    } else {
+      query.eq('employee_id', employee.id);
+    }
 
     const { data, error } = await query;
     if (error) throw error;
@@ -49,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { leave_type, start_date, end_date, reason } = body;
+    const { leave_type, start_date, end_date, reason, is_half_day } = body;
 
     if (!leave_type || !start_date || !end_date || !reason?.trim()) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
@@ -59,8 +72,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid leave type.' }, { status: 400 });
     }
 
-    const days = Math.ceil((new Date(end_date).getTime() - new Date(start_date).getTime()) / 86400000) + 1;
-    if (days < 1) return NextResponse.json({ error: 'End date must be after start date.' }, { status: 400 });
+    const days = is_half_day ? 0.5 : Math.ceil((new Date(end_date).getTime() - new Date(start_date).getTime()) / 86400000) + 1;
+    if (!is_half_day && days < 1) return NextResponse.json({ error: 'End date must be after start date.' }, { status: 400 });
 
     // Balance check before allowing submission
     if (leave_type === 'earned' && employee.leave_balance_earned < days) {
@@ -90,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Log activity
     await serviceClient.from('activity_log').insert({
       action: 'leave_submitted',
-      description: `${employee.name} submitted a ${leave_type} leave request (${days} day${days > 1 ? 's' : ''})`,
+      description: `${employee.name} submitted a ${leave_type} leave request (${days === 0.5 ? 'half day' : `${days} day${days > 1 ? 's' : ''}`})`,
       performed_by: employee.id,
       action_type: 'info',
     });
@@ -121,8 +134,8 @@ export async function POST(request: NextRequest) {
           ccEmails: [],
           isHrApplying: true,
         });
-      } else {
-        // Employee / IT applying → email goes to HR desk, all admins in CC
+      } else if (employee.role === 'manager') {
+        // Manager applying → email goes to HR desk, all admins in CC
         const hrDeskEmail = process.env.EMAIL_HR_DESK!;
         await sendLeaveRequestEmail({
           employeeName: employee.name,
@@ -134,6 +147,23 @@ export async function POST(request: NextRequest) {
           reason,
           toEmails: [hrDeskEmail],
           ccEmails: toAdmins,
+          isHrApplying: false,
+        });
+      } else {
+        // Employee / IT applying → email goes to HR desk, admins + reporting manager in CC
+        const hrDeskEmail = process.env.EMAIL_HR_DESK!;
+        const ccEmails = [...toAdmins];
+        if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
+        await sendLeaveRequestEmail({
+          employeeName: employee.name,
+          department: employee.department,
+          leaveType: leave_type,
+          startDate: start_date,
+          endDate: end_date,
+          days,
+          reason,
+          toEmails: [hrDeskEmail],
+          ccEmails,
           isHrApplying: false,
         });
       }

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'SACHHSOFT — Employee Portal';
+export const alt = 'Aadhcode — Employee Portal';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -92,7 +92,7 @@ export default function OGImage() {
             fontFamily: 'Georgia, serif',
           }}
         >
-          SACHHSOFT
+          Aadhcode
         </div>
 
         {/* Gold underline */}
@@ -149,7 +149,7 @@ export default function OGImage() {
               letterSpacing: '1px',
             }}
           >
-            portal.sachhsoft.com
+            portal.aadhcode.com
           </span>
         </div>
       </div>

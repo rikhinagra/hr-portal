@@ -26,7 +26,7 @@ interface StepState {
 }
 
 export default function OnboardingClient({ employee }: { employee: Employee }) {
-  const [newHire, setNewHire] = useState({ name: '', personalEmail: '', workEmail: '', designation: '', dept: 'Engineering', dob: '' });
+  const [newHire, setNewHire] = useState({ name: '', personalEmail: '', designation: '', dept: 'Engineering', dob: '', employmentType: 'Full-Time' });
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [steps, setSteps] = useState<StepState[]>([]);
@@ -42,7 +42,7 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
   })();
 
   const startOnboarding = async () => {
-    if (!newHire.name.trim() || !newHire.personalEmail.trim() || !newHire.workEmail.trim() || !newHire.designation.trim()) {
+    if (!newHire.name.trim() || !newHire.personalEmail.trim() || !newHire.designation.trim()) {
       toast.error('Missing Fields', { description: 'Please fill all required fields.' });
       return;
     }
@@ -56,10 +56,10 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
         body: JSON.stringify({
           name: newHire.name,
           email: newHire.personalEmail,
-          workEmail: newHire.workEmail,
           designation: newHire.designation,
           department: newHire.dept,
           dob: newHire.dob || '2000-01-01',
+          employmentType: newHire.employmentType,
         }),
       });
       const data = await res.json();
@@ -133,11 +133,6 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
                   className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">Work Email *</label>
-                <input type="email" value={newHire.workEmail} onChange={e => setNewHire({ ...newHire, workEmail: e.target.value })}
-                  className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
-              </div>
-              <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">Designation *</label>
                 <input value={newHire.designation} onChange={e => setNewHire({ ...newHire, designation: e.target.value })}
                   className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground" />
@@ -148,6 +143,14 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
                   className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
                   <option>Engineering</option><option>Design</option><option>QA</option>
                   <option>Business Dev</option><option>HR</option><option>IT</option><option>LexgoSolution</option>
+                </select>
+                <ChevronDown className="absolute right-3 bottom-3 size-4 text-muted-foreground pointer-events-none" />
+              </div>
+              <div className="relative">
+                <label className="block text-xs text-muted-foreground mb-1.5">Role Type</label>
+                <select value={newHire.employmentType} onChange={e => setNewHire({ ...newHire, employmentType: e.target.value })}
+                  className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
+                  <option>Full-Time</option><option>Part-Time</option><option>Contract</option>
                 </select>
                 <ChevronDown className="absolute right-3 bottom-3 size-4 text-muted-foreground pointer-events-none" />
               </div>
@@ -245,7 +248,7 @@ export default function OnboardingClient({ employee }: { employee: Employee }) {
 
             {currentStep === -1 && steps.length > 0 && steps.every(s => s.status === 'done') && (
               <button
-                onClick={() => { setRunning(false); setSteps([]); setNewHire({ name: '', personalEmail: '', workEmail: '', designation: '', dept: 'Engineering', dob: '' }); setAssignedCode(''); }}
+                onClick={() => { setRunning(false); setSteps([]); setNewHire({ name: '', personalEmail: '', designation: '', dept: 'Engineering', dob: '', employmentType: 'Full-Time' }); setAssignedCode(''); }}
                 className="mt-5 px-6 py-3 rounded-lg font-semibold text-sm text-white"
                 style={{ background: '#0f1a2e' }}>
                 Onboard Another Employee

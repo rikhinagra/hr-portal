@@ -74,3 +74,55 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const serviceClient = createServiceClient();
+    const { data: me } = await serviceClient.from('employees').select('id, role, photo_url').eq('auth_user_id', user.id).single();
+    if (!me) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+
+    const { searchParams } = new URL(request.url);
+    const employeeId = searchParams.get('employee_id') ?? me.id;
+
+    if (employeeId !== me.id && !['admin', 'hr'].includes(me.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    let photoUrl = me.photo_url;
+    if (employeeId !== me.id) {
+      const { data: target } = await serviceClient.from('employees').select('photo_url').eq('id', employeeId).single();
+      photoUrl = target?.photo_url ?? null;
+    }
+
+    if (photoUrl) {
+      try {
+        const cleanUrl = photoUrl.split('?')[0];
+        const pathParts = cleanUrl.split('/profile-photos/');
+        if (pathParts[1]) {
+          await serviceClient.storage.from('profile-photos').remove([decodeURIComponent(pathParts[1])]);
+        }
+      } catch {
+        // Non-fatal — continue even if storage delete fails
+      }
+    }
+
+    await serviceClient.from('employees').update({ photo_url: null }).eq('id', employeeId);
+
+    await serviceClient.from('activity_log').insert({
+      action: 'photo_removed',
+      description: employeeId === me.id ? 'Removed profile photo' : 'Removed employee photo',
+      performed_by: me.id,
+      target_employee_id: employeeId,
+      action_type: 'info',
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Photo remove error:', err);
+    return NextResponse.json({ error: 'Remove failed' }, { status: 500 });
+  }
+}

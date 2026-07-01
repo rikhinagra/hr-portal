@@ -22,22 +22,22 @@ export const COLORS = {
 export const HANDBOOK_CHAPTERS = [
   {
     num: 1,
-    title: 'Welcome to SACHHSOFT',
+    title: 'Welcome to Aadhcode',
     content: `Dear Team Member,
 
-Welcome to the SACHHSOFT family! Whether you are joining us from Jammu, working remotely from anywhere in India, or collaborating with our partner team in the United States, you are now part of a team that believes in building technology with purpose, integrity, and excellence.
+Welcome to the Aadhcode family! Whether you are joining us from Jammu, working remotely from anywhere in India, or collaborating with our partner team in the United States, you are now part of a team that believes in building technology with purpose, integrity, and excellence.
 
 This handbook is your go-to guide for everything, from your first day to your long-term growth. We operate with a simple philosophy: treat every colleague with respect, show up with intention, communicate openly, and take pride in the work you deliver.
 
 We are glad you are here. Let's build something great together.
 
 Warm regards,
-The SACHHSOFT Leadership Team`,
+The Aadhcode Leadership Team`,
   },
   {
     num: 2,
     title: 'About Us: Organization & Culture',
-    content: `AadhCode Solutions Pvt. Ltd. operates globally under the brand SACHHSOFT. We specialize in custom software development across HealthTech, FinTech, and E-commerce. We partner with startups as co-builders, investing expertise alongside capital to create products that matter.
+    content: `AadhCode Solutions Pvt. Ltd. operates globally under the brand Aadhcode. We specialize in custom software development across HealthTech, FinTech, and E-commerce. We partner with startups as co-builders, investing expertise alongside capital to create products that matter.
 
 Our Values: Quality First: We build products with empathy and craftsmanship. Transparency: We say what we mean, share what we know, and flag what worries us. Accountability: We take ownership of our work, our timelines, and our commitments. Respect: Every teammate deserves kindness, patience, and professional courtesy. Growth Mindset: We adapt, learn, and improve across processes, skills, and products.
 
@@ -45,18 +45,18 @@ Organization Structure: Business Head / Founder → CTO → HR Head | Operations
 
 Your reporting line: You → Team Lead / PM → CTO / Operations → Business Head.
 
-Sister entities: AadhCode (India), LexgoSolution (legal tech, Jammu office), and SACHHSOFT USA (Palatine, IL). Regardless of entity or project, your culture and policies remain SACHHSOFT.`,
+Sister entities: AadhCode (India), LexgoSolution (legal tech, Jammu office), and Aadhcode USA (Palatine, IL). Regardless of entity or project, your culture and policies remain Aadhcode.`,
   },
   {
     num: 3,
     title: 'Your Employment: Brand Identity',
-    content: `You are an employee of AadhCode Solutions Pvt. Ltd., working under the brand SACHHSOFT. When allocated to a client project, you work on behalf of SACHHSOFT. You remain our employee at all times. Our policies, appraisals, leaves, and values govern your journey, not the client's.
+    content: `You are an employee of AadhCode Solutions Pvt. Ltd., working under the brand Aadhcode. When allocated to a client project, you work on behalf of Aadhcode. You remain our employee at all times. Our policies, appraisals, leaves, and values govern your journey, not the client's.
 
-What This Means: Your contract, salary, appraisals, and career growth are managed by SACHHSOFT. Client allocations are project-based and do not change your employer. You represent SACHHSOFT on every call, email, and deliverable. You follow SACHHSOFT policies regardless of which project you are on.
+What This Means: Your contract, salary, appraisals, and career growth are managed by Aadhcode. Client allocations are project-based and do not change your employer. You represent Aadhcode on every call, email, and deliverable. You follow Aadhcode policies regardless of which project you are on.
 
-Team Locations: Jammu (HQ): AadhCode core team, Work from Office. Jammu Office: LexgoSolution (under Saheb), Work from Office. Pan-India: Remote developers, Work from Home policy. Palatine, IL, USA: SACHHSOFT partner office, US operations.
+Team Locations: Jammu (HQ): AadhCode core team, Work from Office. Jammu Office: LexgoSolution (under Saheb), Work from Office. Pan-India: Remote developers, Work from Home policy. Palatine, IL, USA: Aadhcode partner office, US operations.
 
-Brand Engagement: Follow and engage with SACHHSOFT on LinkedIn, Twitter/X, and Instagram. Join the SACHHSOFT WhatsApp community channel. Share company milestones and project wins on your social channels. Team Leads shall actively encourage brand participation within their teams.
+Brand Engagement: Follow and engage with Aadhcode on LinkedIn, Twitter/X, and Instagram. Join the Aadhcode WhatsApp community channel. Share company milestones and project wins on your social channels. Team Leads shall actively encourage brand participation within their teams.
 
 Your visibility strengthens our brand. When you share and engage, you help the entire team grow.`,
   },
@@ -78,14 +78,14 @@ Standard Shifts: Day Shift (India): 10:00 AM to 7:00 PM IST, Standard India proj
 
 Key Expectations: Shift timing is communicated at project allocation and must be followed strictly. Timings apply equally for office and remote work. If your project requires time zone overlap, you must be available during those hours. The company may modify shifts based on business needs with reasonable notice.
 
-Availability during the client's working hours is a professional commitment and reflects directly on SACHHSOFT's reputation.
+Availability during the client's working hours is a professional commitment and reflects directly on Aadhcode's reputation.
 
 Punctuality is non-negotiable. Repeated late log-ins affect performance evaluations.`,
   },
   {
     num: 6,
     title: 'Work From Home Policy',
-    content: `SACHHSOFT follows a Work From Office (WFO) model. WFH is permitted under specific conditions.
+    content: `Aadhcode follows a Work From Office (WFO) model. WFH is permitted under specific conditions.
 
 Eligibility: WFO employees may avail 1 WFH day per month, with prior approval from Reporting Manager and HR notification. Requests beyond the limit are only under exceptional circumstances with management approval. Unapproved remote work is treated as unauthorized absence.
 
@@ -98,7 +98,7 @@ WFH utilization and attendance discipline form part of your overall performance 
   {
     num: 7,
     title: 'Communication Standards & Response Times',
-    content: `Communication is a core professional responsibility at SACHHSOFT. How you communicate reflects on you, your team, and the entire organization.
+    content: `Communication is a core professional responsibility at Aadhcode. How you communicate reflects on you, your team, and the entire organization.
 
 NO GHOSTING. Ever. Ignoring messages on Slack, WhatsApp, email, or any channel is unacceptable. If you have seen a message, acknowledge it, even if you need time to respond in full.
 
@@ -115,7 +115,7 @@ If you are unable to respond due to a genuine emergency, inform your Team Lead o
 
 Expected Standards: Treat every colleague with respect regardless of role or seniority. Disagreements are healthy; disrespect is not. Challenge ideas, not people. Be punctual for meetings, standups, and deadlines. Take ownership: if you commit to a deadline, deliver. Be transparent about blockers; asking for help is strength. Maintain confidentiality of internal and client information. Support new team members generously.
 
-Client & Cross-Team Interactions: You represent SACHHSOFT. Be professional, prepared, and courteous. Respect different working styles and time zones. Give constructive feedback focused on work, not the person. Celebrate wins publicly; address concerns privately.
+Client & Cross-Team Interactions: You represent Aadhcode. Be professional, prepared, and courteous. Respect different working styles and time zones. Give constructive feedback focused on work, not the person. Celebrate wins publicly; address concerns privately.
 
 Harassment, bullying, discrimination, verbal abuse, or any form of intimidation is not tolerated. This includes written communication. Violations fall under our Zero Tolerance Policy (Chapter 16).`,
   },
@@ -128,9 +128,9 @@ You don't need to wear a suit. But you should look like someone a client trusts 
 
 Virtual Call Guidelines: Wear clean, presentable clothing; neat casuals are fine. Avoid pyjamas, gym wear, or overly casual attire on client or team calls. Ensure a clean, professional background (virtual backgrounds work too). Good lighting and a stable internet connection matter. Camera on during client calls unless told otherwise. Be well-groomed; first impressions count, even on a screen. Mute when not speaking; minimize background noise.
 
-Your Virtual Setup: Quiet, distraction-free workspace. Reliable internet (minimum 10 Mbps recommended). Working microphone and camera. Professional email signature with SACHHSOFT / AadhCode designation.
+Your Virtual Setup: Quiet, distraction-free workspace. Reliable internet (minimum 10 Mbps recommended). Working microphone and camera. Professional email signature with Aadhcode / AadhCode designation.
 
-You are the face of SACHHSOFT on every call. Looking good and prepared is about professionalism and the trust our clients place in us.`,
+You are the face of Aadhcode on every call. Looking good and prepared is about professionalism and the trust our clients place in us.`,
   },
   {
     num: 10,
@@ -191,7 +191,7 @@ A breach of data confidentiality is a serious offence and may result in discipli
 
 Data Security Best Practices: Use strong, unique passwords for all work accounts. Enable two-factor authentication wherever available. Do not use public Wi-Fi for work without a VPN. Regularly update your software and operating system. Do not click on suspicious links or attachments.
 
-All client data shared with SACHHSOFT is governed by our NDA and data processing agreements. Treat every piece of client data as if it were your own personal financial information.`,
+All client data shared with Aadhcode is governed by our NDA and data processing agreements. Treat every piece of client data as if it were your own personal financial information.`,
   },
   {
     num: 15,
@@ -209,16 +209,16 @@ If something does not feel right, talk to us. Early conversations prevent bigger
   {
     num: 16,
     title: 'Zero Tolerance Policy',
-    content: `SACHHSOFT has a strict zero tolerance policy for the following. Any substantiated instance leads to immediate disciplinary action, potentially including termination.
+    content: `Aadhcode has a strict zero tolerance policy for the following. Any substantiated instance leads to immediate disciplinary action, potentially including termination.
 
 Prohibited Conduct and Consequences: Sexual harassment or any harassment: Investigation, termination if substantiated. Bullying, intimidation, or verbal abuse: Warning to termination per severity. Discrimination based on gender, religion, caste, or region: Investigation, termination if substantiated. Theft of company or client property: Termination plus legal action. Intentional data breach or unauthorized sharing: Termination plus legal proceedings. Physical violence or threats: Immediate termination. Fraudulent claims including leave, expenses, or credentials: Termination. Substance abuse during work hours: Warning to termination per severity. Repeated ghosting on communication channels: PIP to termination. Persistent no-shows on standups without notice: Impacts appraisal, repeated instances lead to PIP.
 
-This policy protects everyone and ensures SACHHSOFT remains a safe, respectful, and professional workplace.`,
+This policy protects everyone and ensures Aadhcode remains a safe, respectful, and professional workplace.`,
   },
   {
     num: 17,
     title: 'Acknowledgement & Agreement',
-    content: `By acknowledging, you confirm that you have received, read, and understood the complete SACHHSOFT Employee Handbook. You agree to abide by all policies, guidelines, and standards outlined in this document.
+    content: `By acknowledging, you confirm that you have received, read, and understood the complete Aadhcode Employee Handbook. You agree to abide by all policies, guidelines, and standards outlined in this document.
 
 You understand that: This handbook may be updated and you will be notified of changes. Violation of any policy may result in disciplinary action, up to termination. You are encouraged to seek clarification from HR on any policy. This handbook does not constitute a contract of employment.
 

@@ -40,6 +40,8 @@ export async function PATCH(request: NextRequest) {
       if (body.join_date !== undefined && body.join_date !== '') updateData.join_date = body.join_date;
       if (body.is_active !== undefined) updateData.is_active = body.is_active;
       if (body.reporting_manager_email !== undefined) updateData.reporting_manager_email = body.reporting_manager_email || null;
+      if (body.employment_type !== undefined && body.employment_type !== '') updateData.employment_type = body.employment_type;
+      if (body.total_experience !== undefined) updateData.total_experience = body.total_experience || null;
     }
 
     const { data: targetEmployee } = await serviceClient

@@ -18,8 +18,11 @@ export async function PATCH(
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!approver) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    if (approver.role !== 'admin' && approver.role !== 'hr') {
-      return NextResponse.json({ error: 'Access denied. Admin or HR only.' }, { status: 403 });
+    const isAdminOrHr = approver.role === 'admin' || approver.role === 'hr';
+    const isManager = approver.role === 'manager';
+
+    if (!isAdminOrHr && !isManager) {
+      return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -32,11 +35,24 @@ export async function PATCH(
     // Fetch the leave request with employee details
     const { data: leave } = await serviceClient
       .from('leave_requests')
-      .select('*, employee:employee_id(name, email, employee_code, leave_balance_earned, leave_balance_sick)')
+      .select('*, employee:employee_id(name, email, employee_code, leave_balance_earned, leave_balance_sick, reporting_manager_email)')
       .eq('id', id)
       .single();
 
     if (!leave) return NextResponse.json({ error: 'Leave request not found.' }, { status: 404 });
+
+    // Nobody can approve their own leave
+    if (approver.id === leave.employee_id) {
+      return NextResponse.json({ error: 'You cannot approve your own leave request.' }, { status: 403 });
+    }
+
+    // Manager can only action direct reports' leaves
+    if (isManager) {
+      const emp = leave.employee as { reporting_manager_email?: string } | null;
+      if (emp?.reporting_manager_email !== approver.email) {
+        return NextResponse.json({ error: 'Access denied. You can only manage your direct reports\' leave requests.' }, { status: 403 });
+      }
+    }
 
     // Conflict protection — check if already actioned
     if (leave.status !== 'pending') {
