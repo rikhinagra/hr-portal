@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Pencil, Trash2, Monitor, Package, ChevronDown, CalendarDays } from 'lucide-react';
+import { Pencil, Trash2, Monitor, Package, ChevronDown, CalendarDays, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Employee, EquipmentRequest } from '@/types';
 
@@ -45,6 +45,10 @@ export default function EquipmentClient({ employee, initialRequests, employees }
 
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // View modal
+  const [showView, setShowView] = useState(false);
+  const [viewingRecord, setViewingRecord] = useState<EquipmentRow | null>(null);
 
   const filtered = search.trim()
     ? requests.filter(r =>
@@ -215,7 +219,7 @@ export default function EquipmentClient({ employee, initialRequests, employees }
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: '#0f1a2e' }}>
-                  {['Employee', 'Equipment', 'Specifications', 'Device Info', 'Date of Issue', 'Total Value', 'Status', ...(isHrOrAdmin ? ['Actions'] : [])].map(h => (
+                  {['Employee', 'Equipment', 'Specifications', 'Device Info', 'Date of Issue', 'Status', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-white whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -223,7 +227,7 @@ export default function EquipmentClient({ employee, initialRequests, employees }
               <tbody className="divide-y">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={isHrOrAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">No equipment records found.</td>
+                    <td colSpan={7} className="py-10 text-center text-muted-foreground">No equipment records found.</td>
                   </tr>
                 ) : filtered.map(r => (
                   <tr key={r.id} className="hover:bg-muted/40 transition-colors">
@@ -235,26 +239,34 @@ export default function EquipmentClient({ employee, initialRequests, employees }
                     <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px]">
                       <span className="line-clamp-2">{r.specifications}</span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{r.device_info ?? '—'}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px]">
+                      <span className="line-clamp-2">{r.device_info ?? '—'}</span>
+                    </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(r.date_of_issue)}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-foreground whitespace-nowrap">{fmtValue(r.total_value)}</td>
                     <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={r.status} /></td>
-                    {isHrOrAdmin && (
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex gap-2">
-                          <button onClick={() => openEdit(r)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border"
-                            style={{ color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.3)' }}>
-                            <Pencil className="size-3" /> Edit
-                          </button>
-                          <button onClick={() => handleDelete(r)} disabled={deletingId === r.id}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold border"
-                            style={{ color: '#b33a3a', borderColor: 'rgba(179,58,58,0.3)', opacity: deletingId === r.id ? 0.5 : 1 }}>
-                            <Trash2 className="size-3" /> {deletingId === r.id ? '…' : 'Delete'}
-                          </button>
-                        </div>
-                      </td>
-                    )}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex gap-1.5">
+                        <button onClick={() => { setViewingRecord(r); setShowView(true); }} title="View Details"
+                          className="p-1.5 rounded border"
+                          style={{ color: '#c8985e', borderColor: 'rgba(200,152,94,0.3)' }}>
+                          <Eye className="size-3.5" />
+                        </button>
+                        {isHrOrAdmin && (
+                          <>
+                            <button onClick={() => openEdit(r)} title="Edit"
+                              className="p-1.5 rounded border"
+                              style={{ color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.3)' }}>
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button onClick={() => handleDelete(r)} disabled={deletingId === r.id} title="Delete"
+                              className="p-1.5 rounded border"
+                              style={{ color: '#b33a3a', borderColor: 'rgba(179,58,58,0.3)', opacity: deletingId === r.id ? 0.5 : 1 }}>
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -287,20 +299,27 @@ export default function EquipmentClient({ employee, initialRequests, employees }
                 {r.date_of_issue && <span>Issued: {fmtDate(r.date_of_issue)}</span>}
                 {r.total_value != null && <span>Value: {fmtValue(r.total_value)}</span>}
               </div>
-              {isHrOrAdmin && (
-                <div className="flex gap-2 mt-3 pt-3 border-t border-border">
-                  <button onClick={() => openEdit(r)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
-                    style={{ color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.3)' }}>
-                    <Pencil className="size-3" /> Edit
-                  </button>
-                  <button onClick={() => handleDelete(r)} disabled={deletingId === r.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
-                    style={{ color: '#b33a3a', borderColor: 'rgba(179,58,58,0.3)', opacity: deletingId === r.id ? 0.5 : 1 }}>
-                    <Trash2 className="size-3" /> {deletingId === r.id ? 'Deleting…' : 'Delete'}
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-border flex-wrap">
+                <button onClick={() => { setViewingRecord(r); setShowView(true); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
+                  style={{ color: '#c8985e', borderColor: 'rgba(200,152,94,0.3)' }}>
+                  <Eye className="size-3" /> View
+                </button>
+                {isHrOrAdmin && (
+                  <>
+                    <button onClick={() => openEdit(r)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
+                      style={{ color: '#3a7bd5', borderColor: 'rgba(58,123,213,0.3)' }}>
+                      <Pencil className="size-3" /> Edit
+                    </button>
+                    <button onClick={() => handleDelete(r)} disabled={deletingId === r.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
+                      style={{ color: '#b33a3a', borderColor: 'rgba(179,58,58,0.3)', opacity: deletingId === r.id ? 0.5 : 1 }}>
+                      <Trash2 className="size-3" /> {deletingId === r.id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -391,6 +410,34 @@ export default function EquipmentClient({ employee, initialRequests, employees }
                 className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
                 style={{ background: saving ? '#ccc' : '#c8985e', color: '#0f1a2e' }}>
                 {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* ── View Record Modal ── */}
+      {showView && viewingRecord && (
+        <ModalShell title="Equipment Details" onClose={() => { setShowView(false); setViewingRecord(null); }}>
+          <div className="space-y-4">
+            <div className="rounded-lg p-4 space-y-1" style={{ background: 'rgba(200,152,94,0.08)', border: '1px solid rgba(200,152,94,0.2)' }}>
+              <p className="text-xs text-muted-foreground">Employee</p>
+              <p className="text-sm font-semibold text-foreground">{viewingRecord.employee?.name ?? '—'}</p>
+              <p className="text-xs text-muted-foreground">{viewingRecord.employee?.employee_code} · {viewingRecord.employee?.department}</p>
+            </div>
+            <ViewRow label="Equipment Type" value={viewingRecord.equipment_type} />
+            <ViewRow label="Specifications" value={viewingRecord.specifications} />
+            <ViewRow label="Device Info / Serial No." value={viewingRecord.device_info ?? '—'} />
+            <ViewRow label="Date of Issue" value={fmtDate(viewingRecord.date_of_issue)} />
+            <ViewRow label="Total Value" value={fmtValue(viewingRecord.total_value)} />
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">Status</p>
+              <StatusBadge status={viewingRecord.status} />
+            </div>
+            <div className="pt-1">
+              <button onClick={() => { setShowView(false); setViewingRecord(null); }}
+                className="w-full py-2.5 rounded-lg text-sm border text-muted-foreground hover:bg-muted transition-colors">
+                Close
               </button>
             </div>
           </div>
@@ -501,6 +548,15 @@ function DateInput({ value, max, onChange }: { value: string; max?: string; onCh
       {!value && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
       <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
       <style>{`input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;right:0;width:44px;height:100%;opacity:0;cursor:pointer}`}</style>
+    </div>
+  );
+}
+
+function ViewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm text-foreground leading-relaxed break-words">{value}</p>
     </div>
   );
 }
