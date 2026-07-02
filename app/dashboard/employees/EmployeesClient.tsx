@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Eye, UserMinus, UserCheck } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EmpRow {
@@ -291,15 +291,15 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                               {getInitials(emp.name)}
                             </div>
                           )}
-                          <div>
-                            <div className="font-semibold text-foreground text-sm">{emp.name}</div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground text-sm truncate max-w-[160px]" title={emp.name}>{emp.name}</div>
                             <div className="text-xs text-muted-foreground font-mono">{emp.employee_code}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3" onClick={() => router.push(`/dashboard/employees/${emp.id}`)}>
-                        <div className="text-sm text-foreground">{emp.department}</div>
-                        <div className="text-xs text-muted-foreground">{emp.designation}</div>
+                      <td className="px-4 py-3 max-w-[150px]" onClick={() => router.push(`/dashboard/employees/${emp.id}`)}>
+                        <div className="text-sm text-foreground truncate" title={emp.department}>{emp.department}</div>
+                        <div className="text-xs text-muted-foreground truncate" title={emp.designation}>{emp.designation}</div>
                       </td>
                       <td className="px-4 py-3" onClick={() => router.push(`/dashboard/employees/${emp.id}`)}>
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase"
@@ -321,32 +321,24 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                           {emp.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex gap-1.5">
                           <button onClick={() => router.push(`/dashboard/employees/${emp.id}`)}
-                            className="px-3 py-1 rounded-md text-xs font-semibold"
-                            style={{ background: 'rgba(200,152,94,.12)', color: '#c8985e', border: '1px solid rgba(200,152,94,.3)' }}>
-                            View
+                            title="View Profile"
+                            className="p-1.5 rounded border"
+                            style={{ color: '#c8985e', borderColor: 'rgba(200,152,94,0.3)' }}>
+                            <Eye className="size-3.5" />
                           </button>
                           <button onClick={() => toggleActive(emp)} disabled={toggling === emp.id}
-                            className="px-3 py-1 rounded-md text-xs font-semibold"
+                            title={emp.is_active ? 'Offboard' : 'Activate'}
+                            className="p-1.5 rounded border"
                             style={{
-                              background: emp.is_active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)',
                               color: emp.is_active ? '#dc2626' : '#16a34a',
+                              borderColor: emp.is_active ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)',
                               opacity: toggling === emp.id ? 0.6 : 1,
                             }}>
-                            {emp.is_active ? 'Offboard' : 'Activate'}
+                            {emp.is_active ? <UserMinus className="size-3.5" /> : <UserCheck className="size-3.5" />}
                           </button>
-                          {/* DELETE BUTTON — hidden, uncomment to restore
-                          {isAdminOrHr && (
-                            <button onClick={() => openDeleteModal(emp)}
-                              className="px-2 py-1 rounded-md text-xs font-semibold"
-                              style={{ background: 'rgba(220,38,38,.06)', color: '#dc2626', border: '1px solid rgba(220,38,38,.2)' }}
-                              title="Permanently delete employee">
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          )}
-                          */}
                         </div>
                       </td>
                     </tr>
