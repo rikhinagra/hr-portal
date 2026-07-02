@@ -182,6 +182,12 @@
   button:active:not(:disabled) { transform: scale(0.98); }
 }
 
+/* ─── Windows 150%/175% DPI scaling fix ─── */
+/* Mac Retina = 2dppx (excluded), Windows 150% = 1.5dppx, Windows 175% = 1.75dppx */
+@media (min-resolution: 1.5dppx) and (max-resolution: 1.9dppx) {
+  html { font-size: 14px; }
+}
+
 @keyframes slideIn {
   from { opacity: 0; transform: translateX(40px); }
   to { opacity: 1; transform: translateX(0); }
