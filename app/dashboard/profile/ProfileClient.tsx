@@ -228,7 +228,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="page-heading text-2xl">{isOwnProfile ? 'My Profile' : `${employee.name}'s Profile`}</h1>
+          <h1 className="page-heading text-2xl">{isOwnProfile ? 'My Profile' : employee.name}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isOwnProfile ? 'View and manage your personal information' : 'Full employee profile and documents'}
           </p>
