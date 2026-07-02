@@ -41,6 +41,9 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
   const [deleteTarget, setDeleteTarget] = useState<EmpRow | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [offboardTarget, setOffboardTarget] = useState<EmpRow | null>(null);
+  const [offboardConfirmText, setOffboardConfirmText] = useState('');
+  const [offboarding, setOffboarding] = useState(false);
 
   // Reset to page 1 when screen size changes (mobile ↔ desktop)
   useEffect(() => { setPage(1); }, [isMobile]);
@@ -83,6 +86,33 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
   const openDeleteModal = (emp: EmpRow) => {
     setDeleteTarget(emp);
     setDeleteConfirmText('');
+  };
+
+  const openOffboardModal = (emp: EmpRow) => {
+    setOffboardTarget(emp);
+    setOffboardConfirmText('');
+  };
+
+  const handleToggleActive = async () => {
+    if (!offboardTarget || offboardConfirmText !== offboardTarget.name) return;
+    setOffboarding(true);
+    try {
+      const res = await fetch('/api/employees', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: offboardTarget.id, is_active: !offboardTarget.is_active }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setEmployees(prev => prev.map(e => e.id === offboardTarget.id ? { ...e, is_active: !offboardTarget.is_active } : e));
+      toast.success(`${offboardTarget.name} ${!offboardTarget.is_active ? 'activated' : 'offboarded'}`);
+      setOffboardTarget(null);
+      setOffboardConfirmText('');
+    } catch (err: unknown) {
+      toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
+    } finally {
+      setOffboarding(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -329,13 +359,12 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                             style={{ color: '#c8985e', borderColor: 'rgba(200,152,94,0.3)' }}>
                             <Eye className="size-3.5" />
                           </button>
-                          <button onClick={() => toggleActive(emp)} disabled={toggling === emp.id}
+                          <button onClick={() => openOffboardModal(emp)}
                             title={emp.is_active ? 'Offboard' : 'Activate'}
                             className="p-1.5 rounded border"
                             style={{
                               color: emp.is_active ? '#dc2626' : '#16a34a',
                               borderColor: emp.is_active ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)',
-                              opacity: toggling === emp.id ? 0.6 : 1,
                             }}>
                             {emp.is_active ? <UserMinus className="size-3.5" /> : <UserCheck className="size-3.5" />}
                           </button>
@@ -403,13 +432,12 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                     View Profile
                   </button>
                   <button
-                    onClick={() => toggleActive(emp)}
-                    disabled={toggling === emp.id}
+                    onClick={() => openOffboardModal(emp)}
                     className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-center"
                     style={{
                       background: emp.is_active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)',
                       color: emp.is_active ? '#dc2626' : '#16a34a',
-                      opacity: toggling === emp.id ? 0.6 : 1,
+                      border: `1px solid ${emp.is_active ? 'rgba(220,38,38,0.2)' : 'rgba(22,163,74,0.2)'}`,
                     }}>
                     {emp.is_active ? 'Offboard' : 'Activate'}
                   </button>
@@ -430,6 +458,79 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
           );
         })}
       </div>
+
+      {/* Offboard / Activate Confirmation Modal */}
+      {offboardTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-background rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-border">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center justify-center size-10 rounded-full flex-shrink-0"
+                style={{ background: offboardTarget.is_active ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)' }}>
+                {offboardTarget.is_active
+                  ? <UserMinus className="size-5" style={{ color: '#dc2626' }} />
+                  : <UserCheck className="size-5" style={{ color: '#16a34a' }} />
+                }
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-foreground text-sm sm:text-base">
+                  {offboardTarget.is_active ? 'Offboard Employee' : 'Reactivate Employee'}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {offboardTarget.is_active ? 'This will disable their portal access' : 'This will restore their portal access'}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl p-3 mb-5 text-sm"
+              style={{
+                background: offboardTarget.is_active ? 'rgba(220,38,38,0.06)' : 'rgba(22,163,74,0.06)',
+                border: `1px solid ${offboardTarget.is_active ? 'rgba(220,38,38,0.2)' : 'rgba(22,163,74,0.2)'}`,
+              }}>
+              <p className="text-foreground leading-relaxed">
+                {offboardTarget.is_active
+                  ? <><strong>{offboardTarget.name}</strong> ({offboardTarget.employee_code}) will be offboarded. Their portal access will be disabled and IT will be notified.</>
+                  : <><strong>{offboardTarget.name}</strong> ({offboardTarget.employee_code}) will be reactivated. Their portal access will be restored.</>
+                }
+              </p>
+            </div>
+
+            <p className="text-xs text-muted-foreground mb-1.5">
+              Type <strong className="text-foreground">{offboardTarget.name}</strong> to confirm:
+            </p>
+            <input
+              value={offboardConfirmText}
+              onChange={e => setOffboardConfirmText(e.target.value)}
+              placeholder={offboardTarget.name}
+              className="w-full px-3 py-2 rounded-lg border text-sm bg-background text-foreground mb-4"
+              autoFocus
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setOffboardTarget(null); setOffboardConfirmText(''); }}
+                disabled={offboarding}
+                className="flex-1 px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold border text-muted-foreground transition-colors hover:bg-muted/50">
+                Cancel
+              </button>
+              <button
+                onClick={handleToggleActive}
+                disabled={offboardConfirmText !== offboardTarget.name || offboarding}
+                className="flex-1 px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold text-white transition-all"
+                style={{
+                  background: offboardConfirmText === offboardTarget.name
+                    ? (offboardTarget.is_active ? '#dc2626' : '#16a34a')
+                    : (offboardTarget.is_active ? 'rgba(220,38,38,0.3)' : 'rgba(22,163,74,0.3)'),
+                  cursor: offboardConfirmText === offboardTarget.name && !offboarding ? 'pointer' : 'not-allowed',
+                }}>
+                {offboarding
+                  ? (offboardTarget.is_active ? 'Offboarding…' : 'Activating…')
+                  : (offboardTarget.is_active ? 'Confirm Offboard' : 'Confirm Activate')
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
