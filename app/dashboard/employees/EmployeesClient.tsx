@@ -505,17 +505,17 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
               autoFocus
             />
 
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
               <button
                 onClick={() => { setOffboardTarget(null); setOffboardConfirmText(''); }}
                 disabled={offboarding}
-                className="flex-1 px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold border text-muted-foreground transition-colors hover:bg-muted/50">
+                className="w-full sm:flex-1 px-4 py-3 rounded-lg text-sm font-semibold border text-muted-foreground transition-colors hover:bg-muted/50">
                 Cancel
               </button>
               <button
                 onClick={handleToggleActive}
                 disabled={offboardConfirmText !== offboardTarget.name || offboarding}
-                className="flex-1 px-4 py-2.5 sm:py-3 rounded-lg text-sm font-semibold text-white transition-all"
+                className="w-full sm:flex-1 px-4 py-3 rounded-lg text-sm font-semibold text-white transition-all whitespace-nowrap"
                 style={{
                   background: offboardConfirmText === offboardTarget.name
                     ? (offboardTarget.is_active ? '#dc2626' : '#16a34a')
