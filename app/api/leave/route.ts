@@ -76,9 +76,9 @@ export async function POST(request: NextRequest) {
     if (!is_half_day && days < 1) return NextResponse.json({ error: 'End date must be after start date.' }, { status: 400 });
 
     // Balance check before allowing submission
-    if (leave_type === 'earned' && employee.leave_balance_earned < days) {
+    if (leave_type === 'earned' && employee.leave_balance_casual < days) {
       return NextResponse.json({
-        error: `Insufficient earned leave balance. You have ${employee.leave_balance_earned} day(s) remaining but requested ${days}.`,
+        error: `Insufficient casual leave balance. You have ${employee.leave_balance_casual} day(s) remaining but requested ${days}.`,
       }, { status: 400 });
     }
     if (leave_type === 'sick' && employee.leave_balance_sick < days) {

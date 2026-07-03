@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         department: department.trim(),
         designation: designation.trim(),
         join_date: new Date().toISOString().split('T')[0],
-        leave_balance_earned: 12,
+        leave_balance_casual: 12,
         leave_balance_sick: 7,
         is_active: true,
         auth_user_id: authUser.user.id,

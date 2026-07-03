@@ -56,7 +56,7 @@ export async function GET() {
       const { data: leaves } = await leaveQuery;
 
       for (const l of leaves ?? []) {
-        const leaveLabel = l.leave_type === 'earned' ? 'Earned Leave' : l.leave_type === 'sick' ? 'Sick Leave' : 'Comp-Off Leave';
+        const leaveLabel = l.leave_type === 'earned' ? 'Casual Leave' : l.leave_type === 'sick' ? 'Sick Leave' : 'Comp-Off Leave';
         items.push({
           id: `leave-${l.id}`,
           type: 'leave',

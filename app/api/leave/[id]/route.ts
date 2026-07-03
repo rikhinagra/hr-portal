@@ -35,7 +35,7 @@ export async function PATCH(
     // Fetch the leave request with employee details
     const { data: leave } = await serviceClient
       .from('leave_requests')
-      .select('*, employee:employee_id(name, email, employee_code, leave_balance_earned, leave_balance_sick, reporting_manager_email)')
+      .select('*, employee:employee_id(name, email, employee_code, leave_balance_casual, leave_balance_sick, reporting_manager_email)')
       .eq('id', id)
       .single();
 
@@ -82,12 +82,12 @@ export async function PATCH(
     // Deduct leave balance on approval
     if (status === 'approved') {
       const balanceField =
-        leave.leave_type === 'earned' ? 'leave_balance_earned' :
+        leave.leave_type === 'earned' ? 'leave_balance_casual' :
         leave.leave_type === 'sick' ? 'leave_balance_sick' : 'leave_balance_compoff';
 
       const { data: empData } = await serviceClient
         .from('employees')
-        .select('leave_balance_earned, leave_balance_sick, leave_balance_compoff')
+        .select('leave_balance_casual, leave_balance_sick, leave_balance_compoff')
         .eq('id', leave.employee_id)
         .single();
 

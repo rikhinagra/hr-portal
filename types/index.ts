@@ -15,7 +15,7 @@ export interface Employee {
   department: string;
   designation: string;
   join_date: string;
-  leave_balance_earned: number;
+  leave_balance_casual: number;
   leave_balance_sick: number;
   leave_balance_compoff: number;
   photo_url: string | null;
@@ -126,7 +126,7 @@ export interface SessionUser {
   department: string;
   designation: string;
   join_date: string;
-  leave_balance_earned: number;
+  leave_balance_casual: number;
   leave_balance_sick: number;
   photo_url: string | null;
   reporting_manager_email: string | null;

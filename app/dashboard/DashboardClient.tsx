@@ -68,7 +68,7 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
 
   const stats = [
     ...(!isAdmin ? [
-      { label: 'Earned Leave', value: employee.leave_balance_earned, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
+      { label: 'Casual Leave', value: employee.leave_balance_casual, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
       { label: 'Sick Leave', value: employee.leave_balance_sick, sub: 'of 7 days', icon: Heart, iconBg: 'rgba(234,88,12,0.1)', iconColor: '#ea580c' },
       { label: 'Comp-Off', value: employee.leave_balance_compoff, sub: 'days available', icon: Calendar, iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
     ] : []),

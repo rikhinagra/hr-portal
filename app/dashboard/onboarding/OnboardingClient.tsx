@@ -15,7 +15,7 @@ const ONBOARDING_STEPS: { label: string; Icon: React.ElementType; detail: string
   { label: 'Generate Employee Code', Icon: Hash, detail: 'New code auto-assigned' },
   { label: 'Create company email & portal login', Icon: Mail, detail: 'Portal login access created' },
   { label: 'Send welcome email to personal address', Icon: Send, detail: 'Includes login details & portal link' },
-  { label: 'Set up employee profile & leaves', Icon: ClipboardList, detail: '12 Earned & 7 Sick leaves credited' },
+  { label: 'Set up employee profile & leaves', Icon: ClipboardList, detail: '12 Casual & 7 Sick leaves credited' },
 ];
 
 interface StepState {

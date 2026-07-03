@@ -86,7 +86,7 @@ async function seed() {
         department: emp.dept,
         designation: emp.designation,
         join_date: emp.joinDate,
-        leave_balance_earned: 12,
+        leave_balance_casual: 12,
         leave_balance_sick: 7,
         is_active: true,
         auth_user_id: authUserId,

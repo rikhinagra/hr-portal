@@ -13,7 +13,7 @@ interface LeaveClientProps {
 }
 
 function formatLeaveType(type: string): string {
-  if (type === 'earned') return 'Earned (Annual)';
+  if (type === 'earned') return 'Casual (Annual)';
   if (type === 'sick') return 'Sick Leave';
   if (type === 'compoff') return 'Comp-Off';
   return type;
@@ -178,8 +178,8 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         {!isAdmin && (
           <>
             <Card><CardContent className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Earned Leave</div>
-              <div className="text-3xl font-bold" style={{ color: '#3a7bd5' }}>{employee.leave_balance_earned}</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Casual Leave</div>
+              <div className="text-3xl font-bold" style={{ color: '#3a7bd5' }}>{employee.leave_balance_casual}</div>
               <div className="text-xs text-muted-foreground mt-1">of 12 days remaining</div>
             </CardContent></Card>
             <Card><CardContent className="p-6">
@@ -396,7 +396,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <div className="relative">
                   <select value={leaveType} onChange={e => setLeaveType(e.target.value as typeof leaveType)}
                     className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                    <option value="earned">Earned (Annual) — {employee.leave_balance_earned} day(s) remaining</option>
+                    <option value="earned">Casual (Annual) — {employee.leave_balance_casual} day(s) remaining</option>
                     <option value="sick">Sick Leave — {employee.leave_balance_sick} day(s) remaining</option>
                     <option value="compoff">Comp-Off — {employee.leave_balance_compoff} day(s) available</option>
                   </select>
