@@ -10,7 +10,7 @@ const CATEGORIES = ['Onboarding', 'Recruitment', 'Leave', 'WFH', 'Handbook', 'Se
 
 const categoryColors: Record<string, string> = {
   Onboarding: '#3a7bd5', Recruitment: '#2e7d32', Leave: '#e67e22',
-  WFH: '#c8985e', Handbook: '#0f1a2e', Security: '#b33a3a', Conduct: '#b33a3a', 'Holiday Calendar': '#7c3aed', General: '#7c6f5e',
+  WFH: '#c8985e', Handbook: '#0891b2', Security: '#b33a3a', Conduct: '#b33a3a', 'Holiday Calendar': '#7c3aed', General: '#7c6f5e',
 };
 
 interface Props {
