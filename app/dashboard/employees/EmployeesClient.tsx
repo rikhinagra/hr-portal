@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,7 +26,7 @@ function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 }
 
-export default function EmployeesClient({ employees: initialEmployees, viewerRole, viewerId, viewerReportingManagerEmail, viewerEmail }: { employees: EmpRow[]; viewerRole: string; viewerId: string; viewerReportingManagerEmail: string | null; viewerEmail?: string | null }) {
+export default function EmployeesClient({ employees: initialEmployees, viewerRole, viewerId, viewerReportingManagerEmail, viewerEmail, initialPage = 1 }: { employees: EmpRow[]; viewerRole: string; viewerId: string; viewerReportingManagerEmail: string | null; viewerEmail?: string | null; initialPage?: number }) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const pageSize = isMobile ? 8 : 10;
@@ -36,7 +36,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
 
   const [employees, setEmployees] = useState(initialEmployees);
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [toggling, setToggling] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EmpRow | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -45,8 +45,13 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
   const [offboardConfirmText, setOffboardConfirmText] = useState('');
   const [offboarding, setOffboarding] = useState(false);
 
-  // Reset to page 1 when screen size changes (mobile ↔ desktop)
-  useEffect(() => { setPage(1); }, [isMobile]);
+  const isMobileInitialMount = useRef(true);
+  // Reset to page 1 when screen size changes (mobile ↔ desktop), skip first mount
+  useEffect(() => {
+    if (isMobileInitialMount.current) { isMobileInitialMount.current = false; return; }
+    setPage(1);
+    window.history.replaceState(null, '', '/dashboard/employees');
+  }, [isMobile]);
 
   const filtered = employees.filter(e =>
     e.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,6 +67,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
+    window.history.replaceState(null, '', '/dashboard/employees');
   };
 
   const toggleActive = async (emp: EmpRow) => {
@@ -598,7 +604,11 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
 
           <div className="flex items-center gap-2 md:ml-auto">
             <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
+              onClick={() => {
+                const n = Math.max(1, currentPage - 1);
+                setPage(n);
+                window.history.replaceState(null, '', n === 1 ? '/dashboard/employees' : '/dashboard/employees?page=' + n);
+              }}
               disabled={currentPage === 1}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-all"
               style={{
@@ -616,7 +626,11 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
             </span>
 
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => {
+                const n = Math.min(totalPages, currentPage + 1);
+                setPage(n);
+                window.history.replaceState(null, '', '/dashboard/employees?page=' + n);
+              }}
               disabled={currentPage === totalPages}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-all"
               style={{

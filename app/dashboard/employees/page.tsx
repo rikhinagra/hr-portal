@@ -2,9 +2,16 @@ import { getSessionEmployee } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import EmployeesClient from './EmployeesClient';
 
-export default async function EmployeesPage() {
+export default async function EmployeesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const employee = await getSessionEmployee();
   if (!employee) return null;
+
+  const params = await searchParams;
+  const initialPage = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
 
   const supabase = createServiceClient();
   const { data: employees } = await supabase
@@ -19,6 +26,7 @@ export default async function EmployeesPage() {
       viewerId={employee.id}
       viewerReportingManagerEmail={employee.reporting_manager_email ?? null}
       viewerEmail={employee.email ?? null}
+      initialPage={initialPage}
     />
   );
 }
