@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ClipboardList, BookOpen, Monitor, Rocket, AlertTriangle, CalendarDays } from 'lucide-react';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/style.css';
 
 const features = [
   { Icon: ClipboardList, text: 'Leave management with real-time approvals' },
@@ -15,9 +17,55 @@ export default function LoginPage() {
   const router = useRouter();
   const [code, setCode] = useState('');
   const [dob, setDob] = useState('');
+  const [dobDisplay, setDobDisplay] = useState('');
+  const [codeFocused, setCodeFocused] = useState(false);
   const [dobFocused, setDobFocused] = useState(false);
+  const [showDesktopCal, setShowDesktopCal] = useState(false);
+  const [showMobileCal, setShowMobileCal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<Date | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const desktopCalRef = useRef<HTMLDivElement>(null);
+
+  // Close desktop calendar when clicking outside
+  useEffect(() => {
+    if (!showDesktopCal) return;
+    const handleClick = (e: MouseEvent) => {
+      if (desktopCalRef.current && !desktopCalRef.current.contains(e.target as Node)) {
+        setShowDesktopCal(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showDesktopCal]);
+
+  const handleDobText = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 8);
+    let display = '';
+    if (digits.length <= 2) display = digits;
+    else if (digits.length <= 4) display = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    else display = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    setDobDisplay(display);
+    setError('');
+    if (digits.length === 8) {
+      setDob(`${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`);
+    } else {
+      setDob('');
+    }
+  };
+
+  const handleDaySelect = (day: Date | undefined) => {
+    if (!day) return;
+    setSelectedDay(day);
+    const yyyy = day.getFullYear();
+    const mm = String(day.getMonth() + 1).padStart(2, '0');
+    const dd = String(day.getDate()).padStart(2, '0');
+    setDob(`${yyyy}-${mm}-${dd}`);
+    setDobDisplay(`${dd}/${mm}/${yyyy}`);
+    setShowDesktopCal(false);
+    setShowMobileCal(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +85,18 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const dayPicker = (
+    <DayPicker
+      mode="single"
+      selected={selectedDay}
+      onSelect={handleDaySelect}
+      captionLayout="dropdown"
+      startMonth={new Date(1950, 0)}
+      endMonth={new Date(2006, 11)}
+      defaultMonth={selectedDay ?? new Date(1990, 0)}
+    />
+  );
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -66,34 +126,48 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 36 }}>
             <div>
               <label className="mobile-label">Employee Code</label>
-              <input
-                type="text" placeholder="e.g. AC001" value={code}
-                id="m-code" name="username" autoComplete="username"
-                onChange={e => { setCode(e.target.value); setError(''); }}
-                className="mobile-input"
-                style={{ fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em' }}
-                onFocus={e => (e.target.style.borderColor = '#c8985e')}
-                onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
-              />
-            </div>
-            <div>
               <div style={{ position: 'relative' }}>
+                <div inert aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: 16, right: 16, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none', WebkitUserSelect: 'none', zIndex: 0, fontSize: '1rem', fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em', whiteSpace: 'nowrap', overflow: 'hidden', textDecoration: 'none' }}>
+                  <span style={{ color: 'transparent', textDecoration: 'none' }}>{code}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.25)', textDecoration: 'none' }}>{'ADC00000001'.slice(code.length)}</span>
+                </div>
                 <input
-                  type="date"
-                  id="m-dob" name="password" autoComplete="current-password"
-                  value={dob}
-                  onChange={e => { setDob(e.target.value); setError(''); }}
-                  className="mobile-input mobile-date"
-                  style={{ color: dob ? '#fff' : 'transparent', paddingRight: '44px' }}
+                  type="text" placeholder="" value={code}
+                  id="m-code" name="username" autoComplete="off" maxLength={11}
+                  spellCheck={false} autoCorrect="off" autoCapitalize="none" data-gramm="false"
+                  onChange={e => { setCode(e.target.value.slice(0, 11)); setError(''); }}
+                  className="mobile-input"
+                  style={{ fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em', position: 'relative', zIndex: 2, textDecoration: 'none', WebkitTextDecoration: 'none' }}
                   onFocus={e => (e.target.style.borderColor = '#c8985e')}
                   onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
                 />
-                {!dob && (
-                  <span style={{ position: 'absolute', left: 17, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '1rem', pointerEvents: 'none', letterSpacing: '0.05em' }}>
-                    DD/MM/YYYY
-                  </span>
-                )}
-                <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              </div>
+            </div>
+            <div>
+              <label className="mobile-label">Date of Birth</label>
+              <div style={{ position: 'relative' }}>
+                <div inert aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: 16, right: 44, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none', WebkitUserSelect: 'none', zIndex: 0, fontSize: '1rem', fontFamily: 'var(--font-geist-mono), monospace', whiteSpace: 'nowrap', overflow: 'hidden', textDecoration: 'none' }}>
+                  <span style={{ color: 'transparent', textDecoration: 'none' }}>{dobDisplay}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.25)', textDecoration: 'none' }}>{'DD/MM/YYYY'.slice(dobDisplay.length)}</span>
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder=""
+                  value={dobDisplay}
+                  autoComplete="bday"
+                  onChange={e => handleDobText(e.target.value)}
+                  className="mobile-input mobile-dob"
+                  style={{ paddingRight: '44px', position: 'relative', zIndex: 2 }}
+                  onFocus={e => (e.target.style.borderColor = '#c8985e')}
+                  onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMobileCal(true)}
+                  style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 44, zIndex: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <CalendarDays size={16} color="#c8985e" />
+                </button>
               </div>
             </div>
 
@@ -181,30 +255,56 @@ export default function LoginPage() {
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
                 Employee Code
               </label>
-              <input type="text" placeholder="e.g. AC001" value={code}
-                id="d-code" name="username" autoComplete="username"
-                onChange={e => { setCode(e.target.value); setError(''); }}
-                style={{ width: '100%', padding: '13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: '#1f2937', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s', fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em' }}
-                onFocus={e => (e.target.style.borderColor = '#c8985e')}
-                onBlur={e => (e.target.style.borderColor = '#e5e7eb')}
-              />
+              <div style={{ position: 'relative', background: '#fff', border: `1.5px solid ${codeFocused ? '#c8985e' : '#e5e7eb'}`, borderRadius: 10, transition: 'border-color .15s' }}>
+                <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: 16, right: 16, display: 'flex', alignItems: 'center', pointerEvents: 'none', userSelect: 'none', WebkitUserSelect: 'none', zIndex: 0, fontSize: '1rem', fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                  <span style={{ color: 'transparent' }}>{code}</span>
+                  <span style={{ color: '#9ca3af' }}>{'ADC00000001'.slice(code.length)}</span>
+                </div>
+                <input type="text" placeholder="" value={code}
+                  id="d-code" name="username" autoComplete="username" maxLength={11}
+                  spellCheck={false} autoCorrect="off" autoCapitalize="none"
+                  onChange={e => { setCode(e.target.value.slice(0, 11)); setError(''); }}
+                  style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none', outline: 'none', fontSize: '1rem', fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em', color: '#1f2937', boxSizing: 'border-box', position: 'relative', zIndex: 2, textDecoration: 'none' }}
+                  onFocus={() => setCodeFocused(true)}
+                  onBlur={() => setCodeFocused(false)}
+                />
+              </div>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
                 Date of Birth
               </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="date"
-                  id="d-dob" name="password" autoComplete="current-password"
-                  value={dob}
-                  onChange={e => { setDob(e.target.value); setError(''); }}
-                  className="desktop-date"
-                  style={{ width: '100%', padding: '13px 44px 13px 16px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: '1rem', background: '#fff', color: (dobFocused || dob) ? '#1f2937' : '#9ca3af', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s' }}
-                  onFocus={e => { e.target.style.borderColor = '#c8985e'; setDobFocused(true); }}
-                  onBlur={e => { e.target.style.borderColor = '#e5e7eb'; setDobFocused(false); }}
-                />
-                <CalendarDays size={16} color="#c8985e" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              {/* Desktop calendar — dropdown below input, ghost hint shows remaining format */}
+              <div ref={desktopCalRef} style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', background: '#fff', border: `1.5px solid ${dobFocused ? '#c8985e' : '#e5e7eb'}`, borderRadius: 10, transition: 'border-color .15s' }}>
+                  {/* Ghost hint: typed text (transparent) + remaining format (gray) */}
+                  <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: 16, right: 44, display: 'flex', alignItems: 'center', pointerEvents: 'none', fontSize: '1rem', fontFamily: 'var(--font-geist-mono), monospace', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    <span style={{ color: 'transparent' }}>{dobDisplay}</span>
+                    <span style={{ color: '#b0b7c3' }}>{'DD/MM/YYYY'.slice(dobDisplay.length)}</span>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder=""
+                    value={dobDisplay}
+                    autoComplete="bday"
+                    onChange={e => handleDobText(e.target.value)}
+                    style={{ width: '100%', padding: '13px 44px 13px 16px', background: 'transparent', border: 'none', outline: 'none', fontSize: '1rem', fontFamily: 'var(--font-geist-mono), monospace', color: '#1f2937', boxSizing: 'border-box', position: 'relative', zIndex: 1 }}
+                    onFocus={() => setDobFocused(true)}
+                    onBlur={() => setDobFocused(false)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDesktopCal(s => !s)}
+                    style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 44, zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <CalendarDays size={16} color="#c8985e" />
+                  </button>
+                </div>
+                {showDesktopCal && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 200, background: '#fff', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.16)', border: '1px solid #e5e7eb', fontSize: '0.8rem', padding: '12px' }}>
+                    {dayPicker}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -221,6 +321,22 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
+
+      {/* Mobile calendar — fixed overlay (outside mobile section to avoid overflow:hidden clipping) */}
+      {showMobileCal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)', padding: '16px' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowMobileCal(false); }}
+        >
+          <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.35)', maxWidth: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid #e5e7eb' }}>
+              <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#374151' }}>Select Date of Birth</span>
+              <button onClick={() => setShowMobileCal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1.375rem', lineHeight: 1, padding: '0 4px' }}>✕</button>
+            </div>
+            <div style={{ padding: '8px' }}>{dayPicker}</div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 768px) {
@@ -250,30 +366,9 @@ export default function LoginPage() {
           transition: border-color .15s;
         }
         .mobile-input::placeholder { color: rgba(255,255,255,0.2); }
-        .mobile-date {
-          position: relative;
-          appearance: none;
-          -webkit-appearance: none;
-        }
-        .mobile-date::-webkit-calendar-picker-indicator {
-          position: absolute;
-          top: 0; right: 0;
-          width: 44px; height: 100%;
-          opacity: 0;
-          cursor: pointer;
-        }
-        .desktop-date {
-          position: relative;
-          appearance: none;
-          -webkit-appearance: none;
-        }
-        .desktop-date::-webkit-calendar-picker-indicator {
-          position: absolute;
-          top: 0; right: 0;
-          width: 44px; height: 100%;
-          opacity: 0;
-          cursor: pointer;
-        }
+        .mobile-dob::placeholder { color: rgba(255,255,255,0.2); }
+        .desktop-dob::placeholder { color: #9ca3af; }
+        .desktop-code::placeholder { color: #9ca3af; }
         #d-code:-webkit-autofill,
         #d-code:-webkit-autofill:hover,
         #d-code:-webkit-autofill:focus {
@@ -287,6 +382,22 @@ export default function LoginPage() {
           -webkit-box-shadow: 0 0 0px 1000px #0d1828 inset;
           -webkit-text-fill-color: #fff;
           transition: background-color 5000s ease-in-out 0s;
+        }
+        .rdp-root {
+          --rdp-accent-color: #c8985e;
+          --rdp-accent-background-color: rgba(200,152,94,0.12);
+          --rdp-cell-size: 32px;
+          --rdp-day-width: 32px;
+          --rdp-day-height: 32px;
+        }
+        .rdp-root .rdp-month_caption,
+        .rdp-root .rdp-caption_label,
+        .rdp-root .rdp-dropdowns,
+        .rdp-root .rdp-dropdowns select,
+        .rdp-root .rdp-dropdown,
+        .rdp-root .rdp-dropdown_month,
+        .rdp-root .rdp-dropdown_year {
+          font-size: 0.8rem !important;
         }
       `}</style>
     </div>
