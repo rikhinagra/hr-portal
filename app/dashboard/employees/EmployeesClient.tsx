@@ -186,10 +186,10 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                     </div>
                   )}
                   <div style={{ width: '100%' }}>
-                    <div className="font-semibold text-foreground text-sm">{emp.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{emp.department}</div>
-                    <div className="text-xs mt-1" style={{ color: '#6b7280' }}>{emp.designation}</div>
-                    <div className="text-xs mt-2" style={{ color: '#c8985e', wordBreak: 'break-all' }}>{emp.email}</div>
+                    <div className="font-semibold text-foreground text-sm truncate" title={emp.name}>{emp.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate" title={emp.department}>{emp.department}</div>
+                    <div className="text-xs mt-1" style={{ color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{emp.designation}</div>
+                    <div className="text-xs mt-2 truncate" style={{ color: '#c8985e' }} title={emp.email}>{emp.email}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -261,10 +261,10 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                     </div>
                   )}
                   <div style={{ width: '100%' }}>
-                    <div className="font-semibold text-foreground text-sm">{emp.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{emp.department}</div>
-                    <div className="text-xs mt-1" style={{ color: '#6b7280' }}>{emp.designation}</div>
-                    <div className="text-xs mt-2" style={{ color: '#c8985e', wordBreak: 'break-all' }}>{emp.email}</div>
+                    <div className="font-semibold text-foreground text-sm truncate" title={emp.name}>{emp.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate" title={emp.department}>{emp.department}</div>
+                    <div className="text-xs mt-1" style={{ color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{emp.designation}</div>
+                    <div className="text-xs mt-2 truncate" style={{ color: '#c8985e' }} title={emp.email}>{emp.email}</div>
                   </div>
                 </CardContent>
               </Card>
