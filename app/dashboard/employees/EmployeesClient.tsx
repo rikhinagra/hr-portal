@@ -263,6 +263,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
                   <div style={{ width: '100%' }}>
                     <div className="font-semibold text-foreground text-sm">{emp.name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{emp.department}</div>
+                    <div className="text-xs mt-1" style={{ color: '#6b7280' }}>{emp.designation}</div>
                     <div className="text-xs mt-2" style={{ color: '#c8985e', wordBreak: 'break-all' }}>{emp.email}</div>
                   </div>
                 </CardContent>
