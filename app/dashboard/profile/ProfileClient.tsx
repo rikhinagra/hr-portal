@@ -183,15 +183,40 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
     }
     setUploadingDoc(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('employee_id', employee.id);
-      fd.append('document_type', 'ZIP Archive');
-      fd.append('document_label', file.name);
-      const res = await fetch('/api/documents', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setDocuments(prev => [data.document, ...prev]);
+      // Step 1: Get a signed upload URL from our API (tiny JSON request, no file)
+      const urlRes = await fetch('/api/documents/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: employee.id, file_name: file.name }),
+      });
+      const urlData = await urlRes.json();
+      if (!urlRes.ok) throw new Error(urlData.error ?? 'Could not get upload URL');
+
+      // Step 2: Upload file directly to Supabase storage (bypasses Vercel's 4.5MB limit)
+      const uploadRes = await fetch(urlData.signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      });
+      if (!uploadRes.ok) throw new Error('Upload to storage failed. Please try again.');
+
+      // Step 3: Register the document record in our database
+      const regRes = await fetch('/api/documents/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_id: employee.id,
+          path: urlData.path,
+          file_name: file.name,
+          file_size: file.size,
+          document_type: 'ZIP Archive',
+          document_label: file.name,
+        }),
+      });
+      const regData = await regRes.json();
+      if (!regRes.ok) throw new Error(regData.error ?? 'Failed to save document');
+
+      setDocuments(prev => [regData.document, ...prev]);
       setShowDocUpload(false);
       toast.success('Documents uploaded successfully.');
     } catch (err: unknown) {
