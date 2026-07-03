@@ -137,7 +137,7 @@ export default function LoginPage() {
                   spellCheck={false} autoCorrect="off" autoCapitalize="none" data-gramm="false"
                   onChange={e => { setCode(e.target.value.slice(0, 11)); setError(''); }}
                   className="mobile-input"
-                  style={{ fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em', position: 'relative', zIndex: 2, textDecoration: 'none', WebkitTextDecoration: 'none' }}
+                  style={{ fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.06em', position: 'relative', zIndex: 2, textDecoration: 'none' }}
                   onFocus={e => (e.target.style.borderColor = '#c8985e')}
                   onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.14)')}
                 />
