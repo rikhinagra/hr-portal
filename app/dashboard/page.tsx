@@ -18,9 +18,9 @@ export default async function DashboardPage() {
   } else if (employee.role === 'manager') {
     teamCountQuery = activeEmployees.eq('reporting_manager_email', employee.email);
   } else {
-    // employee or IT — show teammates under the same reporting manager
+    // employee or IT — count teammates under same reporting manager, excluding self
     teamCountQuery = employee.reporting_manager_email
-      ? activeEmployees.eq('reporting_manager_email', employee.reporting_manager_email)
+      ? activeEmployees.eq('reporting_manager_email', employee.reporting_manager_email).neq('id', employee.id)
       : activeEmployees.eq('id', employee.id);
   }
 
