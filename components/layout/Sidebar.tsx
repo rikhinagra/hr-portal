@@ -20,7 +20,7 @@ const navItems = [
   { href: '/dashboard/leave', icon: Calendar, label: 'Leave', exact: false, roles: null },
   { href: '/dashboard/handbook', icon: BookOpen, label: 'Handbook', exact: false, roles: null },
   { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false, roles: null },
-  { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: ['admin', 'hr', 'it'] },
+  { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: ['admin', 'hr'] },
   { href: '/dashboard/onboarding', icon: Rocket, label: 'Onboarding', exact: false, roles: ['admin', 'hr'] },
   { href: '/dashboard/employees', icon: Users, label: 'Employees', exact: false, roles: null },
 ];
