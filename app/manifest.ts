@@ -15,7 +15,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/aadhcode-favicon.webp',
         sizes: 'any',
         type: 'image/webp',
-        purpose: 'maskable',
+        purpose: 'any',
       },
     ],
   };
