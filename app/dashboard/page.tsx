@@ -11,9 +11,22 @@ export default async function DashboardPage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+  const activeEmployees = supabase.from('employees').select('*', { count: 'exact', head: true }).eq('is_active', true);
+  let teamCountQuery;
+  if (employee.role === 'admin' || employee.role === 'hr') {
+    teamCountQuery = activeEmployees;
+  } else if (employee.role === 'manager') {
+    teamCountQuery = activeEmployees.eq('reporting_manager_email', employee.email);
+  } else {
+    // employee or IT — show teammates under the same reporting manager
+    teamCountQuery = employee.reporting_manager_email
+      ? activeEmployees.eq('reporting_manager_email', employee.reporting_manager_email)
+      : activeEmployees.eq('id', employee.id);
+  }
+
   const [{ count: policiesCount }, { count: teamCount }, { data: ackData }, { data: activityData }] = await Promise.all([
     supabase.from('policies').select('*', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('employees').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    teamCountQuery,
     supabase.from('handbook_acknowledgements').select('acknowledged_at').eq('employee_id', employee.id).maybeSingle(),
     (employee.role === 'admin' || employee.role === 'hr')
       ? supabase.from('activity_log')

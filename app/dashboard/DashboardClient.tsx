@@ -80,7 +80,9 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
     ...(!isAdmin ? [
       { label: 'Apply for Leave', sub: 'Submit leave request', icon: Calendar, href: '/dashboard/leave', iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
     ] : []),
-    { label: 'Request Equipment', sub: 'Hardware or software', icon: Monitor, href: '/dashboard/equipment', iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
+    ...(isAdmin || employee.role === 'hr' ? [
+      { label: 'Request Equipment', sub: 'Hardware or software', icon: Monitor, href: '/dashboard/equipment', iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
+    ] : []),
     { label: 'Read Handbook', sub: handbookAck ? 'Acknowledged' : 'Pending acknowledgement', icon: BookOpen, href: '/dashboard/handbook', iconBg: handbookAck ? 'rgba(22,163,74,0.1)' : 'rgba(234,88,12,0.1)', iconColor: handbookAck ? '#16a34a' : '#ea580c' },
     { label: 'View Policies', sub: `${policiesCount} documents`, icon: FileText, href: '/dashboard/policies', iconBg: 'rgba(124,58,237,0.1)', iconColor: '#7c3aed' },
   ];
