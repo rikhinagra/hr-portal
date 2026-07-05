@@ -85,36 +85,21 @@ export async function POST(request: NextRequest) {
       action_type: 'info',
     });
 
+    // Email routing — TO: HR Desk, CC: employee's reporting manager
     try {
-      const { data: admins } = await serviceClient
-        .from('employees').select('email').eq('role', 'admin').eq('is_active', true);
+      const hrDeskEmail = process.env.EMAIL_HR_DESK!;
+      const ccEmails: string[] = [];
+      if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
 
-      const adminEmails = (admins ?? []).map((a: { email: string }) => a.email).filter(Boolean) as string[];
-      const toAdmins = adminEmails.length > 0 ? adminEmails : [process.env.EMAIL_REPORTING_MANAGER!];
-
-      if (employee.role === 'hr') {
-        // HR claiming → goes directly to all admins
-        await sendCompOffClaimEmail({
-          employeeName: employee.name, department: employee.department,
-          workDate: work_date, reason, toEmails: toAdmins, ccEmails: [], isHrClaiming: true,
-        });
-      } else if (employee.role === 'manager') {
-        // Manager claiming → goes to HR desk, all admins in CC
-        await sendCompOffClaimEmail({
-          employeeName: employee.name, department: employee.department,
-          workDate: work_date, reason,
-          toEmails: [process.env.EMAIL_HR_DESK!], ccEmails: toAdmins, isHrClaiming: false,
-        });
-      } else {
-        // Employee / IT claiming → goes to HR desk, admins + reporting manager in CC
-        const ccEmails = [...toAdmins];
-        if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
-        await sendCompOffClaimEmail({
-          employeeName: employee.name, department: employee.department,
-          workDate: work_date, reason,
-          toEmails: [process.env.EMAIL_HR_DESK!], ccEmails, isHrClaiming: false,
-        });
-      }
+      await sendCompOffClaimEmail({
+        employeeName: employee.name,
+        department: employee.department,
+        workDate: work_date,
+        reason,
+        toEmails: [hrDeskEmail],
+        ccEmails,
+        isHrClaiming: employee.role === 'hr',
+      });
     } catch (emailErr) {
       console.error('Email send failed (non-fatal):', emailErr);
     }

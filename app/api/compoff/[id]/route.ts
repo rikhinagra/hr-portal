@@ -17,10 +17,10 @@ export async function PATCH(
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!approver) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    const isAdminOrHr = approver.role === 'admin' || approver.role === 'hr';
+    const isHr = approver.role === 'hr';
     const isManager = approver.role === 'manager';
 
-    if (!isAdminOrHr && !isManager) {
+    if (!isHr && !isManager) {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 

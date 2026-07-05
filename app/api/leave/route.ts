@@ -108,65 +108,24 @@ export async function POST(request: NextRequest) {
       action_type: 'info',
     });
 
-    // Smart email routing
+    // Email routing — TO: HR Desk, CC: employee's reporting manager
     try {
-      const { data: admins } = await serviceClient
-        .from('employees')
-        .select('email')
-        .eq('role', 'admin')
-        .eq('is_active', true);
+      const hrDeskEmail = process.env.EMAIL_HR_DESK!;
+      const ccEmails: string[] = [];
+      if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
 
-      const adminEmails = (admins ?? []).map((a: { email: string }) => a.email).filter(Boolean) as string[];
-      const fallbackAdmin = process.env.EMAIL_REPORTING_MANAGER!;
-      const toAdmins = adminEmails.length > 0 ? adminEmails : [fallbackAdmin];
-
-      if (employee.role === 'hr') {
-        // HR applying → email goes directly to all admins
-        await sendLeaveRequestEmail({
-          employeeName: employee.name,
-          department: employee.department,
-          leaveType: leave_type,
-          startDate: start_date,
-          endDate: end_date,
-          days,
-          reason,
-          toEmails: toAdmins,
-          ccEmails: [],
-          isHrApplying: true,
-        });
-      } else if (employee.role === 'manager') {
-        // Manager applying → email goes to HR desk, all admins in CC
-        const hrDeskEmail = process.env.EMAIL_HR_DESK!;
-        await sendLeaveRequestEmail({
-          employeeName: employee.name,
-          department: employee.department,
-          leaveType: leave_type,
-          startDate: start_date,
-          endDate: end_date,
-          days,
-          reason,
-          toEmails: [hrDeskEmail],
-          ccEmails: toAdmins,
-          isHrApplying: false,
-        });
-      } else {
-        // Employee / IT applying → email goes to HR desk, admins + reporting manager in CC
-        const hrDeskEmail = process.env.EMAIL_HR_DESK!;
-        const ccEmails = [...toAdmins];
-        if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
-        await sendLeaveRequestEmail({
-          employeeName: employee.name,
-          department: employee.department,
-          leaveType: leave_type,
-          startDate: start_date,
-          endDate: end_date,
-          days,
-          reason,
-          toEmails: [hrDeskEmail],
-          ccEmails,
-          isHrApplying: false,
-        });
-      }
+      await sendLeaveRequestEmail({
+        employeeName: employee.name,
+        department: employee.department,
+        leaveType: leave_type,
+        startDate: start_date,
+        endDate: end_date,
+        days,
+        reason,
+        toEmails: [hrDeskEmail],
+        ccEmails,
+        isHrApplying: employee.role === 'hr',
+      });
     } catch (emailErr) {
       console.error('Email send failed (non-fatal):', emailErr);
     }
