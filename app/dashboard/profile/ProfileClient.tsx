@@ -238,10 +238,10 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   };
 
   const editButtons = (
-    <div className="flex gap-2">
+    <div className="flex gap-2 flex-shrink-0">
       <button onClick={handleCancel} className="text-xs px-3 py-1.5 rounded-lg border text-muted-foreground">Cancel</button>
       <button onClick={handleSave} disabled={saving}
-        className="text-xs font-bold px-3 py-1.5 rounded-lg"
+        className="text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"
         style={{ background: '#c8985e', color: '#0f1a2e' }}>
         {saving ? 'Saving…' : 'Save Changes'}
       </button>
@@ -251,17 +251,16 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="page-heading text-2xl">{isOwnProfile ? 'My Profile' : employee.name}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isOwnProfile ? 'View and manage your personal information' : 'Full employee profile and documents'}
           </p>
         </div>
-        {/* Admin edit / save buttons at top level */}
         {(isOwnProfile || canEdit) && !editing && (
           <button onClick={() => setEditing(true)}
-            className="text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+            className="text-sm font-semibold px-4 py-2 rounded-lg transition-all flex-shrink-0"
             style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e', border: '1px solid rgba(200,152,94,0.25)' }}>
             <Pencil className="inline size-3.5 mr-1.5" />Edit Profile
           </button>
@@ -276,7 +275,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
         </div>
       )}
 
-      <div className="grid gap-5 profile-grid" style={{ gridTemplateColumns: '320px 1fr', alignItems: 'start' }}>
+      {/* Main Grid — single column on mobile, sidebar+content from md (768px) up */}
+      <div className="grid gap-5 items-start grid-cols-1 md:grid-cols-[320px_1fr]">
 
         {/* Left Column */}
         <div className="flex flex-col gap-4">
@@ -363,7 +363,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
               <h3 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Personal Information</h3>
             </CardHeader>
             <CardContent className="pt-5">
-              <div className="grid grid-cols-2 gap-4 detail-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoField label="Full Name" value={employee.name}
                   editing={isPrivileged && editing} editValue={form.name} onEdit={set('name')} placeholder="Full Name" />
                 <InfoField label="Date of Birth" value={fmt(employee.dob)}
@@ -391,16 +391,16 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
           {/* Employment Information */}
           <Card>
             <CardHeader className="pb-0">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-2 flex-wrap">
                 <h3 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Employment Information</h3>
                 {isPrivileged && editing && (
-                  <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                  <span className="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0"
                     style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>{isAdmin ? 'Admin' : 'HR'} editable</span>
                 )}
               </div>
             </CardHeader>
             <CardContent className="pt-5">
-              <div className="grid grid-cols-2 gap-4 detail-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoField label="Employee Code" value={employee.employee_code} mono
                   editing={isPrivileged && editing} editValue={form.employee_code} onEdit={v => set('employee_code')(v.toUpperCase())} placeholder="AC001" />
                 <InfoField label="Designation" value={employee.designation}
@@ -446,16 +446,16 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
           {/* Documents */}
           <Card>
             <CardHeader className="pb-0">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <h3 className="font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Documents</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">{documents.length} document{documents.length !== 1 ? 's' : ''} uploaded</p>
                 </div>
                 {canEdit && (
                   <button onClick={() => setShowDocUpload(v => !v)}
-                    className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg text-white"
+                    className="flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-lg text-white flex-shrink-0"
                     style={{ background: '#0f1a2e' }}>
-                    + Upload Document
+                    + Upload
                   </button>
                 )}
               </div>
@@ -481,25 +481,29 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                 <div className="text-center py-10 text-muted-foreground text-sm">
                   <FolderOpen className="size-10 mx-auto mb-2 opacity-40" />
                   No documents uploaded yet.
-                  {canEdit && <div className="mt-1">Click &quot;Upload Document&quot; to add files.</div>}
+                  {canEdit && <div className="mt-1">Click &quot;Upload&quot; to add files.</div>}
                 </div>
               ) : (
                 <div className="space-y-2">
                   {documents.map(doc => (
-                    <div key={doc.id} className="flex items-center gap-3 p-3 rounded-xl border bg-muted/30">
-                      <div className="flex-shrink-0 flex items-center justify-center rounded-lg size-9"
-                        style={{ background: 'rgba(200,152,94,0.1)' }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8985e" strokeWidth="1.8">
-                          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-foreground truncate">{doc.document_label}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {doc.document_type} · {doc.file_name}{doc.file_size ? ` · ${fmtSize(doc.file_size)}` : ''} · {new Date(doc.created_at).toLocaleDateString('en-IN')}
+                    <div key={doc.id} className="p-3 rounded-xl border bg-muted/30">
+                      {/* Top row: icon + name + meta */}
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 flex items-center justify-center rounded-lg size-9 mt-0.5"
+                          style={{ background: 'rgba(200,152,94,0.1)' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8985e" strokeWidth="1.8">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-foreground truncate">{doc.document_label}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {doc.document_type}{doc.file_size ? ` · ${fmtSize(doc.file_size)}` : ''} · {new Date(doc.created_at).toLocaleDateString('en-IN')}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-2 flex-shrink-0">
+                      {/* Bottom row: action buttons, indented to align under text */}
+                      <div className="flex gap-2 mt-2 ml-12">
                         <button
                           onClick={async () => {
                             setViewingDocId(doc.id);
@@ -588,22 +592,15 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
           </Card>
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 900px) {
-          .profile-grid { grid-template-columns: 1fr !important; }
-          .detail-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex justify-between items-center">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xs font-medium text-foreground">{value}</span>
+    <div className="flex justify-between items-start gap-2">
+      <span className="text-xs text-muted-foreground shrink-0">{label}</span>
+      <span className="text-xs font-medium text-foreground text-right">{value}</span>
     </div>
   );
 }
@@ -657,7 +654,7 @@ function InfoField({ label, value, editing, editValue, onEdit, placeholder, text
   return (
     <div>
       <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">{label}</div>
-      <div className="text-sm" style={{
+      <div className="text-sm break-all" style={{
         color: valueColor ?? undefined,
         fontFamily: mono ? 'var(--font-geist-mono), monospace' : undefined,
         fontWeight: mono ? 600 : undefined,
