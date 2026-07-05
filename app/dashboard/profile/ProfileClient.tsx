@@ -486,9 +486,9 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
               ) : (
                 <div className="space-y-2">
                   {documents.map(doc => (
-                    <div key={doc.id} className="p-3 rounded-xl border bg-muted/30">
-                      {/* Top row: icon + name + meta */}
-                      <div className="flex items-start gap-3">
+                    <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-xl border bg-muted/30">
+                      {/* Icon + name + meta */}
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
                         <div className="flex-shrink-0 flex items-center justify-center rounded-lg size-9 mt-0.5"
                           style={{ background: 'rgba(200,152,94,0.1)' }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8985e" strokeWidth="1.8">
@@ -502,8 +502,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                           </div>
                         </div>
                       </div>
-                      {/* Bottom row: action buttons, indented to align under text */}
-                      <div className="flex gap-2 mt-2 ml-12">
+                      {/* Buttons — indented below on mobile, right side on desktop */}
+                      <div className="flex gap-2 flex-shrink-0 ml-12 sm:ml-0">
                         <button
                           onClick={async () => {
                             setViewingDocId(doc.id);
