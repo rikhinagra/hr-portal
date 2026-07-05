@@ -30,8 +30,9 @@ export const metadata: Metadata = {
   title: 'Aadhcode — Employee Portal',
   description: 'Official HR Management Portal for Aadhcode employees. Manage leaves, equipment, handbooks, and more.',
   icons: {
-    icon: '/aadhcode-logo.webp',
-    apple: '/aadhcode-logo.webp',
+    icon: '/aadhcode-favicon.webp',
+    shortcut: '/aadhcode-favicon.webp',
+    apple: '/aadhcode-favicon.webp',
   },
   openGraph: {
     title: 'Aadhcode — Employee Portal',
