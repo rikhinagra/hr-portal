@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Aadhcode Employee Portal',
-    short_name: 'HR Portal',
+    short_name: 'HR Desk',
     description: 'Official HR Management Portal for Aadhcode employees. Manage leaves, equipment, handbooks, and more.',
     start_url: '/',
     display: 'standalone',
