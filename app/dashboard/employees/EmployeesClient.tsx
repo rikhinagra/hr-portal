@@ -217,7 +217,15 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
       );
     }
 
-    // Show only teammates who share the same reporting manager (excluding self)
+    // Find reporting manager from employees list
+    const reportingManager = employees.find(e => e.email === viewerReportingManagerEmail && e.is_active) ?? null;
+    const managerMatchesSearch = !search || (reportingManager && (
+      reportingManager.name.toLowerCase().includes(search.toLowerCase()) ||
+      reportingManager.department.toLowerCase().includes(search.toLowerCase())
+    ));
+    const visibleManager = managerMatchesSearch ? reportingManager : null;
+
+    // Teammates — same reporting manager, excluding self
     const directoryItems = employees
       .filter(e =>
         e.is_active &&
@@ -230,12 +238,34 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
         e.department.toLowerCase().includes(search.toLowerCase())
       );
 
+    const totalVisible = (visibleManager ? 1 : 0) + directoryItems.length;
+
+    const empCard = (emp: EmpRow) => (
+      <Card key={emp.id}>
+        <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+          {emp.photo_url ? (
+            <img src={emp.photo_url} alt={emp.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #0f1a2e, #1c2d4a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8985e', fontWeight: 700, fontSize: '1.25rem', flexShrink: 0 }}>
+              {getInitials(emp.name)}
+            </div>
+          )}
+          <div style={{ width: '100%' }}>
+            <div className="font-semibold text-foreground text-sm truncate" title={emp.name}>{emp.name}</div>
+            <div className="text-xs text-muted-foreground mt-0.5 truncate" title={emp.department}>{emp.department}</div>
+            <div className="text-xs mt-1" style={{ color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{emp.designation}</div>
+            <div className="text-xs mt-2 truncate" style={{ color: '#c8985e' }} title={emp.email}>{emp.email}</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+
     return (
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h1 className="page-heading text-2xl">Team Directory</h1>
-            <p className="text-sm text-muted-foreground mt-1">{directoryItems.length} team member{directoryItems.length !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-muted-foreground mt-1">{directoryItems.length} teammate{directoryItems.length !== 1 ? 's' : ''}</p>
           </div>
           <input
             type="text"
@@ -246,30 +276,48 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
           />
         </div>
 
-        {directoryItems.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground text-sm border rounded-xl bg-muted/20">No team members found.</div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
-            {directoryItems.map(emp => (
-              <Card key={emp.id}>
-                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
-                  {emp.photo_url ? (
-                    <img src={emp.photo_url} alt={emp.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #0f1a2e, #1c2d4a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8985e', fontWeight: 700, fontSize: '1.25rem', flexShrink: 0 }}>
-                      {getInitials(emp.name)}
-                    </div>
-                  )}
-                  <div style={{ width: '100%' }}>
-                    <div className="font-semibold text-foreground text-sm truncate" title={emp.name}>{emp.name}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5 truncate" title={emp.department}>{emp.department}</div>
-                    <div className="text-xs mt-1" style={{ color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{emp.designation}</div>
-                    <div className="text-xs mt-2 truncate" style={{ color: '#c8985e' }} title={emp.email}>{emp.email}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {totalVisible === 0 ? (
+          <div className="py-16 text-center text-muted-foreground text-sm border rounded-xl bg-muted/20">
+            {search ? 'No results match your search.' : 'No team members found.'}
           </div>
+        ) : (
+          <>
+            {/* Reporting Manager */}
+            {visibleManager && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Your Manager</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+                  <Card style={{ borderColor: 'rgba(200,152,94,0.4)', background: 'rgba(200,152,94,0.05)' }}>
+                    <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                      {visibleManager.photo_url ? (
+                        <img src={visibleManager.photo_url} alt={visibleManager.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #0f1a2e, #1c2d4a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c8985e', fontWeight: 700, fontSize: '1.25rem', flexShrink: 0 }}>
+                          {getInitials(visibleManager.name)}
+                        </div>
+                      )}
+                      <div style={{ width: '100%' }}>
+                        <div className="font-semibold text-foreground text-sm truncate" title={visibleManager.name}>{visibleManager.name}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5 truncate" title={visibleManager.department}>{visibleManager.department}</div>
+                        <div className="text-xs mt-1" style={{ color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{visibleManager.designation}</div>
+                        <div className="text-xs mt-2 truncate" style={{ color: '#c8985e' }} title={visibleManager.email}>{visibleManager.email}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+
+            {/* Teammates */}
+            {directoryItems.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Your Teammates</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+                  {directoryItems.map(emp => empCard(emp))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     );
