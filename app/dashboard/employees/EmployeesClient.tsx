@@ -285,7 +285,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
             {/* Reporting Manager */}
             {visibleManager && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Your Manager</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Your Reporting Manager</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
                   <Card style={{ borderColor: 'rgba(200,152,94,0.4)', background: 'rgba(200,152,94,0.05)' }}>
                     <CardContent className="p-5 flex flex-col items-center text-center gap-3">
