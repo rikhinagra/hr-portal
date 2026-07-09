@@ -12,9 +12,9 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait',
     icons: [
       {
-        src: '/aadhcode-favicon.webp',
-        sizes: 'any',
-        type: 'image/webp',
+        src: '/favicon.jpg',
+        sizes: '500x500',
+        type: 'image/jpeg',
         purpose: 'any',
       },
     ],
