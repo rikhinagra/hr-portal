@@ -32,6 +32,10 @@ export async function middleware(request: NextRequest) {
   const isApiRoute = request.nextUrl.pathname.startsWith('/api');
   const isRootRoute = request.nextUrl.pathname === '/';
 
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY');
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff');
+  supabaseResponse.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+
   if (isApiRoute) return supabaseResponse;
 
   if (!user && isDashboardRoute) {
