@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Log activity
     await serviceClient.from('activity_log').insert({
       action: 'leave_submitted',
-      description: `${employee.name} submitted a ${leave_type} leave request (${days === 0.5 ? 'half day' : `${days} day${days > 1 ? 's' : ''}`})`,
+      description: `${employee.name} submitted a ${leave_type === 'earned' ? 'casual' : leave_type} leave request (${days === 0.5 ? 'half day' : `${days} day${days > 1 ? 's' : ''}`})`,
       performed_by: employee.id,
       action_type: 'info',
     });

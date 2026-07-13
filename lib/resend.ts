@@ -22,7 +22,7 @@ function emailWrapper(body: string): string {
 }
 
 function formatLeaveType(leaveType: string): string {
-  if (leaveType === 'earned') return 'Earned (Annual Leave)';
+  if (leaveType === 'earned') return 'Casual Leave';
   if (leaveType === 'sick') return 'Sick Leave';
   if (leaveType === 'compoff') return 'Comp-Off';
   return leaveType;
