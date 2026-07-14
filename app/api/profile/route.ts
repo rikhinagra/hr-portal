@@ -28,6 +28,18 @@ export async function PATCH(request: NextRequest) {
       emergency_contact_phone: body.emergency_contact_phone || null,
     };
 
+    // HR only — manual leave balance adjustment (automatic deduction on approval is unaffected)
+    if (me.role === 'hr') {
+      if (body.leave_balance_casual !== undefined && body.leave_balance_casual !== '') {
+        const val = Number(body.leave_balance_casual);
+        if (!isNaN(val) && val >= 0) updateData.leave_balance_casual = val;
+      }
+      if (body.leave_balance_sick !== undefined && body.leave_balance_sick !== '') {
+        const val = Number(body.leave_balance_sick);
+        if (!isNaN(val) && val >= 0) updateData.leave_balance_sick = val;
+      }
+    }
+
     // Admin and HR fields — full control over all employee details
     if (['admin', 'hr'].includes(me.role)) {
       if (body.dob !== undefined && body.dob !== '') updateData.dob = body.dob;
