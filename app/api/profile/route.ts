@@ -58,7 +58,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: targetEmployee } = await serviceClient
       .from('employees')
-      .select('auth_user_id')
+      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, employment_type, total_experience')
       .eq('id', employee_id)
       .single();
 
@@ -72,9 +72,44 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
+    const fieldLabels: Record<string, string> = {
+      phone: 'Phone',
+      personal_email: 'Personal Email',
+      current_address: 'Current Address',
+      emergency_contact_name: 'Emergency Contact Name',
+      emergency_contact_phone: 'Emergency Contact Phone',
+      leave_balance_casual: 'Casual Leave Balance',
+      leave_balance_sick: 'Sick Leave Balance',
+      dob: 'Date of Birth',
+      name: 'Name',
+      email: 'Work Email',
+      employee_code: 'Employee Code',
+      designation: 'Designation',
+      department: 'Department',
+      role: 'Role',
+      join_date: 'Join Date',
+      is_active: 'Status',
+      reporting_manager_email: 'Reporting Manager',
+      employment_type: 'Employment Type',
+      total_experience: 'Total Experience',
+    };
+    const changedFields: string[] = [];
+    if (targetEmployee) {
+      for (const [key, label] of Object.entries(fieldLabels)) {
+        if (key in updateData) {
+          const oldVal = String((targetEmployee as Record<string, unknown>)[key] ?? '');
+          const newVal = String(updateData[key] ?? '');
+          if (oldVal !== newVal) changedFields.push(label);
+        }
+      }
+    }
+    const fieldSuffix = changedFields.length > 0 ? `: ${changedFields.join(', ')}` : '';
+    const targetName = targetEmployee?.name ?? 'employee';
     await serviceClient.from('activity_log').insert({
       action: 'profile_updated',
-      description: employee_id === me.id ? 'Updated personal profile' : 'Updated employee profile',
+      description: employee_id === me.id
+        ? `Updated personal profile${fieldSuffix}`
+        : `Updated ${targetName}'s profile${fieldSuffix}`,
       performed_by: me.id,
       target_employee_id: employee_id,
       action_type: 'info',

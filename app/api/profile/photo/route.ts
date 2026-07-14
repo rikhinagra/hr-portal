@@ -26,9 +26,11 @@ export async function POST(request: NextRequest) {
     // --- Step 1: Delete the OLD photo from storage (any extension) ---
     // Fetch the target employee's current photo_url (may differ from me if admin editing someone else)
     let existingPhotoUrl = me.photo_url;
+    let uploadTargetName: string | null = null;
     if (employeeId !== me.id) {
-      const { data: target } = await serviceClient.from('employees').select('photo_url').eq('id', employeeId).single();
+      const { data: target } = await serviceClient.from('employees').select('photo_url, name').eq('id', employeeId).single();
       existingPhotoUrl = target?.photo_url ?? null;
+      uploadTargetName = target?.name ?? null;
     }
 
     if (existingPhotoUrl) {
@@ -62,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     await serviceClient.from('activity_log').insert({
       action: 'photo_updated',
-      description: employeeId === me.id ? 'Updated profile photo' : 'Updated employee photo',
+      description: employeeId === me.id ? 'Updated profile photo' : `Updated ${uploadTargetName ?? 'employee'} photo`,
       performed_by: me.id,
       target_employee_id: employeeId,
       action_type: 'info',
@@ -93,9 +95,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     let photoUrl = me.photo_url;
+    let removeTargetName: string | null = null;
     if (employeeId !== me.id) {
-      const { data: target } = await serviceClient.from('employees').select('photo_url').eq('id', employeeId).single();
+      const { data: target } = await serviceClient.from('employees').select('photo_url, name').eq('id', employeeId).single();
       photoUrl = target?.photo_url ?? null;
+      removeTargetName = target?.name ?? null;
     }
 
     if (photoUrl) {
@@ -114,7 +118,7 @@ export async function DELETE(request: NextRequest) {
 
     await serviceClient.from('activity_log').insert({
       action: 'photo_removed',
-      description: employeeId === me.id ? 'Removed profile photo' : 'Removed employee photo',
+      description: employeeId === me.id ? 'Removed profile photo' : `Removed ${removeTargetName ?? 'employee'} photo`,
       performed_by: me.id,
       target_employee_id: employeeId,
       action_type: 'info',

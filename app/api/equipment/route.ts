@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
       await serviceClient.from('activity_log').insert({
         action: 'equipment_assigned',
-        description: `${equipment_type} assigned to employee`,
+        description: `${equipment_type} assigned to ${(req.employee as { name?: string } | null)?.name ?? 'employee'}`,
         performed_by: actor.id,
         target_employee_id: employee_id,
         action_type: 'success',

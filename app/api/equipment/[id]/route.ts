@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     await serviceClient.from('activity_log').insert({
       action: 'equipment_updated',
-      description: `Equipment record updated: ${equipment_type}`,
+      description: `Updated ${equipment_type} record for ${(updated.employee as { name?: string } | null)?.name ?? 'employee'}`,
       performed_by: actor.id,
       action_type: 'info',
     });
@@ -76,14 +76,16 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const { data: existing } = await serviceClient
-      .from('equipment_requests').select('equipment_type').eq('id', id).single();
+      .from('equipment_requests')
+      .select('equipment_type, employee:employee_id(name)')
+      .eq('id', id).single();
 
     const { error } = await serviceClient.from('equipment_requests').delete().eq('id', id);
     if (error) throw error;
 
     await serviceClient.from('activity_log').insert({
       action: 'equipment_deleted',
-      description: `Equipment record deleted: ${existing?.equipment_type ?? 'Unknown'}`,
+      description: `Deleted ${existing?.equipment_type ?? 'equipment'} record for ${(existing?.employee as { name?: string } | null)?.name ?? 'employee'}`,
       performed_by: actor.id,
       action_type: 'warning',
     });

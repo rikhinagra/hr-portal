@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest) {
 
     await serviceClient.from('activity_log').insert({
       action: 'employee_status_updated',
-      description: `Employee account marked as ${is_active ? 'Active' : 'Offboarded'}`,
+      description: `${empData?.name ?? 'Employee'} marked as ${is_active ? 'Active' : 'Offboarded'}`,
       performed_by: admin.id,
       target_employee_id: id,
       action_type: is_active ? 'success' : 'warning',

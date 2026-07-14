@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const { data: docTargetEmp } = await serviceClient.from('employees').select('name').eq('id', employee_id).single();
+
     const { data: { publicUrl } } = serviceClient.storage
       .from('employee-documents')
       .getPublicUrl(path);
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     await serviceClient.from('activity_log').insert({
       action: 'document_uploaded',
-      description: `${document_label ?? document_type ?? file_name} uploaded for employee`,
+      description: `${document_label ?? document_type ?? file_name} uploaded for ${docTargetEmp?.name ?? 'employee'}`,
       performed_by: me.id,
       target_employee_id: employee_id,
       action_type: 'success',
