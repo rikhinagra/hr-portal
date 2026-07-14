@@ -57,6 +57,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   const [showDocUpload, setShowDocUpload] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingDocId, setViewingDocId] = useState<string | null>(null);
+  const [casualDisplay, setCasualDisplay] = useState(String(initialEmployee.leave_balance_casual));
+  const [sickDisplay, setSickDisplay] = useState(String(initialEmployee.leave_balance_sick));
 
   const [form, setForm] = useState({
     // Editable by all with access
@@ -90,6 +92,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
 
   const handleCancel = () => {
     setEditing(false);
+    setCasualDisplay(String(employee.leave_balance_casual));
+    setSickDisplay(String(employee.leave_balance_sick));
     setForm({
       phone: employee.phone ?? '',
       personal_email: employee.personal_email ?? '',
@@ -179,6 +183,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setEmployee(prev => ({ ...prev, ...form }));
+      setCasualDisplay(String(form.leave_balance_casual));
+      setSickDisplay(String(form.leave_balance_sick));
       setEditing(false);
       toast.success('Profile updated successfully.');
       router.refresh();
@@ -353,22 +359,22 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
           {employee.role !== 'admin' && (
             <Card>
               <CardContent className="p-5">
-                <style>{`
-                  input[type=number].leave-bal::-webkit-inner-spin-button,
-                  input[type=number].leave-bal::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-                  input[type=number].leave-bal { -moz-appearance: textfield; }
-                `}</style>
                 <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Leave Balance</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(37,99,235,0.1)' }}>
                     {viewerRole === 'hr' && editing ? (
                       <input
-                        type="number"
-                        min={0}
-                        max={12}
-                        value={form.leave_balance_casual}
-                        onChange={e => setForm(f => ({ ...f, leave_balance_casual: Number(e.target.value) }))}
-                        className="leave-bal w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
+                        type="text"
+                        inputMode="decimal"
+                        value={casualDisplay}
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                          setCasualDisplay(raw);
+                          const num = parseFloat(raw);
+                          setForm(f => ({ ...f, leave_balance_casual: isNaN(num) ? 0 : num }));
+                        }}
+                        className="w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
                         style={{ color: '#2563eb', borderColor: '#2563eb' }}
                       />
                     ) : (
@@ -379,12 +385,17 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(234,88,12,0.1)' }}>
                     {viewerRole === 'hr' && editing ? (
                       <input
-                        type="number"
-                        min={0}
-                        max={7}
-                        value={form.leave_balance_sick}
-                        onChange={e => setForm(f => ({ ...f, leave_balance_sick: Number(e.target.value) }))}
-                        className="leave-bal w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
+                        type="text"
+                        inputMode="decimal"
+                        value={sickDisplay}
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                          setSickDisplay(raw);
+                          const num = parseFloat(raw);
+                          setForm(f => ({ ...f, leave_balance_sick: isNaN(num) ? 0 : num }));
+                        }}
+                        className="w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
                         style={{ color: '#ea580c', borderColor: '#ea580c' }}
                       />
                     ) : (
