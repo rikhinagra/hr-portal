@@ -32,11 +32,11 @@ export async function PATCH(request: NextRequest) {
     if (me.role === 'hr') {
       if (body.leave_balance_casual !== undefined && body.leave_balance_casual !== '') {
         const val = Number(body.leave_balance_casual);
-        if (!isNaN(val) && val >= 0) updateData.leave_balance_casual = val;
+        if (!isNaN(val) && val >= 0 && val <= 12) updateData.leave_balance_casual = val;
       }
       if (body.leave_balance_sick !== undefined && body.leave_balance_sick !== '') {
         const val = Number(body.leave_balance_sick);
-        if (!isNaN(val) && val >= 0) updateData.leave_balance_sick = val;
+        if (!isNaN(val) && val >= 0 && val <= 7) updateData.leave_balance_sick = val;
       }
     }
 

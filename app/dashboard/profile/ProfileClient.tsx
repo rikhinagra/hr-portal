@@ -159,6 +159,16 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   };
 
   const handleSave = async () => {
+    if (viewerRole === 'hr') {
+      if (form.leave_balance_casual < 0 || form.leave_balance_casual > 12) {
+        toast.error('Casual leave must be between 0 and 12 days.');
+        return;
+      }
+      if (form.leave_balance_sick < 0 || form.leave_balance_sick > 7) {
+        toast.error('Sick leave must be between 0 and 7 days.');
+        return;
+      }
+    }
     setSaving(true);
     try {
       const res = await fetch('/api/profile', {
