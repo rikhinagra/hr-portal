@@ -343,6 +343,11 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
           {employee.role !== 'admin' && (
             <Card>
               <CardContent className="p-5">
+                <style>{`
+                  input[type=number].leave-bal::-webkit-inner-spin-button,
+                  input[type=number].leave-bal::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+                  input[type=number].leave-bal { -moz-appearance: textfield; }
+                `}</style>
                 <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Leave Balance</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(37,99,235,0.1)' }}>
@@ -350,9 +355,10 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                       <input
                         type="number"
                         min={0}
+                        max={12}
                         value={form.leave_balance_casual}
                         onChange={e => setForm(f => ({ ...f, leave_balance_casual: Number(e.target.value) }))}
-                        className="w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
+                        className="leave-bal w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
                         style={{ color: '#2563eb', borderColor: '#2563eb' }}
                       />
                     ) : (
@@ -365,9 +371,10 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                       <input
                         type="number"
                         min={0}
+                        max={7}
                         value={form.leave_balance_sick}
                         onChange={e => setForm(f => ({ ...f, leave_balance_sick: Number(e.target.value) }))}
-                        className="w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
+                        className="leave-bal w-full text-center text-2xl font-bold bg-transparent border-0 border-b-2 outline-none pb-0.5"
                         style={{ color: '#ea580c', borderColor: '#ea580c' }}
                       />
                     ) : (
