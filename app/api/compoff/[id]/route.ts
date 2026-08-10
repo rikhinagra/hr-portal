@@ -18,9 +18,10 @@ export async function PATCH(
     if (!approver) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
     const isHr = approver.role === 'hr';
+    const isAdmin = approver.role === 'admin';
     const isManager = approver.role === 'manager';
 
-    if (!isHr && !isManager) {
+    if (!isHr && !isAdmin && !isManager) {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 
