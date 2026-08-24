@@ -64,6 +64,7 @@ export interface CompOffClaim {
   id: string;
   employee_id: string;
   work_date: string;
+  intended_leave_date: string;
   reason: string;
   status: LeaveStatus;
   approved_by: string | null;

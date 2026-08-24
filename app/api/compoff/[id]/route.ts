@@ -34,7 +34,7 @@ export async function PATCH(
 
     const { data: claim } = await serviceClient
       .from('compoff_claims')
-      .select('*, employee:employee_id(id, name, email, leave_balance_compoff, reporting_manager_email)')
+      .select('*, employee:employee_id(id, name, email, reporting_manager_email)')
       .eq('id', id)
       .single();
 
@@ -75,15 +75,15 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // Add +1 comp-off balance on approval
+    // Add +1 to Casual Leave balance on approval
     if (status === 'approved') {
       const { data: empData } = await serviceClient
-        .from('employees').select('leave_balance_compoff').eq('id', claim.employee_id).single();
+        .from('employees').select('leave_balance_casual').eq('id', claim.employee_id).single();
 
       if (empData) {
         await serviceClient
           .from('employees')
-          .update({ leave_balance_compoff: empData.leave_balance_compoff + 1 })
+          .update({ leave_balance_casual: empData.leave_balance_casual + 1 })
           .eq('id', claim.employee_id);
       }
     }

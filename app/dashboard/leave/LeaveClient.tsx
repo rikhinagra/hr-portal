@@ -35,6 +35,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
   // Comp-off claim form state
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [workDate, setWorkDate] = useState('');
+  const [intendedLeaveDate, setIntendedLeaveDate] = useState('');
   const [claimReason, setClaimReason] = useState('');
   const [claimSubmitting, setClaimSubmitting] = useState(false);
 
@@ -87,20 +88,20 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
   };
 
   const submitClaim = async () => {
-    if (!workDate || !claimReason.trim()) {
+    if (!workDate || !intendedLeaveDate || !claimReason.trim()) {
       toast.error('Missing Fields', { description: 'Please fill all required fields.' }); return;
     }
     setClaimSubmitting(true);
     try {
       const res = await fetch('/api/compoff', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ work_date: workDate, reason: claimReason }),
+        body: JSON.stringify({ work_date: workDate, intended_leave_date: intendedLeaveDate, reason: claimReason }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setClaims([data.claim, ...claims]);
       setShowClaimForm(false);
-      setWorkDate(''); setClaimReason('');
+      setWorkDate(''); setIntendedLeaveDate(''); setClaimReason('');
       toast.success('Comp-Off Claim Submitted', { description: 'Your claim has been sent for approval.' });
     } catch (err: unknown) {
       toast.error('Error', { description: err instanceof Error ? err.message : 'Something went wrong.' });
@@ -174,7 +175,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       </div>
 
       {/* Balance Cards */}
-      <div className={`grid gap-4 leave-balance-grid ${isAdmin ? 'grid-cols-1 max-w-xs' : 'grid-cols-4'}`}>
+      <div className={`grid gap-4 leave-balance-grid ${isAdmin ? 'grid-cols-1 max-w-xs' : 'grid-cols-3'}`}>
         {!isAdmin && (
           <>
             <Card><CardContent className="p-6">
@@ -186,11 +187,6 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Sick Leave</div>
               <div className="text-3xl font-bold" style={{ color: '#e67e22' }}>{employee.leave_balance_sick}</div>
               <div className="text-xs text-muted-foreground mt-1">of 7 days remaining</div>
-            </CardContent></Card>
-            <Card><CardContent className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Comp-Off</div>
-              <div className="text-3xl font-bold" style={{ color: '#16a34a' }}>{employee.leave_balance_compoff}</div>
-              <div className="text-xs text-muted-foreground mt-1">days available</div>
             </CardContent></Card>
           </>
         )}
@@ -310,18 +306,19 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: '#0f1a2e' }}>
-                  {['Employee', 'Date Worked', 'Reason', 'Status', ...(canManageLeave ? ['Action'] : [])].map(h => (
+                  {['Employee', 'Date Worked', 'Comp-Off Date', 'Reason', 'Status', ...(canManageLeave ? ['Action'] : [])].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold tracking-wide text-white whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {claims.length === 0 ? (
-                  <tr><td colSpan={canManageLeave ? 5 : 4} className="py-10 text-center text-muted-foreground">No comp-off claims yet.</td></tr>
+                  <tr><td colSpan={canManageLeave ? 6 : 5} className="py-10 text-center text-muted-foreground">No comp-off claims yet.</td></tr>
                 ) : claims.map(c => (
                   <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{c.employee?.name ?? 'Unknown'}</td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap">{new Date(c.work_date).toLocaleDateString('en-IN')}</td>
+                    <td className="px-4 py-3 text-foreground whitespace-nowrap">{new Date(c.intended_leave_date).toLocaleDateString('en-IN')}</td>
                     <td className="px-4 py-3 text-muted-foreground" style={{ maxWidth: '240px', wordBreak: 'break-word', whiteSpace: 'normal' }}>{c.reason}</td>
                     <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                     {canManageLeave && (
@@ -359,8 +356,11 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <div className="font-semibold text-foreground text-sm">{c.employee?.name ?? 'Unknown'}</div>
                 <StatusBadge status={c.status} />
               </div>
-              <div className="text-xs text-muted-foreground mb-2">
+              <div className="text-xs text-muted-foreground mb-1">
                 Worked on: <span className="font-semibold text-foreground">{new Date(c.work_date).toLocaleDateString('en-IN')}</span>
+              </div>
+              <div className="text-xs text-muted-foreground mb-2">
+                Comp-off on: <span className="font-semibold text-foreground">{new Date(c.intended_leave_date).toLocaleDateString('en-IN')}</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3" style={{ wordBreak: 'break-word' }}>{c.reason}</p>
               {canManageLeave && c.status === 'pending' && (isAdmin || c.employee?.id !== employee.id) && (
@@ -398,7 +398,6 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                     className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
                     <option value="earned">Casual (Annual) — {employee.leave_balance_casual} day(s) remaining</option>
                     <option value="sick">Sick Leave — {employee.leave_balance_sick} day(s) remaining</option>
-                    <option value="compoff">Comp-Off — {employee.leave_balance_compoff} day(s) available</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 </div>
@@ -413,7 +412,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Date</label>
                   <div className="relative">
-                    <input type="date" value={startDate} min={today}
+                    <input type="date" value={startDate}
                       onChange={e => { setStartDate(e.target.value); setEndDate(e.target.value); }}
                       className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
                     />
@@ -426,7 +425,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                   <div>
                     <label className="block text-xs text-muted-foreground mb-1.5">Start Date</label>
                     <div className="relative">
-                      <input type="date" value={startDate} min={today}
+                      <input type="date" value={startDate}
                         onChange={e => { setStartDate(e.target.value); if (endDate && e.target.value > endDate) setEndDate(''); }}
                         className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
                       />
@@ -454,9 +453,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               </div>
               <div className="rounded-lg p-3 text-xs text-muted-foreground flex items-center gap-2" style={{ background: 'rgba(200,152,94,0.1)' }}>
                 <Mail className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
-                {employee.role === 'hr'
-                  ? 'Email will be sent directly to all Admins for approval'
-                  : 'Email will be sent to HR. Admins will be notified.'}
+                This request will be sent to HR and Reporting Manager.
               </div>
               <button onClick={submitLeave} disabled={submitting}
                 className="w-full py-3 rounded-lg font-semibold text-sm"
@@ -477,7 +474,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               <button onClick={() => setShowClaimForm(false)} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
             </div>
             <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-              Worked on a weekend or public holiday? Submit this claim for approval. Once approved, 1 day will be added to your Comp-Off balance.
+              Worked on a weekend or public holiday? Submit this claim for approval. Once approved, 1 day will be added to your Casual Leave balance.
             </p>
             <div className="space-y-4">
               <div>
@@ -492,6 +489,17 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 </div>
               </div>
               <div>
+                <label className="block text-xs text-muted-foreground mb-1.5">Date You Want to Take Comp-Off *</label>
+                <div className="relative">
+                  <input type="date" value={intendedLeaveDate}
+                    onChange={e => setIntendedLeaveDate(e.target.value)}
+                    className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none outline-none"
+                  />
+                  {!intendedLeaveDate && <span className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none bg-background pr-1">DD/MM/YYYY</span>}
+                  <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                </div>
+              </div>
+              <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">Reason / Work Description *</label>
                 <textarea value={claimReason} onChange={e => setClaimReason(e.target.value)} rows={3}
                   placeholder="Describe what work you did on that day..."
@@ -499,9 +507,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               </div>
               <div className="rounded-lg p-3 text-xs text-muted-foreground flex items-center gap-2" style={{ background: 'rgba(22,163,74,0.08)' }}>
                 <Mail className="size-3.5 flex-shrink-0" style={{ color: '#16a34a' }} />
-                {employee.role === 'hr'
-                  ? 'Claim will be sent directly to all Admins for approval.'
-                  : 'Claim will be sent to HR. Admins will be notified.'}
+                This claim will be sent to HR and Reporting Manager.
               </div>
               <button onClick={submitClaim} disabled={claimSubmitting}
                 className="w-full py-3 rounded-lg font-semibold text-sm"

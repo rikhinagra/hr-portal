@@ -60,10 +60,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { work_date, reason } = body;
+    const { work_date, intended_leave_date, reason } = body;
 
-    if (!work_date || !reason?.trim()) {
-      return NextResponse.json({ error: 'Work date and reason are required.' }, { status: 400 });
+    if (!work_date || !intended_leave_date || !reason?.trim()) {
+      return NextResponse.json({ error: 'Work date, intended leave date, and reason are required.' }, { status: 400 });
     }
 
     if (new Date(work_date) > new Date()) {
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     const { data: claim, error: insertError } = await serviceClient
       .from('compoff_claims')
-      .insert({ employee_id: employee.id, work_date, reason, status: 'pending' })
+      .insert({ employee_id: employee.id, work_date, intended_leave_date, reason, status: 'pending' })
       .select('*, employee:employee_id(id, name, employee_code, department, email)')
       .single();
 
@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         employeeName: employee.name,
         department: employee.department,
         workDate: work_date,
+        intendedLeaveDate: intended_leave_date,
         reason,
         toEmails: [hrDeskEmail],
         ccEmails,

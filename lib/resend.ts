@@ -298,12 +298,13 @@ export async function sendOnboardingWelcomeEmail({
 }
 
 export async function sendCompOffClaimEmail({
-  employeeName, department, workDate, reason, toEmails, ccEmails = [], isHrClaiming = false,
+  employeeName, department, workDate, intendedLeaveDate, reason, toEmails, ccEmails = [], isHrClaiming = false,
 }: {
-  employeeName: string; department: string; workDate: string;
+  employeeName: string; department: string; workDate: string; intendedLeaveDate: string;
   reason: string; toEmails: string[]; ccEmails?: string[]; isHrClaiming?: boolean;
 }) {
   const formattedDate = formatLeaveDate(workDate);
+  const formattedIntendedDate = formatLeaveDate(intendedLeaveDate);
   const body = `
     <h2 style="color:${navy};font-size:1.2rem;margin-bottom:8px">${isHrClaiming ? 'HR Comp-Off Claim' : 'Comp-Off Claim Submitted'}</h2>
     <div style="width:40px;height:2px;background:${gold};margin-bottom:24px"></div>
@@ -312,10 +313,11 @@ export async function sendCompOffClaimEmail({
       <tr><td style="padding:8px 0;color:#8a8a8a;width:140px">Employee</td><td style="padding:8px 0;font-weight:600">${employeeName}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Department</td><td style="padding:8px 0">${department}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Date Worked</td><td style="padding:8px 0;font-weight:700;color:${navy}">${formattedDate}</td></tr>
+      <tr><td style="padding:8px 0;color:#8a8a8a">Comp-Off Date</td><td style="padding:8px 0;font-weight:700;color:${navy}">${formattedIntendedDate}</td></tr>
       <tr><td style="padding:8px 0;color:#8a8a8a">Reason</td><td style="padding:8px 0">${reason}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:rgba(22,163,74,0.08);border-radius:8px;border-left:4px solid #16a34a;font-size:.85rem;color:#5a5a5a">
-      If approved, 1 Comp-Off day will be automatically added to the employee's balance. Please review in the HR Portal.
+      If approved, 1 day will be automatically added to the employee's Casual Leave balance. Please review in the HR Portal.
     </div>`;
 
   return resend.emails.send({
@@ -346,7 +348,7 @@ export async function sendCompOffClaimStatusEmail({
       Your comp-off claim for working on <strong>${formattedDate}</strong> has been <strong>${status}</strong>.
     </p>
     ${isApproved
-      ? `<div style="margin-top:20px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">1 Comp-Off day has been added to your leave balance. You can use it by applying for Comp-Off leave via the HR Portal.</div>`
+      ? `<div style="margin-top:20px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">1 day has been added to your Casual Leave balance. You can use it by applying for Casual Leave via the HR Portal.</div>`
       : `<div style="margin-top:20px;padding:16px;background:#fdf0f0;border-radius:8px;border-left:4px solid #b33a3a;font-size:.85rem;color:#b33a3a">Your comp-off claim was not approved. Please contact HR for more details.</div>`}`;
 
   return resend.emails.send({
