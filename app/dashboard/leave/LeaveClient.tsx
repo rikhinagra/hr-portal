@@ -318,7 +318,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                   <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{c.employee?.name ?? 'Unknown'}</td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap">{new Date(c.work_date).toLocaleDateString('en-IN')}</td>
-                    <td className="px-4 py-3 text-foreground whitespace-nowrap">{new Date(c.intended_leave_date).toLocaleDateString('en-IN')}</td>
+                    <td className="px-4 py-3 text-foreground whitespace-nowrap">{c.intended_leave_date ? new Date(c.intended_leave_date).toLocaleDateString('en-IN') : '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground" style={{ maxWidth: '240px', wordBreak: 'break-word', whiteSpace: 'normal' }}>{c.reason}</td>
                     <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                     {canManageLeave && (
@@ -360,7 +360,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 Worked on: <span className="font-semibold text-foreground">{new Date(c.work_date).toLocaleDateString('en-IN')}</span>
               </div>
               <div className="text-xs text-muted-foreground mb-2">
-                Comp-off on: <span className="font-semibold text-foreground">{new Date(c.intended_leave_date).toLocaleDateString('en-IN')}</span>
+                Comp-off on: <span className="font-semibold text-foreground">{c.intended_leave_date ? new Date(c.intended_leave_date).toLocaleDateString('en-IN') : '—'}</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3" style={{ wordBreak: 'break-word' }}>{c.reason}</p>
               {canManageLeave && c.status === 'pending' && (isAdmin || c.employee?.id !== employee.id) && (
