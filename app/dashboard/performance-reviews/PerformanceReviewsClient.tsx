@@ -325,7 +325,7 @@ export default function PerformanceReviewsClient({ employee, initialReviews, rev
                   className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground resize-y" />
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1.5">Manager's Remarks</label>
+                <label className="block text-xs text-muted-foreground mb-1.5">Manager&apos;s Remarks</label>
                 <textarea value={managersRemarks} onChange={e => setManagersRemarks(e.target.value)} rows={2}
                   className="w-full px-3 py-2.5 border rounded-lg text-sm bg-background text-foreground resize-y" />
               </div>
@@ -360,7 +360,7 @@ export default function PerformanceReviewsClient({ employee, initialReviews, rev
           <div className="rounded-2xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl bg-card text-foreground border my-auto">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-semibold" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-                {viewingReview.employee?.name ?? 'Unknown'}'s Performance Review
+                {viewingReview.employee?.name ?? 'Unknown'}&apos;s Performance Review
               </h3>
               <button onClick={() => setViewingReview(null)} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
             </div>
