@@ -90,6 +90,29 @@ export interface EquipmentRequest {
   employee?: Pick<Employee, 'id' | 'name' | 'email' | 'employee_code' | 'department'> | null;
 }
 
+export interface PerformanceReview {
+  id: string;
+  employee_id: string;
+  reviewed_by: string;
+  review_month: string;
+  rating_quality_timeliness: number;
+  rating_ownership_accountability: number;
+  rating_communication_collaboration: number;
+  rating_role_specific_skills: number;
+  rating_initiative_proactiveness: number;
+  rating_punctuality_conduct: number;
+  key_achievements: string | null;
+  key_strengths: string | null;
+  development_areas: string | null;
+  notable_challenges: string | null;
+  managers_remarks: string | null;
+  overall_rating: number;
+  created_at: string;
+  updated_at: string;
+  employee?: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'reporting_manager_email'> | null;
+  reviewer?: Pick<Employee, 'id' | 'name'> | null;
+}
+
 export interface HandbookAcknowledgement {
   id: string;
   employee_id: string;

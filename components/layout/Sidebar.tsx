@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, User, Calendar, BookOpen, FileText,
-  Monitor, Rocket, Users, LogOut,
+  Monitor, Rocket, Users, LogOut, Star,
 } from 'lucide-react';
 
 import {
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true, roles: null },
   { href: '/dashboard/profile', icon: User, label: 'My Profile', exact: false, roles: null },
   { href: '/dashboard/leave', icon: Calendar, label: 'Leave', exact: false, roles: null },
+  { href: '/dashboard/performance-reviews', icon: Star, label: 'Performance Reviews', exact: false, roles: null },
   { href: '/dashboard/handbook', icon: BookOpen, label: 'Handbook', exact: false, roles: null },
   { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false, roles: null },
   { href: '/dashboard/equipment', icon: Monitor, label: 'Equipment', exact: false, roles: ['admin', 'hr'] },
