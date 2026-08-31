@@ -53,12 +53,19 @@ export async function PATCH(request: NextRequest) {
       if (body.is_active !== undefined) updateData.is_active = body.is_active;
       if (body.reporting_manager_email !== undefined) updateData.reporting_manager_email = body.reporting_manager_email || null;
       if (body.employment_type !== undefined && body.employment_type !== '') updateData.employment_type = body.employment_type;
-      if (body.total_experience !== undefined) updateData.total_experience = body.total_experience || null;
+      if (body.experience_years !== undefined) {
+        const val = Number(body.experience_years);
+        if (!isNaN(val) && val >= 0) updateData.experience_years = Math.floor(val);
+      }
+      if (body.experience_months !== undefined) {
+        const val = Number(body.experience_months);
+        if (!isNaN(val) && val >= 0 && val <= 11) updateData.experience_months = Math.floor(val);
+      }
     }
 
     const { data: targetEmployee } = await serviceClient
       .from('employees')
-      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, employment_type, total_experience')
+      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, employment_type, experience_years, experience_months')
       .eq('id', employee_id)
       .single();
 
@@ -91,7 +98,8 @@ export async function PATCH(request: NextRequest) {
       is_active: 'Status',
       reporting_manager_email: 'Reporting Manager',
       employment_type: 'Employment Type',
-      total_experience: 'Total Experience',
+      experience_years: 'Experience (Years)',
+      experience_months: 'Experience (Months)',
     };
     const changedFields: string[] = [];
     if (targetEmployee) {

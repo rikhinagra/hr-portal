@@ -79,7 +79,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
     join_date: employee.join_date ?? '',
     is_active: employee.is_active,
     employment_type: employee.employment_type ?? 'Full-Time',
-    total_experience: employee.total_experience ?? '',
+    experience_years: employee.experience_years ?? 0,
+    experience_months: employee.experience_months ?? 0,
     // HR-only fields
     leave_balance_casual: employee.leave_balance_casual,
     leave_balance_sick: employee.leave_balance_sick,
@@ -111,7 +112,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       join_date: employee.join_date ?? '',
       is_active: employee.is_active,
       employment_type: employee.employment_type ?? 'Full-Time',
-      total_experience: employee.total_experience ?? '',
+      experience_years: employee.experience_years ?? 0,
+      experience_months: employee.experience_months ?? 0,
       leave_balance_casual: employee.leave_balance_casual,
       leave_balance_sick: employee.leave_balance_sick,
     });
@@ -480,10 +482,30 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                     { value: 'Part-Time', label: 'Part-Time' },
                     { value: 'Contract', label: 'Contract' },
                   ]} />
-                <InfoField label="Total Experience"
-                  value={employee.total_experience ?? '—'}
-                  editing={isPrivileged && editing} editValue={form.total_experience} onEdit={set('total_experience')}
-                  placeholder="e.g. 3 Years 6 Months" />
+                {isPrivileged && editing ? (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Total Experience</label>
+                    <div className="flex gap-2 items-center">
+                      <input type="number" min={0} value={form.experience_years}
+                        onChange={e => {
+                          const v = Math.max(0, parseInt(e.target.value) || 0);
+                          setForm(f => ({ ...f, experience_years: v }));
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg text-sm bg-background text-foreground" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">years</span>
+                      <input type="number" min={0} max={11} value={form.experience_months}
+                        onChange={e => {
+                          const v = Math.min(11, Math.max(0, parseInt(e.target.value) || 0));
+                          setForm(f => ({ ...f, experience_months: v }));
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg text-sm bg-background text-foreground" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">months</span>
+                    </div>
+                  </div>
+                ) : (
+                  <InfoField label="Total Experience"
+                    value={`${employee.experience_years ?? 0} years, ${employee.experience_months ?? 0} months`} />
+                )}
                 <InfoField label="Employment Status"
                   value={employee.is_active ? 'Active' : 'Inactive'}
                   valueColor={employee.is_active ? '#16a34a' : '#dc2626'}

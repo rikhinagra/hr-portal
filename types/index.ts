@@ -31,6 +31,8 @@ export interface Employee {
   emergency_contact_phone: string | null;
   employment_type: string | null;
   total_experience: string | null;
+  experience_years: number;
+  experience_months: number;
 }
 
 export interface EmployeeDocument {
