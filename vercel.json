@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/increment-experience",
-      "schedule": "0 19 31 8 *"
+      "schedule": "0 0 1 * *"
     }
   ]
 }
