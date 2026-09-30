@@ -33,6 +33,8 @@ export interface Employee {
   total_experience: string | null;
   experience_years: number;
   experience_months: number;
+  probation_hold_casual: number;
+  probation_hold_sick: number;
 }
 
 export interface EmployeeDocument {

@@ -79,8 +79,15 @@ export async function POST(request: NextRequest) {
         department: department.trim(),
         designation: designation.trim(),
         join_date: new Date().toISOString().split('T')[0],
-        leave_balance_casual: 12,
-        leave_balance_sick: 7,
+        // New hires start in the 3-month probation hold; the monthly accrual cron
+        // only ever fires on the 1st, so it would otherwise never credit the
+        // employee's own join month (they don't exist in the table yet when that
+        // month's cron run happens) — seeding it here at onboarding time closes
+        // that gap. The cron takes over normally from the following month.
+        leave_balance_casual: 0,
+        leave_balance_sick: 0,
+        probation_hold_casual: 1,
+        probation_hold_sick: 7 / 12,
         is_active: true,
         auth_user_id: authUser.user.id,
       })

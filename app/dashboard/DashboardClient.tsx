@@ -7,6 +7,7 @@ import { Calendar, Heart, FileText, Users, Monitor, BookOpen, ChevronRight, Tras
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import LeaveCalendarWidget from '@/components/dashboard/LeaveCalendarWidget';
 import type { Employee } from '@/types';
 
 interface DashboardClientProps {
@@ -88,6 +89,13 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
 
   return (
     <div className="space-y-6">
+
+      {/* Top-right utility row */}
+      {!isAdmin && (
+        <div className="flex items-center justify-end">
+          <LeaveCalendarWidget />
+        </div>
+      )}
 
       {/* Profile Hero */}
       <Card className="border shadow-xs">
