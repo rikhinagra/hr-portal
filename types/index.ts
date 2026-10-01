@@ -35,6 +35,8 @@ export interface Employee {
   experience_months: number;
   probation_hold_casual: number;
   probation_hold_sick: number;
+  advance_used_casual: number;
+  advance_used_sick: number;
 }
 
 export interface EmployeeDocument {

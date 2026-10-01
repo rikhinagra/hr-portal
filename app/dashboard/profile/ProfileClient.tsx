@@ -406,6 +406,15 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                     <div className="text-xs text-muted-foreground mt-1">Sick</div>
                   </div>
                 </div>
+                {(employee.advance_used_casual > 0 || employee.advance_used_sick > 0) && (
+                  <div className="mt-3 rounded-lg p-3 text-xs leading-relaxed"
+                    style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: 'var(--foreground)' }}>
+                    <span className="font-semibold">Outstanding advance: </span>
+                    {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Casual day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
+                    {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
+                    {' '}— taken before it was earned. Deducted automatically from future accrual.
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

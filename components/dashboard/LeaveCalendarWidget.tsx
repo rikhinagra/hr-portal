@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CalendarDays, X, Lock, Loader2 } from 'lucide-react';
+import { CalendarDays, X, Lock, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MonthData {
@@ -22,6 +22,8 @@ export default function LeaveCalendarWidget() {
   const [loading, setLoading] = useState(false);
   const [months, setMonths] = useState<MonthData[]>([]);
   const [selected, setSelected] = useState<MonthData | null>(null);
+  const [advanceCasual, setAdvanceCasual] = useState(0);
+  const [advanceSick, setAdvanceSick] = useState(0);
 
   const handleOpen = async () => {
     setIsOpen(true);
@@ -31,6 +33,8 @@ export default function LeaveCalendarWidget() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMonths(data.months ?? []);
+      setAdvanceCasual(data.advanceUsedCasual ?? 0);
+      setAdvanceSick(data.advanceUsedSick ?? 0);
       const current = (data.months ?? []).find((m: MonthData) => m.isCurrent);
       setSelected(current ?? null);
     } catch (err: unknown) {
@@ -76,6 +80,19 @@ export default function LeaveCalendarWidget() {
                 </div>
               ) : (
                 <>
+                  {(advanceCasual > 0 || advanceSick > 0) && (
+                    <div className="flex items-start gap-2.5 rounded-lg border p-3.5 mb-5"
+                      style={{ borderColor: 'rgba(234,179,8,0.35)', background: 'rgba(234,179,8,0.08)' }}>
+                      <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
+                      <div className="text-xs leading-relaxed" style={{ color: '#fde68a' }}>
+                        <span className="font-semibold">Outstanding advance: </span>
+                        {advanceCasual > 0 && <>{advanceCasual} Casual day{advanceCasual !== 1 ? 's' : ''}{advanceSick > 0 ? ', ' : ''}</>}
+                        {advanceSick > 0 && <>{advanceSick} Sick day{advanceSick !== 1 ? 's' : ''}</>}
+                        {' '}— you took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed.
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-5">
                     {months.map(m => {
                       const isSelected = selected?.month === m.month;

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Admins never apply for leave; inactive employees don't need ongoing accrual.
     const { data: employees, error: fetchError } = await supabase
       .from('employees')
-      .select('id, join_date, leave_balance_casual, leave_balance_sick, probation_hold_casual, probation_hold_sick')
+      .select('id, join_date, leave_balance_casual, leave_balance_sick, probation_hold_casual, probation_hold_sick, advance_used_casual, advance_used_sick')
       .eq('is_active', true)
       .neq('role', 'admin');
 
@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
           leave_balance_sick: emp.leave_balance_sick ?? 0,
           probation_hold_casual: emp.probation_hold_casual ?? 0,
           probation_hold_sick: emp.probation_hold_sick ?? 0,
+          advance_used_casual: emp.advance_used_casual ?? 0,
+          advance_used_sick: emp.advance_used_sick ?? 0,
         },
         today
       );

@@ -149,6 +149,20 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
         </CardContent>
       </Card>
 
+      {/* Outstanding leave advance notice */}
+      {!isAdmin && (employee.advance_used_casual > 0 || employee.advance_used_sick > 0) && (
+        <div className="flex items-start gap-2.5 rounded-lg border p-3.5"
+          style={{ borderColor: 'rgba(234,179,8,0.35)', background: 'rgba(234,179,8,0.08)' }}>
+          <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
+          <div className="text-sm leading-relaxed text-foreground">
+            <span className="font-semibold">Outstanding leave advance: </span>
+            {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Casual day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
+            {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
+            {' '}— this will be automatically deducted from future accrual before new leave becomes usable.
+          </div>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s, i) => (

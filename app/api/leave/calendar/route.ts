@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const serviceClient = createServiceClient();
     const { data: employee } = await serviceClient
       .from('employees')
-      .select('id, join_date, leave_balance_casual, leave_balance_sick, role')
+      .select('id, join_date, leave_balance_casual, leave_balance_sick, role, advance_used_casual, advance_used_sick')
       .eq('auth_user_id', user.id)
       .single();
 
@@ -52,7 +52,12 @@ export async function GET(request: NextRequest) {
     let cursor = new Date(Date.UTC(join.getUTCFullYear(), join.getUTCMonth(), 1));
     const stop = new Date(Date.UTC(currentYear, currentMonthIndex, 1));
 
-    let state = { leave_balance_casual: 0, leave_balance_sick: 0, probation_hold_casual: 0, probation_hold_sick: 0 };
+    // Note: this replay always starts with zero advance, since it reconstructs
+    // accrual history from scratch — it can't know about a real-world advance
+    // debt that predates this feature. The employee's actual, current advance
+    // (read below from the DB) is surfaced separately and is always accurate;
+    // only the month-by-month historical breakdown is a best-effort approximation.
+    let state = { leave_balance_casual: 0, leave_balance_sick: 0, probation_hold_casual: 0, probation_hold_sick: 0, advance_used_casual: 0, advance_used_sick: 0 };
     const accruedByMonth = new Map<string, { casual: number; sick: number }>();
 
     while (cursor <= stop) {
@@ -101,7 +106,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ months });
+    return NextResponse.json({
+      months,
+      advanceUsedCasual: Number(employee.advance_used_casual ?? 0),
+      advanceUsedSick: Number(employee.advance_used_sick ?? 0),
+    });
   } catch (err) {
     console.error('Leave calendar error:', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
