@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Mail, ArrowRight, ChevronDown, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import LeaveCalendarWidget from '@/components/dashboard/LeaveCalendarWidget';
 import type { Employee, LeaveRequest, CompOffClaim } from '@/types';
 
 interface LeaveClientProps {
@@ -160,6 +161,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         </div>
         {canApply && (
           <div className="flex gap-2 flex-wrap">
+            <LeaveCalendarWidget />
             <button onClick={() => setShowClaimForm(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border"
               style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.25)' }}>
