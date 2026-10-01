@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CalendarDays, X, Lock, Loader2, AlertTriangle } from 'lucide-react';
+import { CalendarDays, X, Lock, MinusCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MonthData {
@@ -9,6 +9,7 @@ interface MonthData {
   label: string;
   isCurrent: boolean;
   isFuture: boolean;
+  isBeforeDataStart: boolean;
   casualAccrued: number | null;
   casualUsed: number | null;
   casualBalance: number | null;
@@ -88,7 +89,7 @@ export default function LeaveCalendarWidget() {
                         <span className="font-semibold">Outstanding advance: </span>
                         {advanceCasual > 0 && <>{advanceCasual} Casual day{advanceCasual !== 1 ? 's' : ''}{advanceSick > 0 ? ', ' : ''}</>}
                         {advanceSick > 0 && <>{advanceSick} Sick day{advanceSick !== 1 ? 's' : ''}</>}
-                        {' '}— you took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed.
+                        {' '}— you took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed. (This means some of the &quot;Accrued&quot; amount shown below for the current month has already gone toward paying this down, rather than adding to your balance.)
                       </div>
                     </div>
                   )}
@@ -96,12 +97,13 @@ export default function LeaveCalendarWidget() {
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-5">
                     {months.map(m => {
                       const isSelected = selected?.month === m.month;
-                      const disabled = m.isFuture;
+                      const disabled = m.isFuture || m.isBeforeDataStart;
                       return (
                         <button
                           key={m.month}
                           disabled={disabled}
                           onClick={() => !disabled && setSelected(m)}
+                          title={m.isBeforeDataStart ? 'Before monthly tracking started — no data' : m.isFuture ? 'Not accrued yet' : undefined}
                           className="relative flex flex-col items-center justify-center gap-1 rounded-lg py-3 px-2 text-xs font-semibold transition-all"
                           style={{
                             background: disabled ? 'rgba(255,255,255,0.03)' : isSelected ? 'rgba(200,152,94,0.18)' : 'rgba(255,255,255,0.05)',
@@ -110,7 +112,8 @@ export default function LeaveCalendarWidget() {
                             cursor: disabled ? 'not-allowed' : 'pointer',
                           }}
                         >
-                          {disabled && <Lock className="size-3 absolute top-1.5 right-1.5" />}
+                          {m.isFuture && <Lock className="size-3 absolute top-1.5 right-1.5" />}
+                          {m.isBeforeDataStart && <MinusCircle className="size-3 absolute top-1.5 right-1.5" />}
                           {m.label.slice(0, 3)}
                           {m.isCurrent && <span style={{ fontSize: '0.55rem', color: '#c8985e' }}>Current</span>}
                         </button>
@@ -153,7 +156,7 @@ export default function LeaveCalendarWidget() {
                   )}
 
                   <p className="text-xs text-gray-500 mt-5 leading-relaxed">
-                    Past months show a reconstruction based on the standard accrual formula and any approved leave that month — manual balance corrections by HR may not be reflected exactly in past months. The current month always shows your live, up-to-date balance.
+                    Monthly tracking started in October 2026 — months before that (marked <MinusCircle className="inline size-3 -mt-0.5" />) were never recorded month-by-month under the old system, so no breakdown is shown for them. From October onward, the current month always shows your live, up-to-date balance, and earlier tracked months show what happened that month.
                   </p>
                 </>
               )}

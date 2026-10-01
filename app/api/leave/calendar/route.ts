@@ -7,6 +7,14 @@ const MONTH_LABELS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+// The old system only ever kept a single annual balance — it never recorded
+// month-by-month activity. This feature is what introduced real monthly
+// tracking, so nothing before the month it went live can be honestly shown:
+// the formula CAN compute a hypothetical "what if zero leave was ever taken"
+// number for earlier months, but that number is fictional, not history, and
+// showing it next to real figures would be actively misleading.
+const DATA_START = new Date(Date.UTC(2026, 9, 1)); // October 2026
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -81,28 +89,34 @@ export async function GET(request: NextRequest) {
 
     for (let m = 0; m < 12; m++) {
       const key = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+      const monthDate = new Date(Date.UTC(currentYear, m, 1));
+      const isBeforeDataStart = monthDate < DATA_START;
       const isFuture = m > currentMonthIndex;
       const isCurrent = m === currentMonthIndex;
+      const showData = !isFuture && !isBeforeDataStart;
 
       const accrued = accruedByMonth.get(key) ?? { casual: 0, sick: 0 };
       const usedCasual = usedCasualByMonth.get(key) ?? 0;
       const usedSick = usedSickByMonth.get(key) ?? 0;
 
-      runningCasual += accrued.casual - usedCasual;
-      runningSick += accrued.sick - usedSick;
+      if (showData) {
+        runningCasual += accrued.casual - usedCasual;
+        runningSick += accrued.sick - usedSick;
+      }
 
       months.push({
         month: key,
         label: MONTH_LABELS[m],
         isCurrent,
         isFuture,
-        casualAccrued: isFuture ? null : accrued.casual,
-        casualUsed: isFuture ? null : usedCasual,
-        // current month shows the live, authoritative balance; past months show the reconstructed running total
-        casualBalance: isFuture ? null : (isCurrent ? Number(employee.leave_balance_casual) : Number(runningCasual.toFixed(1))),
-        sickAccrued: isFuture ? null : accrued.sick,
-        sickUsed: isFuture ? null : usedSick,
-        sickBalance: isFuture ? null : (isCurrent ? Number(employee.leave_balance_sick) : Number(runningSick.toFixed(1))),
+        isBeforeDataStart,
+        casualAccrued: showData ? accrued.casual : null,
+        casualUsed: showData ? usedCasual : null,
+        // current month shows the live, authoritative balance; past tracked months show the reconstructed running total
+        casualBalance: !showData ? null : (isCurrent ? Number(employee.leave_balance_casual) : Number(runningCasual.toFixed(1))),
+        sickAccrued: showData ? accrued.sick : null,
+        sickUsed: showData ? usedSick : null,
+        sickBalance: !showData ? null : (isCurrent ? Number(employee.leave_balance_sick) : Number(runningSick.toFixed(1))),
       });
     }
 
