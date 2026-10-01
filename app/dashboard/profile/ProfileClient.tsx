@@ -294,7 +294,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       {isPrivileged && editing && (
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
           style={{ background: 'rgba(200,152,94,0.08)', border: '1px solid rgba(200,152,94,0.25)', color: '#c8985e' }}>
-          {isAdmin ? 'Admin' : 'HR'} mode — all fields are editable
+          {isAdmin ? 'Admin' : 'HR'} mode: all fields are editable
         </div>
       )}
 
@@ -412,7 +412,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                     <span className="font-semibold">Outstanding advance: </span>
                     {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
                     {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
-                    {' '}— taken before it was earned. Deducted automatically from future accrual.
+                    , taken before it was earned. Deducted automatically from future accrual.
                   </div>
                 )}
               </CardContent>

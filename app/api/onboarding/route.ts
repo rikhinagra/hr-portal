@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Log activity
     await serviceClient.from('activity_log').insert({
       action: 'employee_onboarded',
-      description: `${employee.name} onboarded ${name} (${newCode}) — ${designation}, ${department}`,
+      description: `${employee.name} onboarded ${name} (${newCode}) as ${designation}, ${department}`,
       performed_by: employee.id,
       target_employee_id: newEmployee.id,
       action_type: 'success',

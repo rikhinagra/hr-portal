@@ -398,8 +398,8 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <div className="relative">
                   <select value={leaveType} onChange={e => setLeaveType(e.target.value as typeof leaveType)}
                     className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                    <option value="earned">Earned (Annual) — {employee.leave_balance_casual} day(s) remaining</option>
-                    <option value="sick">Sick Leave — {employee.leave_balance_sick} day(s) remaining</option>
+                    <option value="earned">Earned (Annual): {employee.leave_balance_casual} day(s) remaining</option>
+                    <option value="sick">Sick Leave: {employee.leave_balance_sick} day(s) remaining</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 </div>

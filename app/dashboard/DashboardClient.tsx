@@ -158,7 +158,7 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
             <span className="font-semibold">Outstanding leave advance: </span>
             {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
             {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
-            {' '}— this will be automatically deducted from future accrual before new leave becomes usable.
+            . This will be automatically deducted from future accrual before new leave becomes usable.
           </div>
         </div>
       )}

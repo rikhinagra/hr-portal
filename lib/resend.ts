@@ -11,7 +11,7 @@ function emailWrapper(body: string): string {
 <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
   <div style="background:${navy};padding:28px 32px">
     <div style="font-size:.65rem;letter-spacing:3px;color:${gold};text-transform:uppercase">AadhCode Solutions Pvt. Ltd.</div>
-    <div style="font-size:1.3rem;color:#fff;margin-top:4px;font-weight:600">Aadhcode — Employee Portal</div>
+    <div style="font-size:1.3rem;color:#fff;margin-top:4px;font-weight:600">Aadhcode Employee Portal</div>
   </div>
   <div style="padding:32px">${body}</div>
   <div style="background:#f5f0ea;padding:20px 32px;text-align:center;font-size:.75rem;color:#8a8a8a">
@@ -171,13 +171,13 @@ export async function sendOffboardingEmail({
       <tr><td style="padding:8px 0;color:#8a8a8a">Designation</td><td style="padding:8px 0">${designation}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:rgba(179,58,58,.08);border-radius:8px;border-left:4px solid #b33a3a;font-size:.85rem;color:#5a5a5a">
-      <strong>Action Required:</strong> Please deactivate the following immediately — Google Workspace account, work email, internal tools access, and any other company system access for this employee.
+      <strong>Action Required:</strong> Please deactivate the following immediately: Google Workspace account, work email, internal tools access, and any other company system access for this employee.
     </div>`;
 
   return resend.emails.send({
     from: process.env.EMAIL_FROM!,
     to: process.env.EMAIL_IT_ADMIN!,
-    subject: `Offboarding: Deactivate All Accounts — ${employeeName} (${employeeCode})`,
+    subject: `Offboarding: Deactivate All Accounts for ${employeeName} (${employeeCode})`,
     html: emailWrapper(body),
   });
 }
@@ -277,7 +277,7 @@ export async function sendOnboardingWelcomeEmail({
       <table style="width:100%;font-size:.9rem;border-collapse:collapse">
         <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Portal Link</td><td style="padding:7px 0"><a href="${portalUrl}" style="color:${gold};font-weight:600">${portalUrl}</a></td></tr>
         <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Login ID</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${employeeCode}</td></tr>
-        <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Password</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${dob} <span style="font-size:.75rem;color:#8a8a8a;font-weight:400">(Your date of birth — used as login password)</span></td></tr>
+        <tr><td style="padding:7px 0;color:#8a8a8a;width:160px;white-space:nowrap">Password</td><td style="padding:7px 0;font-family:monospace;font-weight:600">${dob} <span style="font-size:.75rem;color:#8a8a8a;font-weight:400">(your date of birth is your login password)</span></td></tr>
       </table>
     </div>
 

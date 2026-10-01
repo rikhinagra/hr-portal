@@ -66,7 +66,7 @@ export default function LeaveCalendarWidget() {
               <div className="flex items-center gap-2">
                 <CalendarDays className="size-5" style={{ color: '#c8985e' }} />
                 <h3 className="font-semibold text-white" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-                  Leave Calendar — {months[0]?.month.slice(0, 4) ?? new Date().getFullYear()}
+                  Leave Calendar {months[0]?.month.slice(0, 4) ?? new Date().getFullYear()}
                 </h3>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
@@ -89,7 +89,7 @@ export default function LeaveCalendarWidget() {
                         <span className="font-semibold">Outstanding advance: </span>
                         {advanceCasual > 0 && <>{advanceCasual} Earned day{advanceCasual !== 1 ? 's' : ''}{advanceSick > 0 ? ', ' : ''}</>}
                         {advanceSick > 0 && <>{advanceSick} Sick day{advanceSick !== 1 ? 's' : ''}</>}
-                        {' '}— you took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed. (This means some of the &quot;Accrued&quot; amount shown below for the current month has already gone toward paying this down, rather than adding to your balance.)
+                        . You took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed. (This means some of the &quot;Accrued&quot; amount shown below for the current month has already gone toward paying this down, rather than adding to your balance.)
                       </div>
                     </div>
                   )}
@@ -103,7 +103,7 @@ export default function LeaveCalendarWidget() {
                           key={m.month}
                           disabled={disabled}
                           onClick={() => !disabled && setSelected(m)}
-                          title={m.isBeforeDataStart ? 'Before monthly tracking started — no data' : m.isFuture ? 'Not accrued yet' : undefined}
+                          title={m.isBeforeDataStart ? 'No data before monthly tracking started' : m.isFuture ? 'Not accrued yet' : undefined}
                           className="relative flex flex-col items-center justify-center gap-1 rounded-lg py-3 px-2 text-xs font-semibold transition-all"
                           style={{
                             background: disabled ? 'rgba(255,255,255,0.03)' : isSelected ? 'rgba(200,152,94,0.18)' : 'rgba(255,255,255,0.05)',
@@ -125,7 +125,7 @@ export default function LeaveCalendarWidget() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="rounded-lg border p-4" style={{ borderColor: '#1c2d4a', background: 'rgba(37,99,235,0.06)' }}>
                         <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#60a5fa' }}>
-                          Earned Leave — {selected.label}
+                          Earned Leave {selected.label}
                         </p>
                         <div className="space-y-1.5 text-sm text-gray-300">
                           <div className="flex justify-between"><span>Accrued this month</span><span className="font-semibold text-white">+{selected.casualAccrued}</span></div>
@@ -139,7 +139,7 @@ export default function LeaveCalendarWidget() {
 
                       <div className="rounded-lg border p-4" style={{ borderColor: '#1c2d4a', background: 'rgba(234,88,12,0.06)' }}>
                         <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#fb923c' }}>
-                          Sick Leave — {selected.label}
+                          Sick Leave {selected.label}
                         </p>
                         <div className="space-y-1.5 text-sm text-gray-300">
                           <div className="flex justify-between"><span>Accrued this month</span><span className="font-semibold text-white">+{selected.sickAccrued}</span></div>
@@ -156,7 +156,7 @@ export default function LeaveCalendarWidget() {
                   )}
 
                   <p className="text-xs text-gray-500 mt-5 leading-relaxed">
-                    Monthly tracking started in October 2026 — months before that (marked <MinusCircle className="inline size-3 -mt-0.5" />) were never recorded month-by-month under the old system, so no breakdown is shown for them. From October onward, the current month always shows your live, up-to-date balance, and earlier tracked months show what happened that month.
+                    Monthly tracking started in October 2026. Months before that (marked <MinusCircle className="inline size-3 -mt-0.5" />) were never recorded month-by-month under the old system, so no breakdown is shown for them. From October onward, the current month always shows your live, up-to-date balance, and earlier tracked months show what happened that month.
                   </p>
                 </>
               )}

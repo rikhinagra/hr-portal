@@ -15,7 +15,7 @@ export async function DELETE() {
       .single();
 
     if (!me || !['admin', 'hr'].includes(me.role)) {
-      return NextResponse.json({ error: 'Forbidden — only Admin/HR can clear activity log' }, { status: 403 });
+      return NextResponse.json({ error: 'Only Admin/HR can clear the activity log' }, { status: 403 });
     }
 
     // Delete all activity log entries

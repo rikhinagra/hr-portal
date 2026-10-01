@@ -27,7 +27,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Aadhcode — Employee Portal',
+  title: 'Aadhcode Employee Portal',
   description: 'Official HR Management Portal for Aadhcode employees. Manage leaves, equipment, handbooks, and more.',
   icons: {
     icon: '/favicon.jpg',
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     apple: '/favicon.jpg',
   },
   openGraph: {
-    title: 'Aadhcode — Employee Portal',
+    title: 'Aadhcode Employee Portal',
     description: 'Official HR Management Portal for Aadhcode employees.',
     type: 'website',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Aadhcode Employee Portal' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Aadhcode — Employee Portal',
+    title: 'Aadhcode Employee Portal',
     description: 'Official HR Management Portal for Aadhcode employees.',
   },
 };

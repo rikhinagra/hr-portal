@@ -605,7 +605,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
             <div className="rounded-xl p-3 mb-5 text-sm"
               style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)' }}>
               <p className="text-foreground">
-                This will permanently delete <strong>{deleteTarget.name}</strong> ({deleteTarget.employee_code}) and all their data —
+                This will permanently delete <strong>{deleteTarget.name}</strong> ({deleteTarget.employee_code}) and all their data:
                 documents, leave history, equipment records, and login access.
               </p>
             </div>

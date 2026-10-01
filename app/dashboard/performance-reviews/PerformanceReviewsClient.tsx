@@ -332,7 +332,7 @@ export default function PerformanceReviewsClient({ employee, initialReviews, rev
 
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">
-                  Overall Performance Rating (1–5) — <span style={{ color: '#c8985e' }}>Suggested: {suggestedAverage}</span>
+                  Overall Performance Rating (1–5) <span style={{ color: '#c8985e' }}>(Suggested: {suggestedAverage})</span>
                 </label>
                 <input type="text" inputMode="decimal" value={overallRating}
                   onChange={e => {

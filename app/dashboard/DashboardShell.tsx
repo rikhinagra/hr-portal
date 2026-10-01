@@ -209,7 +209,7 @@ function NotificationBell({ employee, onUnreadChange }: NotifBellProps) {
             {notifications.length === 0 ? (
               <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted-foreground)' }}>
                 <Bell className="size-8 mx-auto mb-3" style={{ opacity: 0.25 }} />
-                <p style={{ fontSize: '0.875rem' }}>All caught up — no pending requests</p>
+                <p style={{ fontSize: '0.875rem' }}>All caught up, no pending requests</p>
               </div>
             ) : (
               notifications.map(n => {
