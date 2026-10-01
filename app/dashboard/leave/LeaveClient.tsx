@@ -13,7 +13,7 @@ interface LeaveClientProps {
 }
 
 function formatLeaveType(type: string): string {
-  if (type === 'earned') return 'Casual (Annual)';
+  if (type === 'earned') return 'Earned (Annual)';
   if (type === 'sick') return 'Sick Leave';
   if (type === 'compoff') return 'Comp-Off';
   return type;
@@ -179,7 +179,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         {!isAdmin && (
           <>
             <Card><CardContent className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Casual Leave</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Earned Leave</div>
               <div className="text-3xl font-bold" style={{ color: '#3a7bd5' }}>{employee.leave_balance_casual}</div>
               <div className="text-xs text-muted-foreground mt-1">of 12 days remaining</div>
             </CardContent></Card>
@@ -396,7 +396,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <div className="relative">
                   <select value={leaveType} onChange={e => setLeaveType(e.target.value as typeof leaveType)}
                     className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                    <option value="earned">Casual (Annual) — {employee.leave_balance_casual} day(s) remaining</option>
+                    <option value="earned">Earned (Annual) — {employee.leave_balance_casual} day(s) remaining</option>
                     <option value="sick">Sick Leave — {employee.leave_balance_sick} day(s) remaining</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -474,7 +474,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               <button onClick={() => setShowClaimForm(false)} className="text-muted-foreground hover:text-foreground text-xl">✕</button>
             </div>
             <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-              Worked on a weekend or public holiday? Submit this claim for approval. Once approved, 1 day will be added to your Casual Leave balance.
+              Worked on a weekend or public holiday? Submit this claim for approval. Once approved, 1 day will be added to your Earned Leave balance.
             </p>
             <div className="space-y-4">
               <div>

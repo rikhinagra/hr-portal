@@ -167,7 +167,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   const handleSave = async () => {
     if (viewerRole === 'hr') {
       if (form.leave_balance_casual < 0 || form.leave_balance_casual > 12) {
-        toast.error('Casual leave must be between 0 and 12 days.');
+        toast.error('Earned leave must be between 0 and 12 days.');
         return;
       }
       if (form.leave_balance_sick < 0 || form.leave_balance_sick > 7) {
@@ -382,7 +382,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                     ) : (
                       <div className="text-2xl font-bold" style={{ color: '#2563eb' }}>{employee.leave_balance_casual}</div>
                     )}
-                    <div className="text-xs text-muted-foreground mt-1">Casual</div>
+                    <div className="text-xs text-muted-foreground mt-1">Earned</div>
                   </div>
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(234,88,12,0.1)' }}>
                     {viewerRole === 'hr' && editing ? (
@@ -410,7 +410,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                   <div className="mt-3 rounded-lg p-3 text-xs leading-relaxed"
                     style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: 'var(--foreground)' }}>
                     <span className="font-semibold">Outstanding advance: </span>
-                    {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Casual day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
+                    {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
                     {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
                     {' '}— taken before it was earned. Deducted automatically from future accrual.
                   </div>

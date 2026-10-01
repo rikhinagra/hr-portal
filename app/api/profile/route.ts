@@ -85,7 +85,7 @@ export async function PATCH(request: NextRequest) {
       current_address: 'Current Address',
       emergency_contact_name: 'Emergency Contact Name',
       emergency_contact_phone: 'Emergency Contact Phone',
-      leave_balance_casual: 'Casual Leave Balance',
+      leave_balance_casual: 'Earned Leave Balance',
       leave_balance_sick: 'Sick Leave Balance',
       dob: 'Date of Birth',
       name: 'Name',

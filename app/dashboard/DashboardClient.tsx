@@ -69,7 +69,7 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
 
   const stats = [
     ...(!isAdmin ? [
-      { label: 'Casual Leave', value: employee.leave_balance_casual, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
+      { label: 'Earned Leave', value: employee.leave_balance_casual, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
       { label: 'Sick Leave', value: employee.leave_balance_sick, sub: 'of 7 days', icon: Heart, iconBg: 'rgba(234,88,12,0.1)', iconColor: '#ea580c' },
     ] : []),
     { label: 'Policies', value: policiesCount, sub: 'documents', icon: FileText, iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
@@ -156,7 +156,7 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
           <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
           <div className="text-sm leading-relaxed text-foreground">
             <span className="font-semibold">Outstanding leave advance: </span>
-            {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Casual day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
+            {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
             {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
             {' '}— this will be automatically deducted from future accrual before new leave becomes usable.
           </div>

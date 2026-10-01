@@ -87,7 +87,7 @@ export default function LeaveCalendarWidget() {
                       <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
                       <div className="text-xs leading-relaxed" style={{ color: '#fde68a' }}>
                         <span className="font-semibold">Outstanding advance: </span>
-                        {advanceCasual > 0 && <>{advanceCasual} Casual day{advanceCasual !== 1 ? 's' : ''}{advanceSick > 0 ? ', ' : ''}</>}
+                        {advanceCasual > 0 && <>{advanceCasual} Earned day{advanceCasual !== 1 ? 's' : ''}{advanceSick > 0 ? ', ' : ''}</>}
                         {advanceSick > 0 && <>{advanceSick} Sick day{advanceSick !== 1 ? 's' : ''}</>}
                         {' '}— you took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed. (This means some of the &quot;Accrued&quot; amount shown below for the current month has already gone toward paying this down, rather than adding to your balance.)
                       </div>
@@ -125,7 +125,7 @@ export default function LeaveCalendarWidget() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="rounded-lg border p-4" style={{ borderColor: '#1c2d4a', background: 'rgba(37,99,235,0.06)' }}>
                         <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#60a5fa' }}>
-                          Casual Leave — {selected.label}
+                          Earned Leave — {selected.label}
                         </p>
                         <div className="space-y-1.5 text-sm text-gray-300">
                           <div className="flex justify-between"><span>Accrued this month</span><span className="font-semibold text-white">+{selected.casualAccrued}</span></div>

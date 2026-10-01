@@ -22,7 +22,7 @@ function emailWrapper(body: string): string {
 }
 
 function formatLeaveType(leaveType: string): string {
-  if (leaveType === 'earned') return 'Casual Leave';
+  if (leaveType === 'earned') return 'Earned Leave';
   if (leaveType === 'sick') return 'Sick Leave';
   if (leaveType === 'compoff') return 'Comp-Off';
   return leaveType;
@@ -317,7 +317,7 @@ export async function sendCompOffClaimEmail({
       <tr><td style="padding:8px 0;color:#8a8a8a">Reason</td><td style="padding:8px 0">${reason}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px;background:rgba(22,163,74,0.08);border-radius:8px;border-left:4px solid #16a34a;font-size:.85rem;color:#5a5a5a">
-      If approved, 1 day will be automatically added to the employee's Casual Leave balance. Please review in the HR Portal.
+      If approved, 1 day will be automatically added to the employee's Earned Leave balance. Please review in the HR Portal.
     </div>`;
 
   return resend.emails.send({
@@ -348,7 +348,7 @@ export async function sendCompOffClaimStatusEmail({
       Your comp-off claim for working on <strong>${formattedDate}</strong> has been <strong>${status}</strong>.
     </p>
     ${isApproved
-      ? `<div style="margin-top:20px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">1 day has been added to your Casual Leave balance. You can use it by applying for Casual Leave via the HR Portal.</div>`
+      ? `<div style="margin-top:20px;padding:16px;background:#f0f7ee;border-radius:8px;border-left:4px solid #2e7d32;font-size:.85rem;color:#2e7d32">1 day has been added to your Earned Leave balance. You can use it by applying for Earned Leave via the HR Portal.</div>`
       : `<div style="margin-top:20px;padding:16px;background:#fdf0f0;border-radius:8px;border-left:4px solid #b33a3a;font-size:.85rem;color:#b33a3a">Your comp-off claim was not approved. Please contact HR for more details.</div>`}`;
 
   return resend.emails.send({

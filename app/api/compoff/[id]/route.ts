@@ -75,7 +75,7 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // Add +1 to Casual Leave balance on approval
+    // Add +1 to Earned Leave balance on approval
     if (status === 'approved') {
       const { data: empData } = await serviceClient
         .from('employees').select('leave_balance_casual').eq('id', claim.employee_id).single();
