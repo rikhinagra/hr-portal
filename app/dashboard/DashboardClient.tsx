@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Calendar, Heart, FileText, Users, Monitor, BookOpen, ChevronRight, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Calendar, FileText, Users, Monitor, BookOpen, ChevronRight, Trash2, AlertTriangle, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import LeaveCalendarWidget from '@/components/dashboard/LeaveCalendarWidget';
 import type { Employee } from '@/types';
 
 interface DashboardClientProps {
@@ -68,10 +67,6 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
   const isAdmin = employee.role === 'admin';
 
   const stats = [
-    ...(!isAdmin ? [
-      { label: 'Earned Leave', value: employee.leave_balance_casual, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
-      { label: 'Sick Leave', value: employee.leave_balance_sick, sub: 'of 7 days', icon: Heart, iconBg: 'rgba(234,88,12,0.1)', iconColor: '#ea580c' },
-    ] : []),
     { label: 'Policies', value: policiesCount, sub: 'documents', icon: FileText, iconBg: 'rgba(22,163,74,0.1)', iconColor: '#16a34a' },
     { label: 'Team Size', value: teamCount, sub: 'active members', icon: Users, iconBg: 'rgba(200,152,94,0.1)', iconColor: '#c8985e' },
   ];
@@ -89,13 +84,6 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
 
   return (
     <div className="space-y-6">
-
-      {/* Top-right utility row */}
-      {!isAdmin && (
-        <div className="flex items-center justify-end">
-          <LeaveCalendarWidget />
-        </div>
-      )}
 
       {/* Profile Hero */}
       <Card className="border shadow-xs">
@@ -148,20 +136,6 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
           </div>
         </CardContent>
       </Card>
-
-      {/* Outstanding leave advance notice */}
-      {!isAdmin && (employee.advance_used_casual > 0 || employee.advance_used_sick > 0) && (
-        <div className="flex items-start gap-2.5 rounded-lg border p-3.5"
-          style={{ borderColor: 'rgba(234,179,8,0.35)', background: 'rgba(234,179,8,0.08)' }}>
-          <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
-          <div className="text-sm leading-relaxed text-foreground">
-            <span className="font-semibold">Outstanding leave advance: </span>
-            {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
-            {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
-            . This will be automatically deducted from future accrual before new leave becomes usable.
-          </div>
-        </div>
-      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

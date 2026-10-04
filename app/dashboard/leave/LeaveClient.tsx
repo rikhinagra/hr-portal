@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Mail, ArrowRight, ChevronDown, CalendarDays } from 'lucide-react';
+import { Mail, ArrowRight, ChevronDown, CalendarDays, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import LeaveCalendarWidget from '@/components/dashboard/LeaveCalendarWidget';
 import type { Employee, LeaveRequest, CompOffClaim } from '@/types';
@@ -26,7 +26,9 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
 
   // Leave form state
   const [showForm, setShowForm] = useState(false);
-  const [leaveType, setLeaveType] = useState<'earned' | 'sick' | 'compoff'>('earned');
+  const [leaveType, setLeaveType] = useState<'earned' | 'sick' | 'compoff'>(
+    employee.leave_balance_casual > 0 ? 'earned' : 'sick'
+  );
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
@@ -198,6 +200,20 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
           <div className="text-xs text-muted-foreground mt-1">awaiting approval</div>
         </CardContent></Card>
       </div>
+
+      {/* Outstanding leave advance notice */}
+      {!isAdmin && (employee.advance_used_casual > 0 || employee.advance_used_sick > 0) && (
+        <div className="flex items-start gap-2.5 rounded-lg border p-3.5"
+          style={{ borderColor: 'rgba(234,179,8,0.35)', background: 'rgba(234,179,8,0.08)' }}>
+          <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
+          <div className="text-sm leading-relaxed text-foreground">
+            <span className="font-semibold">Outstanding leave advance: </span>
+            {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
+            {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
+            . This will be automatically deducted from future accrual before new leave becomes usable.
+          </div>
+        </div>
+      )}
 
       {/* Leave Requests */}
       <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Leave Requests</h2>
@@ -398,11 +414,18 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <div className="relative">
                   <select value={leaveType} onChange={e => setLeaveType(e.target.value as typeof leaveType)}
                     className="w-full pl-3 pr-9 py-2.5 border rounded-lg text-sm bg-background text-foreground appearance-none">
-                    <option value="earned">Earned (Annual): {employee.leave_balance_casual} day(s) remaining</option>
-                    <option value="sick">Sick Leave: {employee.leave_balance_sick} day(s) remaining</option>
+                    <option value="earned" disabled={employee.leave_balance_casual <= 0}>Earned (Annual): {employee.leave_balance_casual} day(s) remaining</option>
+                    <option value="sick" disabled={employee.leave_balance_sick <= 0}>Sick Leave: {employee.leave_balance_sick} day(s) remaining</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 </div>
+                {(employee.leave_balance_casual <= 0 || employee.leave_balance_sick <= 0) && (
+                  <p className="text-xs mt-1.5" style={{ color: '#dc2626' }}>
+                    No {employee.leave_balance_casual <= 0 && employee.leave_balance_sick <= 0
+                      ? 'Earned Leave or Sick Leave'
+                      : employee.leave_balance_casual <= 0 ? 'Earned Leave' : 'Sick Leave'} remaining.
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2.5 py-1">
                 <input type="checkbox" id="half-day" checked={isHalfDay}
@@ -457,9 +480,10 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
                 <Mail className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
                 This request will be sent to HR and Reporting Manager.
               </div>
-              <button onClick={submitLeave} disabled={submitting}
+              <button onClick={submitLeave}
+                disabled={submitting || (leaveType === 'earned' && employee.leave_balance_casual <= 0) || (leaveType === 'sick' && employee.leave_balance_sick <= 0)}
                 className="w-full py-3 rounded-lg font-semibold text-sm"
-                style={{ background: submitting ? '#ccc' : '#c8985e', color: '#0f1a2e' }}>
+                style={{ background: (submitting || (leaveType === 'earned' && employee.leave_balance_casual <= 0) || (leaveType === 'sick' && employee.leave_balance_sick <= 0)) ? '#ccc' : '#c8985e', color: '#0f1a2e' }}>
                 {submitting ? 'Submitting…' : 'Submit Leave Request'}
               </button>
             </div>
