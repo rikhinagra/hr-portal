@@ -28,15 +28,36 @@ export async function PATCH(request: NextRequest) {
       emergency_contact_phone: body.emergency_contact_phone || null,
     };
 
-    // HR only — manual leave balance adjustment (automatic deduction on approval is unaffected)
+    // HR only — manual leave balance and entitlement adjustment (automatic
+    // deduction/accrual is unaffected). Each employee has their own annual
+    // entitlement (new joiners get a prorated amount in their first year), so
+    // the balance cap is read per-employee rather than assumed to be 12/7.
     if (me.role === 'hr') {
+      const { data: currentEntitlement } = await serviceClient
+        .from('employees')
+        .select('annual_entitlement_casual, annual_entitlement_sick')
+        .eq('id', employee_id)
+        .single();
+
+      if (body.annual_entitlement_casual !== undefined && body.annual_entitlement_casual !== '') {
+        const val = Number(body.annual_entitlement_casual);
+        if (!isNaN(val) && val >= 0) updateData.annual_entitlement_casual = val;
+      }
+      if (body.annual_entitlement_sick !== undefined && body.annual_entitlement_sick !== '') {
+        const val = Number(body.annual_entitlement_sick);
+        if (!isNaN(val) && val >= 0) updateData.annual_entitlement_sick = val;
+      }
+
+      const casualCap = Number(updateData.annual_entitlement_casual ?? currentEntitlement?.annual_entitlement_casual ?? 12);
+      const sickCap = Number(updateData.annual_entitlement_sick ?? currentEntitlement?.annual_entitlement_sick ?? 7);
+
       if (body.leave_balance_casual !== undefined && body.leave_balance_casual !== '') {
         const val = Number(body.leave_balance_casual);
-        if (!isNaN(val) && val >= 0 && val <= 12) updateData.leave_balance_casual = val;
+        if (!isNaN(val) && val >= 0 && val <= casualCap) updateData.leave_balance_casual = val;
       }
       if (body.leave_balance_sick !== undefined && body.leave_balance_sick !== '') {
         const val = Number(body.leave_balance_sick);
-        if (!isNaN(val) && val >= 0 && val <= 7) updateData.leave_balance_sick = val;
+        if (!isNaN(val) && val >= 0 && val <= sickCap) updateData.leave_balance_sick = val;
       }
     }
 
@@ -65,7 +86,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: targetEmployee } = await serviceClient
       .from('employees')
-      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, employment_type, experience_years, experience_months')
+      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, annual_entitlement_casual, annual_entitlement_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, employment_type, experience_years, experience_months')
       .eq('id', employee_id)
       .single();
 
@@ -87,6 +108,8 @@ export async function PATCH(request: NextRequest) {
       emergency_contact_phone: 'Emergency Contact Phone',
       leave_balance_casual: 'Earned Leave Balance',
       leave_balance_sick: 'Sick Leave Balance',
+      annual_entitlement_casual: 'Annual Earned Leave Entitlement',
+      annual_entitlement_sick: 'Annual Sick Leave Entitlement',
       dob: 'Date of Birth',
       name: 'Name',
       email: 'Work Email',

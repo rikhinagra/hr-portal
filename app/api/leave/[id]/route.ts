@@ -85,19 +85,27 @@ export async function PATCH(
       const balanceField =
         leave.leave_type === 'earned' ? 'leave_balance_casual' :
         leave.leave_type === 'sick' ? 'leave_balance_sick' : 'leave_balance_compoff';
+      // Used Till Date only tracks Earned/Sick (matches HR's sheet — comp-off is a
+      // separate bucket, never part of the Earned/Sick accrual-vs-usage picture).
+      const usedField = leave.leave_type === 'earned' ? 'used_till_date_casual' : leave.leave_type === 'sick' ? 'used_till_date_sick' : null;
 
       const { data: empData } = await serviceClient
         .from('employees')
-        .select('leave_balance_casual, leave_balance_sick, leave_balance_compoff')
+        .select('leave_balance_casual, leave_balance_sick, leave_balance_compoff, used_till_date_casual, used_till_date_sick')
         .eq('id', leave.employee_id)
         .single();
 
       if (empData) {
         const currentBalance = empData[balanceField as keyof typeof empData] as number;
         const newBalance = Math.max(0, currentBalance - leave.days);
+        const updatePayload: Record<string, number> = { [balanceField]: newBalance };
+        if (usedField) {
+          const currentUsed = empData[usedField as keyof typeof empData] as number;
+          updatePayload[usedField] = currentUsed + leave.days;
+        }
         await serviceClient
           .from('employees')
-          .update({ [balanceField]: newBalance })
+          .update(updatePayload)
           .eq('id', leave.employee_id);
       }
     }

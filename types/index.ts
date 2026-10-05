@@ -37,6 +37,12 @@ export interface Employee {
   probation_hold_sick: number;
   advance_used_casual: number;
   advance_used_sick: number;
+  accrued_till_date_casual: number;
+  accrued_till_date_sick: number;
+  used_till_date_casual: number;
+  used_till_date_sick: number;
+  annual_entitlement_casual: number;
+  annual_entitlement_sick: number;
 }
 
 export interface EmployeeDocument {

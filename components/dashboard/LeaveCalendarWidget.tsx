@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CalendarDays, X, Lock, MinusCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { CalendarDays, X, Lock, Loader2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MonthData {
@@ -9,34 +9,41 @@ interface MonthData {
   label: string;
   isCurrent: boolean;
   isFuture: boolean;
-  isBeforeDataStart: boolean;
-  casualAccrued: number | null;
-  casualUsed: number | null;
+  hasRealData: boolean;
+  casualAccruedTillDate: number | null;
+  casualUsedTillDate: number | null;
   casualBalance: number | null;
-  sickAccrued: number | null;
-  sickUsed: number | null;
+  casualAdvanceUsed: number | null;
+  sickAccruedTillDate: number | null;
+  sickUsedTillDate: number | null;
   sickBalance: number | null;
+  sickAdvanceUsed: number | null;
+}
+
+interface CalendarData {
+  months: MonthData[];
+  probation: { status: 'in_probation' | 'na'; endDate: string | null };
+}
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default function LeaveCalendarWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [months, setMonths] = useState<MonthData[]>([]);
+  const [data, setData] = useState<CalendarData | null>(null);
   const [selected, setSelected] = useState<MonthData | null>(null);
-  const [advanceCasual, setAdvanceCasual] = useState(0);
-  const [advanceSick, setAdvanceSick] = useState(0);
 
   const handleOpen = async () => {
     setIsOpen(true);
     setLoading(true);
     try {
       const res = await fetch('/api/leave/calendar');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setMonths(data.months ?? []);
-      setAdvanceCasual(data.advanceUsedCasual ?? 0);
-      setAdvanceSick(data.advanceUsedSick ?? 0);
-      const current = (data.months ?? []).find((m: MonthData) => m.isCurrent);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setData(json);
+      const current = (json.months ?? []).find((m: MonthData) => m.isCurrent);
       setSelected(current ?? null);
     } catch (err: unknown) {
       toast.error('Failed to load leave calendar', { description: err instanceof Error ? err.message : 'Try again.' });
@@ -66,7 +73,7 @@ export default function LeaveCalendarWidget() {
               <div className="flex items-center gap-2">
                 <CalendarDays className="size-5" style={{ color: '#c8985e' }} />
                 <h3 className="font-semibold text-white" style={{ fontFamily: 'var(--font-playfair), serif' }}>
-                  Leave Calendar {months[0]?.month.slice(0, 4) ?? new Date().getFullYear()}
+                  Leave Calendar {data?.months[0]?.month.slice(0, 4) ?? new Date().getFullYear()}
                 </h3>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
@@ -75,35 +82,23 @@ export default function LeaveCalendarWidget() {
             </div>
 
             <div className="p-5 overflow-y-auto">
-              {loading ? (
+              {loading || !data ? (
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="size-6 animate-spin text-gray-400" />
                 </div>
               ) : (
                 <>
-                  {(advanceCasual > 0 || advanceSick > 0) && (
-                    <div className="flex items-start gap-2.5 rounded-lg border p-3.5 mb-5"
-                      style={{ borderColor: 'rgba(234,179,8,0.35)', background: 'rgba(234,179,8,0.08)' }}>
-                      <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
-                      <div className="text-xs leading-relaxed" style={{ color: '#fde68a' }}>
-                        <span className="font-semibold">Outstanding advance: </span>
-                        {advanceCasual > 0 && <>{advanceCasual} Earned day{advanceCasual !== 1 ? 's' : ''}{advanceSick > 0 ? ', ' : ''}</>}
-                        {advanceSick > 0 && <>{advanceSick} Sick day{advanceSick !== 1 ? 's' : ''}</>}
-                        . You took this leave before it was earned. It will be automatically deducted from your future accrual before any new leave becomes usable, no action needed. (This means some of the &quot;Accrued&quot; amount shown below for the current month has already gone toward paying this down, rather than adding to your balance.)
-                      </div>
-                    </div>
-                  )}
-
+                  {/* Month grid */}
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-5">
-                    {months.map(m => {
+                    {data.months.map(m => {
                       const isSelected = selected?.month === m.month;
-                      const disabled = m.isFuture || m.isBeforeDataStart;
+                      const disabled = m.isFuture;
                       return (
                         <button
                           key={m.month}
                           disabled={disabled}
                           onClick={() => !disabled && setSelected(m)}
-                          title={m.isBeforeDataStart ? 'No data before monthly tracking started' : m.isFuture ? 'Not accrued yet' : undefined}
+                          title={m.isFuture ? 'Not accrued yet' : undefined}
                           className="relative flex flex-col items-center justify-center gap-1 rounded-lg py-3 px-2 text-xs font-semibold transition-all"
                           style={{
                             background: disabled ? 'rgba(255,255,255,0.03)' : isSelected ? 'rgba(200,152,94,0.18)' : 'rgba(255,255,255,0.05)',
@@ -113,7 +108,6 @@ export default function LeaveCalendarWidget() {
                           }}
                         >
                           {m.isFuture && <Lock className="size-3 absolute top-1.5 right-1.5" />}
-                          {m.isBeforeDataStart && <MinusCircle className="size-3 absolute top-1.5 right-1.5" />}
                           {m.label.slice(0, 3)}
                           {m.isCurrent && <span style={{ fontSize: '0.55rem', color: '#c8985e' }}>Current</span>}
                         </button>
@@ -121,43 +115,51 @@ export default function LeaveCalendarWidget() {
                     })}
                   </div>
 
+                  {/* Probation status */}
+                  <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 mb-5"
+                    style={{ borderColor: '#1c2d4a', background: 'rgba(255,255,255,0.03)' }}>
+                    <Clock className="size-3.5 flex-shrink-0" style={{ color: '#c8985e' }} />
+                    <span className="text-xs text-gray-400">Probation</span>
+                    <span className="text-xs font-semibold text-white">
+                      {data.probation.status === 'in_probation' ? `Until ${formatDate(data.probation.endDate!)}` : 'N/A'}
+                    </span>
+                  </div>
+
                   {selected ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="rounded-lg border p-4" style={{ borderColor: '#1c2d4a', background: 'rgba(37,99,235,0.06)' }}>
                         <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#60a5fa' }}>
-                          Earned Leave {selected.label}
+                          Annual Earned Leave, as of {selected.label}
                         </p>
                         <div className="space-y-1.5 text-sm text-gray-300">
-                          <div className="flex justify-between"><span>Accrued this month</span><span className="font-semibold text-white">+{selected.casualAccrued}</span></div>
-                          <div className="flex justify-between"><span>Used this month</span><span className="font-semibold text-white">-{selected.casualUsed}</span></div>
+                          <div className="flex justify-between"><span>Accrued Till Date</span><span className="font-semibold text-white">{selected.casualAccruedTillDate}</span></div>
+                          <div className="flex justify-between"><span>Used Till Date</span><span className="font-semibold text-white">{selected.hasRealData ? selected.casualUsedTillDate : '–'}</span></div>
                           <div className="flex justify-between pt-1.5 border-t" style={{ borderColor: '#1c2d4a' }}>
-                            <span>Balance {selected.isCurrent ? '(live)' : 'at month end'}</span>
-                            <span className="font-bold" style={{ color: '#60a5fa' }}>{selected.casualBalance}</span>
+                            <span>Balance {selected.isCurrent ? '(live)' : ''}</span>
+                            <span className="font-bold" style={{ color: '#60a5fa' }}>{selected.hasRealData ? selected.casualBalance : '–'}</span>
                           </div>
+                          <div className="flex justify-between"><span>Advance Used</span><span className="font-semibold text-white">{selected.hasRealData && selected.casualAdvanceUsed ? selected.casualAdvanceUsed.toFixed(2) : '–'}</span></div>
                         </div>
                       </div>
 
                       <div className="rounded-lg border p-4" style={{ borderColor: '#1c2d4a', background: 'rgba(234,88,12,0.06)' }}>
                         <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#fb923c' }}>
-                          Sick Leave {selected.label}
+                          Annual Sick Leave, as of {selected.label}
                         </p>
                         <div className="space-y-1.5 text-sm text-gray-300">
-                          <div className="flex justify-between"><span>Accrued this month</span><span className="font-semibold text-white">+{selected.sickAccrued}</span></div>
-                          <div className="flex justify-between"><span>Used this month</span><span className="font-semibold text-white">-{selected.sickUsed}</span></div>
+                          <div className="flex justify-between"><span>Accrued Till Date</span><span className="font-semibold text-white">{selected.sickAccruedTillDate}</span></div>
+                          <div className="flex justify-between"><span>Used Till Date</span><span className="font-semibold text-white">{selected.hasRealData ? selected.sickUsedTillDate : '–'}</span></div>
                           <div className="flex justify-between pt-1.5 border-t" style={{ borderColor: '#1c2d4a' }}>
-                            <span>Balance {selected.isCurrent ? '(live)' : 'at month end'}</span>
-                            <span className="font-bold" style={{ color: '#fb923c' }}>{selected.sickBalance}</span>
+                            <span>Balance {selected.isCurrent ? '(live)' : ''}</span>
+                            <span className="font-bold" style={{ color: '#fb923c' }}>{selected.hasRealData ? selected.sickBalance : '–'}</span>
                           </div>
+                          <div className="flex justify-between"><span>Advance Used</span><span className="font-semibold text-white">{selected.hasRealData && selected.sickAdvanceUsed ? selected.sickAdvanceUsed.toFixed(2) : '–'}</span></div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <p className="text-sm text-gray-400 text-center py-6">Select a month to view details.</p>
                   )}
-
-                  <p className="text-xs text-gray-500 mt-5 leading-relaxed">
-                    Monthly tracking started in October 2026. Months before that (marked <MinusCircle className="inline size-3 -mt-0.5" />) were never recorded month-by-month under the old system, so no breakdown is shown for them. From October onward, the current month always shows your live, up-to-date balance, and earlier tracked months show what happened that month.
-                  </p>
                 </>
               )}
             </div>

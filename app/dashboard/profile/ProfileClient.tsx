@@ -57,8 +57,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
   const [showDocUpload, setShowDocUpload] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingDocId, setViewingDocId] = useState<string | null>(null);
-  const [casualDisplay, setCasualDisplay] = useState(String(initialEmployee.leave_balance_casual));
-  const [sickDisplay, setSickDisplay] = useState(String(initialEmployee.leave_balance_sick));
+  const [casualDisplay, setCasualDisplay] = useState(String(Number(initialEmployee.leave_balance_casual.toFixed(2))));
+  const [sickDisplay, setSickDisplay] = useState(String(Number(initialEmployee.leave_balance_sick.toFixed(2))));
 
   const [form, setForm] = useState({
     // Editable by all with access
@@ -84,6 +84,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
     // HR-only fields
     leave_balance_casual: employee.leave_balance_casual,
     leave_balance_sick: employee.leave_balance_sick,
+    annual_entitlement_casual: employee.annual_entitlement_casual,
+    annual_entitlement_sick: employee.annual_entitlement_sick,
   });
 
   const set = (key: string) => (v: string) => setForm(f => ({ ...f, [key]: v }));
@@ -93,8 +95,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
 
   const handleCancel = () => {
     setEditing(false);
-    setCasualDisplay(String(employee.leave_balance_casual));
-    setSickDisplay(String(employee.leave_balance_sick));
+    setCasualDisplay(String(Number(employee.leave_balance_casual.toFixed(2))));
+    setSickDisplay(String(Number(employee.leave_balance_sick.toFixed(2))));
     setForm({
       phone: employee.phone ?? '',
       personal_email: employee.personal_email ?? '',
@@ -116,6 +118,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       experience_months: employee.experience_months ?? 0,
       leave_balance_casual: employee.leave_balance_casual,
       leave_balance_sick: employee.leave_balance_sick,
+      annual_entitlement_casual: employee.annual_entitlement_casual,
+      annual_entitlement_sick: employee.annual_entitlement_sick,
     });
   };
 
@@ -166,12 +170,20 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
 
   const handleSave = async () => {
     if (viewerRole === 'hr') {
-      if (form.leave_balance_casual < 0 || form.leave_balance_casual > 12) {
-        toast.error('Earned leave must be between 0 and 12 days.');
+      if (form.annual_entitlement_casual < 0) {
+        toast.error('Annual Earned Leave entitlement cannot be negative.');
         return;
       }
-      if (form.leave_balance_sick < 0 || form.leave_balance_sick > 7) {
-        toast.error('Sick leave must be between 0 and 7 days.');
+      if (form.annual_entitlement_sick < 0) {
+        toast.error('Annual Sick Leave entitlement cannot be negative.');
+        return;
+      }
+      if (form.leave_balance_casual < 0 || form.leave_balance_casual > form.annual_entitlement_casual) {
+        toast.error(`Earned leave must be between 0 and ${form.annual_entitlement_casual} days.`);
+        return;
+      }
+      if (form.leave_balance_sick < 0 || form.leave_balance_sick > form.annual_entitlement_sick) {
+        toast.error(`Sick leave must be between 0 and ${form.annual_entitlement_sick} days.`);
         return;
       }
     }
@@ -380,9 +392,30 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                         style={{ color: '#2563eb', borderColor: '#2563eb' }}
                       />
                     ) : (
-                      <div className="text-2xl font-bold" style={{ color: '#2563eb' }}>{employee.leave_balance_casual}</div>
+                      <div className="text-2xl font-bold" style={{ color: '#2563eb' }}>{employee.leave_balance_casual.toFixed(2)}</div>
                     )}
                     <div className="text-xs text-muted-foreground mt-1">Earned</div>
+                    {viewerRole === 'hr' && editing ? (
+                      <div className="flex items-center justify-center gap-1 mt-1.5">
+                        <span className="text-[10px] text-muted-foreground">of</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={form.annual_entitlement_casual}
+                          onChange={e => {
+                            const raw = e.target.value;
+                            if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                            const num = parseFloat(raw);
+                            setForm(f => ({ ...f, annual_entitlement_casual: isNaN(num) ? 0 : num }));
+                          }}
+                          className="w-10 text-center text-[11px] font-semibold bg-transparent border-0 border-b outline-none"
+                          style={{ color: '#2563eb', borderColor: '#2563eb' }}
+                        />
+                        <span className="text-[10px] text-muted-foreground">annual</span>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-muted-foreground mt-0.5">of {employee.annual_entitlement_casual} annual</div>
+                    )}
                   </div>
                   <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(234,88,12,0.1)' }}>
                     {viewerRole === 'hr' && editing ? (
@@ -401,18 +434,41 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                         style={{ color: '#ea580c', borderColor: '#ea580c' }}
                       />
                     ) : (
-                      <div className="text-2xl font-bold" style={{ color: '#ea580c' }}>{employee.leave_balance_sick}</div>
+                      <div className="text-2xl font-bold" style={{ color: '#ea580c' }}>{employee.leave_balance_sick.toFixed(2)}</div>
                     )}
                     <div className="text-xs text-muted-foreground mt-1">Sick</div>
+                    {viewerRole === 'hr' && editing ? (
+                      <div className="flex items-center justify-center gap-1 mt-1.5">
+                        <span className="text-[10px] text-muted-foreground">of</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={form.annual_entitlement_sick}
+                          onChange={e => {
+                            const raw = e.target.value;
+                            if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+                            const num = parseFloat(raw);
+                            setForm(f => ({ ...f, annual_entitlement_sick: isNaN(num) ? 0 : num }));
+                          }}
+                          className="w-10 text-center text-[11px] font-semibold bg-transparent border-0 border-b outline-none"
+                          style={{ color: '#ea580c', borderColor: '#ea580c' }}
+                        />
+                        <span className="text-[10px] text-muted-foreground">annual</span>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-muted-foreground mt-0.5">of {employee.annual_entitlement_sick} annual</div>
+                    )}
                   </div>
                 </div>
                 {(employee.advance_used_casual > 0 || employee.advance_used_sick > 0) && (
-                  <div className="mt-3 rounded-lg p-3 text-xs leading-relaxed"
-                    style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: 'var(--foreground)' }}>
-                    <span className="font-semibold">Outstanding advance: </span>
-                    {employee.advance_used_casual > 0 && <>{employee.advance_used_casual} Earned day{employee.advance_used_casual !== 1 ? 's' : ''}{employee.advance_used_sick > 0 ? ', ' : ''}</>}
-                    {employee.advance_used_sick > 0 && <>{employee.advance_used_sick} Sick day{employee.advance_used_sick !== 1 ? 's' : ''}</>}
-                    , taken before it was earned. Deducted automatically from future accrual.
+                  <div className="mt-3 rounded-lg p-3 text-xs"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                    {employee.advance_used_casual > 0 && (
+                      <div className="flex justify-between"><span className="text-muted-foreground">Excess/Advance Used (Earned)</span><span className="font-semibold">{employee.advance_used_casual.toFixed(2)}</span></div>
+                    )}
+                    {employee.advance_used_sick > 0 && (
+                      <div className="flex justify-between"><span className="text-muted-foreground">Excess/Advance Used (Sick)</span><span className="font-semibold">{employee.advance_used_sick.toFixed(2)}</span></div>
+                    )}
                   </div>
                 )}
               </CardContent>
