@@ -4,6 +4,13 @@ export type LeaveStatus = 'pending' | 'approved' | 'rejected';
 export type EquipmentStatus = 'pending' | 'approved' | 'delivered' | 'rejected' | 'assigned';
 export type Urgency = 'Low' | 'Normal' | 'High' | 'Critical';
 export type ActionType = 'success' | 'info' | 'warning' | 'error';
+export type TimesheetStatus = 'pending' | 'approved' | 'rejected';
+export const WORK_TYPES = [
+  'Development', 'Testing /QA', 'Bugfix / Troubleshooting', 'Research / Analysis',
+  'Documentation', 'Meeting', 'Client Meeting', 'Training', 'Operations',
+  'Recruitment', 'Business Development', 'Content Creation', 'Deploy / Release', 'Others',
+] as const;
+export type WorkType = typeof WORK_TYPES[number];
 
 export interface Employee {
   id: string;
@@ -73,6 +80,22 @@ export interface CompOffClaim {
   approved_at: string | null;
   created_at: string;
   employee?: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'email'> | null;
+}
+
+export interface TimesheetEntry {
+  id: string;
+  employee_id: string;
+  date: string;
+  project_client: string;
+  task_activity: string;
+  duration_hours: number;
+  ticket_link: string | null;
+  work_type: WorkType;
+  status: TimesheetStatus;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  employee?: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'email' | 'reporting_manager_email'> | null;
 }
 
 export interface EquipmentRequest {
