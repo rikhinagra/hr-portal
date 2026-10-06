@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { Mail, ArrowRight, ChevronDown, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import LeaveCalendarPanel from '@/components/dashboard/LeaveCalendarPanel';
+import PaginationBar from '@/components/dashboard/PaginationBar';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { Employee, LeaveRequest, CompOffClaim } from '@/types';
 
 interface LeaveClientProps {
@@ -44,6 +46,18 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Pagination: both lists arrive newest first, so page 1 is the most recent and the last page the oldest.
+  const isMobile = useIsMobile();
+  const pageSize = isMobile ? 8 : 10;
+  const [leavePage, setLeavePage] = useState(1);
+  const [claimPage, setClaimPage] = useState(1);
+  const leaveTotalPages = Math.max(1, Math.ceil(leaves.length / pageSize));
+  const claimTotalPages = Math.max(1, Math.ceil(claims.length / pageSize));
+  const currentLeavePage = Math.min(leavePage, leaveTotalPages);
+  const currentClaimPage = Math.min(claimPage, claimTotalPages);
+  const pagedLeaves = leaves.slice((currentLeavePage - 1) * pageSize, currentLeavePage * pageSize);
+  const pagedClaims = claims.slice((currentClaimPage - 1) * pageSize, currentClaimPage * pageSize);
+
   const isAdmin = employee.role === 'admin';
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
   const isManager = employee.role === 'manager';
@@ -82,6 +96,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setLeaves([data.leave, ...leaves]);
+      setLeavePage(1);
       setShowForm(false);
       setStartDate(''); setEndDate(''); setReason(''); setLeaveType('earned'); setIsHalfDay(false);
       toast.success('Leave Request Submitted', { description: `${data.leave.days === 0.5 ? 'Half day' : `${data.leave.days} day(s)`} submitted. Email sent to HR.` });
@@ -103,6 +118,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setClaims([data.claim, ...claims]);
+      setClaimPage(1);
       setShowClaimForm(false);
       setWorkDate(''); setIntendedLeaveDate(''); setClaimReason('');
       toast.success('Comp-Off Claim Submitted', { description: 'Your claim has been sent for approval.' });
@@ -209,7 +225,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               <tbody className="divide-y">
                 {leaves.length === 0 ? (
                   <tr><td colSpan={canManageLeave ? 7 : 6} className="py-10 text-center text-muted-foreground">No leave requests yet.</td></tr>
-                ) : leaves.map(l => (
+                ) : pagedLeaves.map(l => (
                   <tr key={l.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{l.employee?.name ?? 'Unknown'}</td>
                     <td className="px-4 py-3 text-foreground">{formatLeaveType(l.leave_type)}</td>
@@ -251,7 +267,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       <div className="flex flex-col gap-3 md:hidden">
         {leaves.length === 0 ? (
           <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No leave requests yet.</CardContent></Card>
-        ) : leaves.map(l => (
+        ) : pagedLeaves.map(l => (
           <Card key={l.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between gap-2 mb-2">
@@ -290,6 +306,9 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         ))}
       </div>
 
+      <PaginationBar page={currentLeavePage} totalPages={leaveTotalPages} total={leaves.length} pageSize={pageSize}
+        noun="request" nounPlural="requests" onPageChange={setLeavePage} />
+
       {/* Comp-Off Claims */}
       <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Comp-Off Claims</h2>
 
@@ -308,7 +327,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
               <tbody className="divide-y">
                 {claims.length === 0 ? (
                   <tr><td colSpan={canManageLeave ? 6 : 5} className="py-10 text-center text-muted-foreground">No comp-off claims yet.</td></tr>
-                ) : claims.map(c => (
+                ) : pagedClaims.map(c => (
                   <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{c.employee?.name ?? 'Unknown'}</td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap">{new Date(c.work_date).toLocaleDateString('en-IN')}</td>
@@ -343,7 +362,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       <div className="flex flex-col gap-3 md:hidden">
         {claims.length === 0 ? (
           <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No comp-off claims yet.</CardContent></Card>
-        ) : claims.map(c => (
+        ) : pagedClaims.map(c => (
           <Card key={c.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between gap-2 mb-2">
@@ -375,6 +394,9 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
           </Card>
         ))}
       </div>
+
+      <PaginationBar page={currentClaimPage} totalPages={claimTotalPages} total={claims.length} pageSize={pageSize}
+        noun="claim" nounPlural="claims" onPageChange={setClaimPage} />
 
       {/* Apply Leave Modal */}
       {showForm && canApply && (
