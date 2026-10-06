@@ -33,6 +33,9 @@ export interface Employee {
   total_experience: string | null;
   experience_years: number;
   experience_months: number;
+  // True for people who approve leave but never take any themselves (e.g. a Director).
+  // Treated like Admin for the personal leave screens; missing/false means a normal employee.
+  leave_exempt?: boolean;
 }
 
 export interface EmployeeDocument {

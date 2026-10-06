@@ -357,8 +357,8 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
             </CardContent>
           </Card>
 
-          {/* Leave Balance — hidden for Admin */}
-          {employee.role !== 'admin' && (
+          {/* Leave Balance — hidden for Admin and for leave_exempt people (e.g. a Director) */}
+          {employee.role !== 'admin' && employee.leave_exempt !== true && (
             <Card>
               <CardContent className="p-5">
                 <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Leave Balance</div>

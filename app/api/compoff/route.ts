@@ -59,6 +59,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admins cannot submit comp-off claims.' }, { status: 403 });
     }
 
+    // People marked leave_exempt (e.g. a Director) never submit their own comp-off claims
+    if (employee.leave_exempt === true) {
+      return NextResponse.json({ error: 'Your account does not submit comp-off claims.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { work_date, intended_leave_date, reason } = body;
 
