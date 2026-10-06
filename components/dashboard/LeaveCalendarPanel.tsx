@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CalendarDays, Clock, Loader2, Lock, RefreshCw } from 'lucide-react';
+import { CalendarDays, Clock, Lock, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import LeaveCalendarSkeleton from './LeaveCalendarSkeleton';
 
 export interface MonthData {
   month: string;
@@ -73,8 +74,8 @@ export default function LeaveCalendarPanel() {
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-14">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <div role="status" aria-busy="true" aria-label="Loading your leave calendar">
+            <LeaveCalendarSkeleton />
           </div>
         )}
 
