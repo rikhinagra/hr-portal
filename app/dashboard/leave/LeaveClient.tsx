@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Mail, ArrowRight, ChevronDown, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import LeaveCalendarWidget from '@/components/dashboard/LeaveCalendarWidget';
+import LeaveCalendarPanel from '@/components/dashboard/LeaveCalendarPanel';
 import type { Employee, LeaveRequest, CompOffClaim } from '@/types';
 
 interface LeaveClientProps {
@@ -163,7 +163,6 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         </div>
         {canApply && (
           <div className="flex gap-2 flex-wrap">
-            <LeaveCalendarWidget />
             <button onClick={() => setShowClaimForm(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border"
               style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.25)' }}>
@@ -178,26 +177,19 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         )}
       </div>
 
-      {/* Balance Cards */}
-      <div className={`grid gap-4 leave-balance-grid ${isAdmin ? 'grid-cols-1 max-w-xs' : 'grid-cols-3'}`}>
+      {/* Slim summary row */}
+      <div className={`grid gap-2 sm:gap-3 ${isAdmin ? 'grid-cols-1 max-w-xs' : 'grid-cols-3'}`}>
         {!isAdmin && (
           <>
-            <Card><CardContent className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Annual Earned Leave</div>
-              <div className="text-3xl font-bold" style={{ color: '#3a7bd5' }}>{employee.annual_entitlement_casual}</div>
-            </CardContent></Card>
-            <Card><CardContent className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Annual Sick Leave</div>
-              <div className="text-3xl font-bold" style={{ color: '#e67e22' }}>{employee.annual_entitlement_sick}</div>
-            </CardContent></Card>
+            <StatTile label="Annual Earned Leave" value={employee.annual_entitlement_casual} color="#3a7bd5" />
+            <StatTile label="Annual Sick Leave" value={employee.annual_entitlement_sick} color="#e67e22" />
           </>
         )}
-        <Card><CardContent className="p-6">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Pending Requests</div>
-          <div className="text-3xl font-bold" style={{ color: '#b33a3a' }}>{pendingCount}</div>
-          <div className="text-xs text-muted-foreground mt-1">awaiting approval</div>
-        </CardContent></Card>
+        <StatTile label="Pending Requests" value={pendingCount} color="#b33a3a" sub="awaiting approval" />
       </div>
+
+      {/* Leave Calendar, shown on the page itself */}
+      {canApply && <LeaveCalendarPanel />}
 
       {/* Leave Requests */}
       <h2 className="text-base font-semibold text-foreground" style={{ fontFamily: 'var(--font-playfair), serif' }}>Leave Requests</h2>
@@ -530,11 +522,21 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       )}
 
       <style>{`
-        @media(max-width:768px){.leave-balance-grid{grid-template-columns:1fr 1fr!important}}
-        @media(max-width:480px){.leave-balance-grid{grid-template-columns:1fr!important}}
         input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;right:0;width:44px;height:100%;opacity:0;cursor:pointer}
       `}</style>
     </div>
+  );
+}
+
+function StatTile({ label, value, color, sub }: { label: string; value: number | string; color: string; sub?: string }) {
+  return (
+    <Card className="gap-0 py-0">
+      <CardContent className="px-3 py-3 sm:px-4">
+        <div className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground sm:text-[11px]">{label}</div>
+        <div className="mt-1.5 text-xl font-bold leading-none sm:text-2xl" style={{ color }}>{value}</div>
+        {sub && <div className="mt-1 hidden text-[11px] text-muted-foreground sm:block">{sub}</div>}
+      </CardContent>
+    </Card>
   );
 }
 
