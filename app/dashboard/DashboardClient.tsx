@@ -65,9 +65,11 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
   };
 
   const isAdmin = employee.role === 'admin';
+  // Admins, and leave_exempt people (e.g. a Director), have no personal leave cards or Apply shortcut
+  const noOwnLeave = isAdmin || employee.leave_exempt === true;
 
   const stats = [
-    ...(!isAdmin ? [
+    ...(!noOwnLeave ? [
       { label: 'Casual Leave', value: employee.leave_balance_casual, sub: 'of 12 days', icon: Calendar, iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
       { label: 'Sick Leave', value: employee.leave_balance_sick, sub: 'of 7 days', icon: Heart, iconBg: 'rgba(234,88,12,0.1)', iconColor: '#ea580c' },
     ] : []),
@@ -76,7 +78,7 @@ export default function DashboardClient({ employee, policiesCount, teamCount, ha
   ];
 
   const quickActions = [
-    ...(!isAdmin ? [
+    ...(!noOwnLeave ? [
       { label: 'Apply for Leave', sub: 'Submit leave request', icon: Calendar, href: '/dashboard/leave', iconBg: 'rgba(37,99,235,0.1)', iconColor: '#2563eb' },
     ] : []),
     ...(isAdmin || employee.role === 'hr' ? [

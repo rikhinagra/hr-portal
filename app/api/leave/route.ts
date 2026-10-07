@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admins cannot apply for leave.' }, { status: 403 });
     }
 
+    // People marked leave_exempt (e.g. a Director) approve leave but never apply for their own
+    if (employee.leave_exempt === true) {
+      return NextResponse.json({ error: 'Your account does not apply for leave.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { leave_type, start_date, end_date, reason, is_half_day } = body;
 

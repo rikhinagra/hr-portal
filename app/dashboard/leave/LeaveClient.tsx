@@ -45,7 +45,10 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
   const isAdminOrHr = employee.role === 'admin' || employee.role === 'hr';
   const isManager = employee.role === 'manager';
   const canManageLeave = isAdminOrHr || isManager;
-  const canApply = employee.role !== 'admin';
+  // Admins, and people marked leave_exempt (e.g. a Director who approves a team but never
+  // takes leave), see no personal balance cards and cannot apply. Approvals are unaffected.
+  const noOwnLeave = isAdmin || employee.leave_exempt === true;
+  const canApply = !noOwnLeave;
   const pendingCount = leaves.filter(l => l.status === 'pending').length + claims.filter(c => c.status === 'pending').length;
 
   const today = new Date().toISOString().split('T')[0];
@@ -155,7 +158,7 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
         <div>
           <h1 className="page-heading text-2xl">Leave Management</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {isAdmin ? 'Track and manage leave requests' : 'Apply, track, and manage leave requests'}
+            {noOwnLeave ? 'Track and manage leave requests' : 'Apply, track, and manage leave requests'}
           </p>
         </div>
         {canApply && (
@@ -175,8 +178,8 @@ export default function LeaveClient({ employee, initialLeaves, initialClaims }: 
       </div>
 
       {/* Balance Cards */}
-      <div className={`grid gap-4 leave-balance-grid ${isAdmin ? 'grid-cols-1 max-w-xs' : 'grid-cols-3'}`}>
-        {!isAdmin && (
+      <div className={`grid gap-4 leave-balance-grid ${noOwnLeave ? 'grid-cols-1 max-w-xs' : 'grid-cols-3'}`}>
+        {!noOwnLeave && (
           <>
             <Card><CardContent className="p-6">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Casual Leave</div>
