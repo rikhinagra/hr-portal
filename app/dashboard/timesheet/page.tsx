@@ -34,7 +34,9 @@ export default async function TimesheetPage() {
   if (isHr) {
     // no filter — see all
   } else if (isManager) {
-    query.in('employee_id', [...teamMemberIds, employee.id]);
+    // Managers only review their team; they don't log their own time
+    if (teamMemberIds.length === 0) return <TimesheetClient employee={employee} initialEntries={[]} />;
+    query.in('employee_id', teamMemberIds);
   } else {
     query.eq('employee_id', employee.id);
   }

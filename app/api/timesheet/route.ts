@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { WORK_TYPES } from '@/types';
+import { WORK_TYPES, TIMESHEET_LIMITS } from '@/types';
 
 export async function GET() {
   try {
@@ -36,7 +36,9 @@ export async function GET() {
         .eq('reporting_manager_email', employee.email)
         .eq('is_active', true);
       const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
-      query.in('employee_id', [...teamIds, employee.id]);
+      // Managers only review their team; they don't log their own time
+      if (teamIds.length === 0) return NextResponse.json([]);
+      query.in('employee_id', teamIds);
     } else {
       query.eq('employee_id', employee.id);
     }
@@ -67,6 +69,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admins do not log timesheet entries.' }, { status: 403 });
     }
 
+    // Managers and HR review other people's timesheets; they don't log their own
+    if (employee.role === 'manager' || employee.role === 'hr') {
+      return NextResponse.json({ error: 'Managers and HR review timesheet entries but do not log their own.' }, { status: 403 });
+    }
+
     const body = await request.json();
     // One submission can carry several task rows (e.g. multiple projects in a day)
     const rows: Record<string, unknown>[] = Array.isArray(body.entries) ? body.entries : [body];
@@ -95,9 +102,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `${where}Invalid work type.` }, { status: 400 });
       }
 
+      if (projectClient.length > TIMESHEET_LIMITS.project) {
+        return NextResponse.json({ error: `${where}Project/Client must be ${TIMESHEET_LIMITS.project} characters or fewer.` }, { status: 400 });
+      }
+      if (taskActivity.length > TIMESHEET_LIMITS.task) {
+        return NextResponse.json({ error: `${where}Task/Activity must be ${TIMESHEET_LIMITS.task} characters or fewer.` }, { status: 400 });
+      }
+      if (ticketLink.length > TIMESHEET_LIMITS.link) {
+        return NextResponse.json({ error: `${where}Link must be ${TIMESHEET_LIMITS.link} characters or fewer.` }, { status: 400 });
+      }
+
       const hours = Number(row.duration_hours);
-      if (!row.duration_hours || isNaN(hours) || hours <= 0 || hours > 24) {
-        return NextResponse.json({ error: `${where}Duration must be a number between 0 and 24 hours.` }, { status: 400 });
+      if (!row.duration_hours || isNaN(hours) || hours < TIMESHEET_LIMITS.minHours || hours > 24) {
+        return NextResponse.json({ error: `${where}Duration must be between ${TIMESHEET_LIMITS.minHours} (15 minutes) and 24 hours.` }, { status: 400 });
+      }
+
+      if (Math.abs(hours * 100 - Math.round(hours * 100)) > 1e-6) {
+        return NextResponse.json({ error: `${where}Hours can have at most 2 decimal places, for example 1.25.` }, { status: 400 });
       }
 
       totalHours += hours;
@@ -111,6 +132,25 @@ export async function POST(request: NextRequest) {
         work_type: workType,
         status: 'pending',
       });
+    }
+
+    // No more than 24 hours on any one date, counting hours already logged (rejected entries don't count)
+    const newByDate = new Map<string, number>();
+    for (const r of toInsert) newByDate.set(r.date as string, (newByDate.get(r.date as string) ?? 0) + (r.duration_hours as number));
+    const { data: existingRows, error: existingError } = await serviceClient
+      .from('timesheet_entries')
+      .select('date, duration_hours')
+      .eq('employee_id', employee.id)
+      .in('date', Array.from(newByDate.keys()))
+      .neq('status', 'rejected');
+    if (existingError) throw existingError;
+    const loggedByDate = new Map<string, number>();
+    for (const r of existingRows ?? []) loggedByDate.set(r.date, (loggedByDate.get(r.date) ?? 0) + Number(r.duration_hours));
+    for (const [d, added] of newByDate) {
+      const total = (loggedByDate.get(d) ?? 0) + added;
+      if (total > 24 + 1e-9) {
+        return NextResponse.json({ error: `${d}: that would be ${Number(total.toFixed(2))}h logged for one date. The limit is 24h per day.` }, { status: 400 });
+      }
     }
 
     const { data: entries, error: insertError } = await serviceClient

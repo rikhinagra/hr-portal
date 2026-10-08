@@ -11,6 +11,9 @@ export const WORK_TYPES = [
   'Recruitment', 'Business Development', 'Content Creation', 'Deploy / Release', 'Others',
 ] as const;
 export type WorkType = typeof WORK_TYPES[number];
+// Limits for a timesheet entry: longest text (the page stops typing at these; the server refuses longer text)
+// and the shortest duration, 0.25 hours = 15 minutes.
+export const TIMESHEET_LIMITS = { project: 100, task: 500, link: 300, minHours: 0.25 } as const;
 
 export interface Employee {
   id: string;
@@ -95,6 +98,7 @@ export interface TimesheetEntry {
   ticket_link: string | null;
   work_type: WorkType;
   status: TimesheetStatus;
+  rejection_reason: string | null;
   approved_by: string | null;
   approved_at: string | null;
   created_at: string;
