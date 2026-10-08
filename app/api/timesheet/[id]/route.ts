@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { WORK_TYPES, TIMESHEET_LIMITS } from '@/types';
+import { getTimesheetAccess, canActOnEntry } from '@/lib/timesheetAccess';
 
 export async function PATCH(
   request: NextRequest,
@@ -17,13 +18,10 @@ export async function PATCH(
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!approver) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    const isHr = approver.role === 'hr';
-    const isManager = approver.role === 'manager';
-
-    // Admin can view everything but does not approve/reject timesheet entries —
-    // only the Reporting Manager and HR do, unlike Leave/Comp-off where Admin
-    // also has approval power.
-    if (!isHr && !isManager) {
+    // Only HR and the engineer manager of the person can approve or reject (the reporting manager and
+    // Admin have no say here, unlike Leave/Comp-off)
+    const access = await getTimesheetAccess(approver);
+    if (!access.canApprove) {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 
@@ -43,7 +41,7 @@ export async function PATCH(
 
     const { data: entry } = await serviceClient
       .from('timesheet_entries')
-      .select('*, employee:employee_id(name, email, reporting_manager_email)')
+      .select('*, employee:employee_id(id, name, email, reporting_manager_email, engineer_manager_email)')
       .eq('id', id)
       .single();
 
@@ -54,12 +52,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'You cannot approve your own timesheet entry.' }, { status: 403 });
     }
 
-    // Manager can only action direct reports' entries
-    if (isManager) {
-      const emp = entry.employee as { reporting_manager_email?: string } | null;
-      if (emp?.reporting_manager_email !== approver.email) {
-        return NextResponse.json({ error: 'Access denied. You can only manage your direct reports\' timesheet entries.' }, { status: 403 });
-      }
+    // An engineer manager can only action the entries of the people they are the engineer manager for
+    const emp = entry.employee as { id?: string; engineer_manager_email?: string | null } | null;
+    if (!canActOnEntry(approver, { id: entry.employee_id, engineer_manager_email: emp?.engineer_manager_email })) {
+      return NextResponse.json({ error: 'Access denied. You can only manage the entries of the people you are the engineer manager for.' }, { status: 403 });
     }
 
     // Conflict protection — check if already actioned
@@ -123,11 +119,9 @@ export async function PUT(
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    if (employee.role === 'admin') {
-      return NextResponse.json({ error: 'Admins do not log timesheet entries.' }, { status: 403 });
-    }
-    if (employee.role === 'manager' || employee.role === 'hr') {
-      return NextResponse.json({ error: 'Managers and HR review timesheet entries but do not log their own.' }, { status: 403 });
+    const access = await getTimesheetAccess(employee);
+    if (!access.canFile) {
+      return NextResponse.json({ error: 'Only people who have an engineer manager log timesheet entries.' }, { status: 403 });
     }
 
     const { data: entry } = await serviceClient

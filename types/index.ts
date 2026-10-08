@@ -30,6 +30,8 @@ export interface Employee {
   leave_balance_compoff: number;
   photo_url: string | null;
   reporting_manager_email: string | null;
+  // Who approves this person's timesheet (separate from the reporting manager, who approves leave)
+  engineer_manager_email?: string | null;
   is_active: boolean;
   auth_user_id: string | null;
   created_at: string;

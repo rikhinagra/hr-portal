@@ -12,6 +12,7 @@ import type { Employee } from '@/types';
 interface DashboardShellProps {
   employee: Employee;
   children: React.ReactNode;
+  timesheetAccess?: boolean;
 }
 
 interface NotificationItem {
@@ -290,12 +291,12 @@ function NotificationBell({ employee, onUnreadChange }: NotifBellProps) {
   );
 }
 
-export default function DashboardShell({ employee, children }: DashboardShellProps) {
+export default function DashboardShell({ employee, children, timesheetAccess = false }: DashboardShellProps) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   return (
     <SidebarProvider>
-      <AppSidebar employee={employee} pendingCount={unreadCount} />
+      <AppSidebar employee={employee} pendingCount={unreadCount} timesheetAccess={timesheetAccess} />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
           <SidebarTrigger className="-ml-1" />

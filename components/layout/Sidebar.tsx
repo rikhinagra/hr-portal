@@ -18,7 +18,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true, roles: null },
   { href: '/dashboard/profile', icon: User, label: 'My Profile', exact: false, roles: null },
   { href: '/dashboard/leave', icon: Calendar, label: 'Leave', exact: false, roles: null },
-  { href: '/dashboard/timesheet', icon: Clock, label: 'Timesheet', exact: false, roles: ['hr', 'manager', 'employee', 'it'] },
+  { href: '/dashboard/timesheet', icon: Clock, label: 'Timesheet', exact: false, roles: null }, // shown only when timesheetAccess is true
   { href: '/dashboard/performance-reviews', icon: Star, label: 'Performance Reviews', exact: false, roles: null },
   { href: '/dashboard/handbook', icon: BookOpen, label: 'Handbook', exact: false, roles: null },
   { href: '/dashboard/policies', icon: FileText, label: 'Policies', exact: false, roles: null },
@@ -35,7 +35,7 @@ const roleColor: Record<string, string> = {
   admin: '#c8985e', hr: '#3b82f6', it: '#10b981', employee: '#6b7280', manager: '#8b5cf6',
 };
 
-export default function AppSidebar({ employee, pendingCount = 0 }: { employee: Employee; pendingCount?: number }) {
+export default function AppSidebar({ employee, pendingCount = 0, timesheetAccess = false }: { employee: Employee; pendingCount?: number; timesheetAccess?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const { state, setOpenMobile } = useSidebar();
@@ -75,7 +75,7 @@ export default function AppSidebar({ employee, pendingCount = 0 }: { employee: E
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5 px-1">
-              {navItems.filter(item => !item.roles || item.roles.includes(employee.role)).map(item => {
+              {navItems.filter(item => item.href === '/dashboard/timesheet' ? timesheetAccess : (!item.roles || item.roles.includes(employee.role))).map(item => {
                 const isActive = item.exact
                   ? pathname === item.href
                   : pathname === item.href || pathname.startsWith(item.href + '/');

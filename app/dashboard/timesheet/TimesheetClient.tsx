@@ -16,6 +16,10 @@ type EntryWithEmployee = TimesheetEntry & {
 interface TimesheetClientProps {
   employee: Employee;
   initialEntries: EntryWithEmployee[];
+  /** Has an engineer manager, so logs their own time */
+  canFile: boolean;
+  /** Approves other people's entries (their engineer manager, or HR) */
+  canApprove: boolean;
 }
 
 type DraftRow = {
@@ -146,7 +150,7 @@ const looksLikeUrl = (s: string) =>
 
 const GRID_COLS ='xl:grid-cols-[132px_minmax(140px,1fr)_minmax(200px,2fr)_84px_170px_minmax(130px,1fr)_40px]';
 
-export default function TimesheetClient({ employee, initialEntries }: TimesheetClientProps) {
+export default function TimesheetClient({ employee, initialEntries, canFile, canApprove }: TimesheetClientProps) {
   const [entries, setEntries] = useState(initialEntries);
   const [today, setToday] = useState('');
 
@@ -186,13 +190,12 @@ export default function TimesheetClient({ employee, initialEntries }: TimesheetC
   const gridRef = useRef<HTMLDivElement>(null);
 
   const isHr = employee.role === 'hr';
-  const isManager = employee.role === 'manager';
-  const canManage = isHr || isManager;
+  const canManage = canApprove;
 
   useEffect(() => {
     const t = toISO(new Date());
     setToday(t);
-    const saved = canManage ? null : loadDraft(draftKey);
+    const saved = canFile ? loadDraft(draftKey) : null;
     if (saved) {
       setRows(saved.map(r => ({ ...r, key: String(++keyRef.current), date: r.date || t })));
       setRestored(true);
@@ -200,7 +203,7 @@ export default function TimesheetClient({ employee, initialEntries }: TimesheetC
       setRows(prev => prev.map(r => (r.date ? r : { ...r, date: t })));
     }
     setDraftReady(true);
-  }, [draftKey, canManage]);
+  }, [draftKey, canFile]);
 
   // Keep the unsent rows in this browser a moment after you stop typing; nothing is kept when every row is empty.
   useEffect(() => {
@@ -639,15 +642,17 @@ export default function TimesheetClient({ employee, initialEntries }: TimesheetC
             </span>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {canManage
-              ? (isHr ? 'Review and approve time entries from the whole team' : "Review and approve your team's time entries")
-              : 'Log everything you worked on, across any number of projects, in one go'}
+            {canManage && canFile
+              ? "Log your own time and review your team's entries"
+              : canManage
+                ? (isHr ? 'Review and approve time entries from the whole team' : "Review and approve your team's time entries")
+                : 'Log everything you worked on, across any number of projects, in one go'}
           </p>
         </div>
       </div>
 
-      {/* Managers and HR only review the team's entries; they don't log their own time, so no week strip or entry form */}
-      {!canManage && (
+      {/* Only people who have an engineer manager log time; approvers who don't, see no week strip or entry form */}
+      {canFile && (
       <>
       {/* Week at a glance */}
       <Card aria-busy={!week}>
@@ -892,7 +897,7 @@ export default function TimesheetClient({ employee, initialEntries }: TimesheetC
           <Card>
             <CardContent className="py-12 text-center text-sm text-muted-foreground">
               {entries.length === 0
-                ? (canManage ? 'No timesheet entries to review yet.' : 'No timesheet entries yet. Log your first task above.')
+                ? (canFile ? 'No timesheet entries yet. Log your first task above.' : 'No timesheet entries to review yet.')
                 : 'No entries match these filters.'}
             </CardContent>
           </Card>

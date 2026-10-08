@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { WORK_TYPES, TIMESHEET_LIMITS } from '@/types';
+import { getTimesheetAccess } from '@/lib/timesheetAccess';
 
 export async function GET() {
   try {
@@ -13,34 +14,20 @@ export async function GET() {
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    // Admin does not use Timesheet at all — only HR and reporting managers
-    // handle approvals, and Admin isn't meant to even view entries.
-    if (employee.role === 'admin') {
-      return NextResponse.json({ error: 'Admins do not have access to Timesheet.' }, { status: 403 });
+    const access = await getTimesheetAccess(employee);
+    if (!access.hasAccess) {
+      return NextResponse.json({ error: 'You do not have access to Timesheet.' }, { status: 403 });
     }
 
-    const isHr = employee.role === 'hr';
-    const isManager = employee.role === 'manager';
     const query = serviceClient
       .from('timesheet_entries')
       .select('*, employee:employee_id(id, name, employee_code, department, email, reporting_manager_email)')
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (isHr) {
-      // no filter — see all
-    } else if (isManager) {
-      const { data: teamMembers } = await serviceClient
-        .from('employees')
-        .select('id')
-        .eq('reporting_manager_email', employee.email)
-        .eq('is_active', true);
-      const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
-      // Managers only review their team; they don't log their own time
-      if (teamIds.length === 0) return NextResponse.json([]);
-      query.in('employee_id', teamIds);
-    } else {
-      query.eq('employee_id', employee.id);
+    if (!access.isHr) {
+      // The people you approve, plus yourself if you also log your own time (HR sees everyone)
+      query.in('employee_id', [...access.teamIds, ...(access.canFile ? [employee.id] : [])]);
     }
 
     const { data, error } = await query;
@@ -64,14 +51,10 @@ export async function POST(request: NextRequest) {
       .from('employees').select('*').eq('auth_user_id', user.id).single();
     if (!employee) return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
 
-    // Admin manages the system but doesn't log their own timesheet, same as Leave/Comp-off
-    if (employee.role === 'admin') {
-      return NextResponse.json({ error: 'Admins do not log timesheet entries.' }, { status: 403 });
-    }
-
-    // Managers and HR review other people's timesheets; they don't log their own
-    if (employee.role === 'manager' || employee.role === 'hr') {
-      return NextResponse.json({ error: 'Managers and HR review timesheet entries but do not log their own.' }, { status: 403 });
+    // Only people who have an engineer manager log timesheet entries
+    const access = await getTimesheetAccess(employee);
+    if (!access.canFile) {
+      return NextResponse.json({ error: 'Only people who have an engineer manager log timesheet entries.' }, { status: 403 });
     }
 
     const body = await request.json();
