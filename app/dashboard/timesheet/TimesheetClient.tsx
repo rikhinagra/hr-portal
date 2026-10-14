@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, X, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ExternalLink, Check } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ExternalLink, Check, Ticket, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { WORK_TYPES, TIMESHEET_LIMITS } from '@/types';
+import { WORK_TYPES, WORK_TYPE_GROUPS, TIMESHEET_LIMITS } from '@/types';
 import type { Employee, TimesheetEntry, WorkType } from '@/types';
+import type { JiraTicket } from '@/lib/jira';
 import Dropdown from './Dropdown';
+import FullTextField from './FullTextField';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 type EntryWithEmployee = TimesheetEntry & {
@@ -20,6 +22,8 @@ interface TimesheetClientProps {
   canFile: boolean;
   /** Approves other people's entries (their engineer manager, or HR) */
   canApprove: boolean;
+  /** Shows the "Add from Jira" button (only people with a Jira account id set) */
+  jiraEnabled?: boolean;
 }
 
 type DraftRow = {
@@ -43,6 +47,19 @@ const parseISO = (s: string) => {
 const fmtDay = (s: string) =>
   parseISO(s).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 const fmtHours = (n: number) => `${Number(n.toFixed(2))}h`;
+
+// "Updated today", "Updated 3 days ago"... for a Jira ticket's last-change time (counted in calendar days)
+const updatedAgo = (iso: string) => {
+  const t = new Date(iso);
+  if (!iso || isNaN(t.getTime())) return '';
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOfDay(new Date()) - startOfDay(t)) / 86400000);
+  if (days <= 0) return 'Updated today';
+  if (days === 1) return 'Updated yesterday';
+  if (days < 14) return `Updated ${days} days ago`;
+  if (days < 60) return `Updated ${Math.round(days / 7)} weeks ago`;
+  return `Updated ${Math.round(days / 30)} months ago`;
+};
 
 const cellInput =
   'w-full bg-background xl:bg-transparent px-2.5 py-2 text-sm text-foreground outline-none border rounded-lg xl:border-0 xl:rounded-none ' +
@@ -128,7 +145,7 @@ const WEEK_PLACEHOLDER = {
   total: 0, approved: 0, label: '0 – 0 Mmm 0000', tag: 'This week', isCurrent: true,
 };
 
-const WORK_TYPE_OPTIONS = WORK_TYPES.map(wt => ({ value: wt, label: wt }));
+const WORK_TYPE_GROUP_OPTIONS = WORK_TYPE_GROUPS.map(g => ({ label: g.label, options: g.types.map(wt => ({ value: wt, label: wt })) }));
 const RANGE_OPTIONS = [
   { value: 'all', label: 'All time' },
   { value: 'week', label: 'This week' },
@@ -148,9 +165,22 @@ const linkHref = (url: string) => {
 const looksLikeUrl = (s: string) =>
   /^(?:https?:\/\/\S+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#]\S*)?)$/i.test(s.trim());
 
+// A Jira ticket link (https://your-company.atlassian.net/browse/PIAC-120) is shown by its ticket name, PIAC-120,
+// so it is clear which ticket it is. Any other link keeps the plain word "Link". Returns null when it is not one.
+const jiraTicketKey = (link: string): string | null => {
+  try {
+    const u = new URL(link.trim());
+    if (u.protocol !== 'https:' || !u.hostname.toLowerCase().endsWith('.atlassian.net')) return null;
+    const m = u.pathname.match(/^\/browse\/([A-Za-z][A-Za-z0-9_]*-\d+)\/?$/);
+    return m ? m[1].toUpperCase() : null;
+  } catch {
+    return null;
+  }
+};
+
 const GRID_COLS ='xl:grid-cols-[132px_minmax(140px,1fr)_minmax(200px,2fr)_84px_170px_minmax(130px,1fr)_40px]';
 
-export default function TimesheetClient({ employee, initialEntries, canFile, canApprove }: TimesheetClientProps) {
+export default function TimesheetClient({ employee, initialEntries, canFile, canApprove, jiraEnabled = false }: TimesheetClientProps) {
   const [entries, setEntries] = useState(initialEntries);
   const [today, setToday] = useState('');
 
@@ -163,7 +193,6 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const [showEntry, setShowEntry] = useState(true);
   const [rows, setRows] = useState<DraftRow[]>(() => [blankRow()]);
   const [draftReady, setDraftReady] = useState(false);
-  const [restored, setRestored] = useState(false);
   const draftKey = `timesheet-draft:${employee.id}`;
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -175,6 +204,21 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const deleteDialog = useDialogFocus(!!deleteTarget);
   const rejectDialog = useDialogFocus(!!rejectTarget);
   const editDialog = useDialogFocus(!!editTarget);
+
+  // "Add from Jira": the person's own tickets, picked from a popup to fill a row
+  const [jiraOpen, setJiraOpen] = useState(false);
+  const [jiraTickets, setJiraTickets] = useState<JiraTicket[] | null>(null);
+  const [jiraLoading, setJiraLoading] = useState(false);
+  const [jiraError, setJiraError] = useState<string | null>(null);
+  const [jiraSearch, setJiraSearch] = useState('');
+  const [jiraDays, setJiraDays] = useState<30 | 90>(30);
+  const [jiraLimit, setJiraLimit] = useState(100);
+  const jiraDialog = useDialogFocus(jiraOpen);
+  const jiraVisible = useMemo(() => {
+    if (!jiraTickets) return [];
+    const q = jiraSearch.trim().toLowerCase();
+    return q ? jiraTickets.filter(t => `${t.key} ${t.title} ${t.project} ${t.type} ${t.status}`.toLowerCase().includes(q)) : jiraTickets;
+  }, [jiraTickets, jiraSearch]);
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
@@ -198,7 +242,6 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
     const saved = canFile ? loadDraft(draftKey) : null;
     if (saved) {
       setRows(saved.map(r => ({ ...r, key: String(++keyRef.current), date: r.date || t })));
-      setRestored(true);
     } else {
       setRows(prev => prev.map(r => (r.date ? r : { ...r, date: t })));
     }
@@ -221,12 +264,6 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
     return () => clearTimeout(timer);
   }, [rows, draftReady, draftKey]);
 
-  const discardDraft = () => {
-    setRows([blankRow(today)]);
-    setRestored(false);
-    try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
-  };
-
   // ---------- Entry grid ----------
   const updateRow = (key: string, patch: Partial<DraftRow>) =>
     setRows(prev => prev.map(r => (r.key === key ? { ...r, ...patch } : r)));
@@ -240,9 +277,67 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
     }, 30);
   };
 
-  const removeRow = (key: string) => setRows(prev => (prev.length === 1 ? prev : prev.filter(r => r.key !== key)));
+  // The page always keeps one row. Removing the only row that has something in it empties it (keeping its date and work type).
+  const removeRow = (key: string) => setRows(prev => {
+    if (prev.length > 1) return prev.filter(r => r.key !== key);
+    const only = prev[0];
+    if (!only || only.key !== key || isBlank(only)) return prev;
+    return [blankRow(only.date, only.workType)];
+  });
 
   const resetGrid = (date: string) => setRows([blankRow(date)]);
+
+  // ---------- Add from Jira ----------
+  const loadJiraTickets = async (days: 30 | 90) => {
+    setJiraLoading(true);
+    setJiraError(null);
+    try {
+      const res = await fetch(`/api/jira/tickets?days=${days}`, { cache: 'no-store' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'Jira could not be reached.');
+      setJiraTickets(Array.isArray(data.tickets) ? data.tickets : []);
+      setJiraDays(days);
+      if (typeof data.limit === 'number') setJiraLimit(data.limit);
+    } catch (err: unknown) {
+      setJiraError(err instanceof Error ? err.message : 'Jira could not be reached.');
+    } finally {
+      setJiraLoading(false);
+    }
+  };
+
+  const openJira = () => {
+    setJiraSearch('');
+    setJiraOpen(true);
+    loadJiraTickets(30);
+  };
+
+  // A picked ticket fills the empty last row (or a new row): project, task, link and work type come from Jira;
+  // the date stays as it was and the hours are left for the person to type.
+  const pickJiraTicket = (t: JiraTicket) => {
+    const last = rows[rows.length - 1];
+    const reuse = !!last && isBlank(last);
+    const date = last?.date || today;
+    const row: DraftRow = {
+      key: reuse ? last.key : nextKey(),
+      date,
+      project: t.project.slice(0, TIMESHEET_LIMITS.project),
+      task: t.taskText.slice(0, TIMESHEET_LIMITS.task),
+      hours: '',
+      workType: t.workType ?? last?.workType ?? WORK_TYPES[0],
+      ticket: t.url.slice(0, TIMESHEET_LIMITS.link),
+    };
+    // Warn (but still fill the row) if this ticket is already in your rows or already logged for that date
+    const marker = `${t.key} –`;
+    const duplicate = rows.some(r => r.date === date && r.task.startsWith(marker))
+      || entries.some(e => e.employee_id === employee.id && e.status !== 'rejected' && e.date === date && e.task_activity.startsWith(marker));
+    setRows(prev => (reuse ? prev.map(r => (r.key === last.key ? row : r)) : [...prev, row]));
+    setJiraOpen(false);
+    if (duplicate) toast.warning(`${t.key} is already logged for ${fmtDay(date)}`, { description: 'Check that you are not entering it twice.' });
+    else toast.success(`${t.key} added`, { description: 'Now add your hours.' });
+    setTimeout(() => {
+      gridRef.current?.querySelector<HTMLInputElement>(`[data-row="${row.key}"][data-col="hours"]`)?.focus();
+    }, 30);
+  };
 
   const filledRows = rows.filter(r => !isBlank(r));
   const draftTotal = filledRows.reduce((sum, r) => sum + (Number(r.hours) || 0), 0);
@@ -285,7 +380,6 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
       if (!res.ok) throw new Error(data.error);
       setEntries(prev => [...(data.entries as EntryWithEmployee[]), ...prev]);
       resetGrid(filledRows[filledRows.length - 1].date);
-      setRestored(false);
       // Remove the saved draft right away, so a refresh a moment later can't bring back rows that were just submitted
       try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       toast.success(
@@ -406,15 +500,15 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
     } finally { setActionLoading(null); setDeleteTarget(null); }
   };
 
-  // Esc closes the delete / reject / edit popup (unless the action is already in progress).
+  // Esc closes the delete / reject / edit / Jira popup (unless the action is already in progress).
   useEffect(() => {
-    if (!deleteTarget && !rejectTarget && !editTarget) return;
+    if (!deleteTarget && !rejectTarget && !editTarget && !jiraOpen) return;
     const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape' && actionLoading === null) { setDeleteTarget(null); setRejectTarget(null); setEditTarget(null); }
+      if (ev.key === 'Escape' && actionLoading === null) { setDeleteTarget(null); setRejectTarget(null); setEditTarget(null); setJiraOpen(false); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [deleteTarget, rejectTarget, editTarget, actionLoading]);
+  }, [deleteTarget, rejectTarget, editTarget, jiraOpen, actionLoading]);
 
   // ---------- Derived data ----------
   const pendingForMe = canManage
@@ -607,8 +701,9 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
       <span style={{ wordBreak: 'break-word' }}>{e.task_activity}</span>
       {e.ticket_link && (looksLikeUrl(e.ticket_link) ? (
         <a href={linkHref(e.ticket_link)} target="_blank" rel="noopener noreferrer"
+          title={jiraTicketKey(e.ticket_link) ? e.ticket_link : undefined}
           className="mt-0.5 flex items-center gap-1 text-xs" style={{ color: '#c8985e' }}>
-          Link <ExternalLink className="size-3" />
+          {jiraTicketKey(e.ticket_link) ?? 'Link'} <ExternalLink className="size-3" />
         </a>
       ) : (
         <div className="mt-0.5 text-xs text-muted-foreground" style={{ wordBreak: 'break-word' }}>
@@ -714,14 +809,6 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                 {projectSuggestions.map(p => <option key={p} value={p} />)}
               </datalist>
 
-              {restored && filledRows.length > 0 && (
-                <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs"
-                  style={{ borderColor: 'rgba(200,152,94,0.4)', background: 'rgba(200,152,94,0.08)' }}>
-                  <span className="text-foreground">We restored your unsaved rows.</span>
-                  <button type="button" onClick={discardDraft} className="font-semibold" style={{ color: '#c8985e' }}>Discard</button>
-                </div>
-              )}
-
               <div ref={gridRef}>
                 {/* Column headers (spreadsheet layout, wide screens) */}
                 <div className={`hidden xl:grid ${GRID_COLS} text-[11px] font-semibold uppercase tracking-wide text-white rounded-t-lg`}
@@ -750,13 +837,14 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                       </label>
                       <label className="block col-span-2 max-[400px]:col-span-1 xl:col-span-1">
                         <span className="xl:hidden mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Task / Activity</span>
-                        <input type="text" value={r.task} aria-label={`Task or activity, row ${idx + 1}`} placeholder="What did you work on?" maxLength={TIMESHEET_LIMITS.task}
-                          onChange={e => updateRow(r.key, { task: e.target.value })}
+                        <FullTextField value={r.task} ariaLabel={`Task or activity, row ${idx + 1}`} placeholder="What did you work on?" maxLength={TIMESHEET_LIMITS.task}
+                          onChange={v => updateRow(r.key, { task: v })}
                           className={cellInput} />
                       </label>
                       <label className="block">
                         <span className="xl:hidden mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Hours</span>
                         <input type="text" inputMode="decimal" value={r.hours} aria-label={`Hours, row ${idx + 1}`} placeholder="0.0"
+                          data-row={r.key} data-col="hours"
                           onChange={e => { const v = e.target.value; if (v === '' || HOURS_TYPING.test(v)) updateRow(r.key, { hours: v }); }}
                           className={`${cellInput} xl:text-right`} />
                       </label>
@@ -766,21 +854,24 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                           ariaLabel={`Work type, row ${idx + 1}`}
                           value={r.workType}
                           onChange={v => updateRow(r.key, { workType: v as WorkType })}
-                          options={WORK_TYPE_OPTIONS}
+                          groups={WORK_TYPE_GROUP_OPTIONS}
                           className="bg-background px-2.5 py-2 border rounded-lg xl:bg-transparent xl:border-0 xl:rounded-none xl:focus-visible:ring-inset"
                         />
                       </div>
                       <label className="block col-span-2 max-[400px]:col-span-1 xl:col-span-1">
                         <span className="xl:hidden mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Link (optional)</span>
-                        <input type="text" value={r.ticket} aria-label={`Link (optional), row ${idx + 1}`} placeholder="Ticket, GitHub or any link" maxLength={TIMESHEET_LIMITS.link}
-                          onChange={e => updateRow(r.key, { ticket: e.target.value })}
-                          onKeyDown={e => { if (e.key === 'Enter' && idx === rows.length - 1) { e.preventDefault(); addRow(); } }}
+                        <FullTextField value={r.ticket} ariaLabel={`Link (optional), row ${idx + 1}`} placeholder="Ticket, GitHub or any link" maxLength={TIMESHEET_LIMITS.link}
+                          breakAnywhere
+                          onChange={v => updateRow(r.key, { ticket: v })}
+                          onEnter={() => { if (idx === rows.length - 1) addRow(); }}
                           className={cellInput} />
                       </label>
                       <div className="col-span-2 max-[400px]:col-span-1 xl:col-span-1 flex items-center justify-end xl:justify-center">
-                        <button onClick={() => removeRow(r.key)} disabled={rows.length === 1} title="Remove row" aria-label={`Remove row ${idx + 1}`}
+                        <button onClick={() => removeRow(r.key)} disabled={rows.length === 1 && isBlank(r)}
+                          title={rows.length === 1 ? 'Clear row' : 'Remove row'}
+                          aria-label={rows.length === 1 ? 'Clear row' : `Remove row ${idx + 1}`}
                           className="flex items-center gap-1 rounded-md p-1.5 text-xs text-muted-foreground hover:text-destructive disabled:opacity-30">
-                          <X className="size-4" /> <span className="xl:hidden">Remove row</span>
+                          <X className="size-4" /> <span className="xl:hidden">{rows.length === 1 ? 'Clear row' : 'Remove row'}</span>
                         </button>
                       </div>
                     </div>
@@ -802,11 +893,19 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
               )}
 
               <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
-                <button onClick={addRow}
-                  className="flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-semibold"
-                  style={{ color: '#c8985e', borderColor: 'rgba(200,152,94,0.4)', background: 'rgba(200,152,94,0.08)' }}>
-                  <Plus className="size-4" /> Add row
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button onClick={addRow}
+                    className="flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-semibold"
+                    style={{ color: '#c8985e', borderColor: 'rgba(200,152,94,0.4)', background: 'rgba(200,152,94,0.08)' }}>
+                    <Plus className="size-4" /> Add row
+                  </button>
+                  {jiraEnabled && (
+                    <button type="button" onClick={openJira} aria-haspopup="dialog"
+                      className="flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted/50">
+                      <Ticket className="size-4" /> Add from Jira
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="text-sm text-muted-foreground">
                     {filledRows.length} {filledRows.length === 1 ? 'task' : 'tasks'}
@@ -870,7 +969,8 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
               ariaLabel="Work type filter"
               value={workFilter}
               onChange={setWorkFilter}
-              options={[{ value: 'all', label: 'All work types' }, ...WORK_TYPE_OPTIONS]}
+              options={[{ value: 'all', label: 'All work types' }]}
+              groups={WORK_TYPE_GROUP_OPTIONS}
               className={`${filterTrigger} sm:w-52`}
             />
             {canManage && (
@@ -1066,7 +1166,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                   ariaLabel="Work type"
                   value={editForm.workType}
                   onChange={v => setEditForm(f => ({ ...f, workType: v as WorkType }))}
-                  options={WORK_TYPE_OPTIONS}
+                  groups={WORK_TYPE_GROUP_OPTIONS}
                   className="rounded-lg border bg-background px-3 py-2"
                 />
               </div>
@@ -1144,6 +1244,110 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                 {actionLoading === rejectTarget.id + 'rejected' ? 'Rejecting…' : 'Reject entry'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add from Jira: pick one of your own tickets to fill a row */}
+      {jiraEnabled && jiraOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,.55)' }}
+          onClick={() => setJiraOpen(false)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="jira-picker-title" ref={jiraDialog.ref} onKeyDown={jiraDialog.onKeyDown} tabIndex={-1}
+            onClick={ev => ev.stopPropagation()}
+            className="outline-none flex max-h-[85vh] w-full max-w-xl flex-col rounded-xl border bg-card p-5 text-card-foreground shadow-xl sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 id="jira-picker-title" className="text-base font-semibold text-foreground">Add from Jira</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Your tickets updated in the last {jiraDays} days, the most recently updated first. Pick one to fill a row, then add your hours.</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button type="button" onClick={() => loadJiraTickets(jiraDays)} disabled={jiraLoading} aria-label="Refresh tickets" title="Refresh tickets"
+                  className="flex size-8 items-center justify-center rounded-lg border text-muted-foreground hover:bg-muted/50 disabled:opacity-60">
+                  <RefreshCw className={`size-4 ${jiraLoading ? 'animate-spin' : ''}`} />
+                </button>
+                <button type="button" onClick={() => setJiraOpen(false)} aria-label="Close" title="Close"
+                  className="flex size-8 items-center justify-center rounded-lg border text-muted-foreground hover:bg-muted/50">
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="relative mt-4">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input autoFocus type="text" value={jiraSearch} onChange={ev => setJiraSearch(ev.target.value)} aria-label="Search your Jira tickets"
+                placeholder="Search by ticket number or title"
+                className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-1 focus:ring-[#c8985e]/70" />
+            </div>
+
+            {jiraError && (
+              <div role="alert" className="mt-3 flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm"
+                style={{ borderColor: 'rgba(179,58,58,0.4)', background: 'rgba(179,58,58,0.08)', color: '#b33a3a' }}>
+                <span>{jiraError} You can still add your entry by typing it.</span>
+                <button type="button" onClick={() => loadJiraTickets(jiraDays)} disabled={jiraLoading} className="shrink-0 font-semibold underline disabled:opacity-60">Try again</button>
+              </div>
+            )}
+
+            <div className="mt-3 min-h-0 flex-1 overflow-y-auto" aria-busy={jiraLoading && !jiraTickets}>
+              {jiraLoading && !jiraTickets && !jiraError && (
+                <div className="space-y-2" aria-label="Loading your tickets">
+                  {[0, 1, 2, 3].map(i => <div key={i} className="h-[62px] animate-pulse rounded-lg border bg-muted/30" />)}
+                </div>
+              )}
+              {jiraTickets && jiraTickets.length === 0 && !jiraError && (
+                <p className="rounded-lg border bg-muted/30 px-3.5 py-6 text-center text-sm text-muted-foreground">
+                  No tickets assigned to you were updated in the last {jiraDays} days.
+                </p>
+              )}
+              {jiraTickets && jiraTickets.length > 0 && jiraVisible.length === 0 && (
+                <p className="rounded-lg border bg-muted/30 px-3.5 py-6 text-center text-sm text-muted-foreground">
+                  No ticket matches &ldquo;{jiraSearch.trim()}&rdquo;.
+                </p>
+              )}
+              <ul className="space-y-2">
+                {jiraVisible.map(t => (
+                  <li key={t.key}>
+                    <button type="button" onClick={() => pickJiraTicket(t)}
+                      className="w-full rounded-lg border px-3.5 py-2.5 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#c8985e]/70">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-xs font-bold" style={{ color: '#c8985e' }}>{t.key}</span>
+                        <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                          style={t.type.toLowerCase() === 'bug'
+                            ? { background: 'rgba(179,58,58,.12)', color: '#b33a3a' }
+                            : { background: 'rgba(128,128,128,.15)', color: 'var(--muted-foreground)' }}>
+                          {t.type}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{t.status}</span>
+                        <span className="ml-auto text-[11px] text-muted-foreground" title={t.updated ? new Date(t.updated).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : undefined}>
+                          {t.project}{updatedAgo(t.updated) && <> · {updatedAgo(t.updated)}</>}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm text-foreground" style={{ wordBreak: 'break-word' }}>{t.title}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {jiraTickets && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t pt-3 text-xs text-muted-foreground">
+                <span>
+                  {jiraTickets.length >= jiraLimit
+                    ? `Showing the ${jiraLimit} most recently updated tickets.`
+                    : `${jiraTickets.length} ${jiraTickets.length === 1 ? 'ticket' : 'tickets'} from the last ${jiraDays} days.`}
+                </span>
+                {jiraDays === 30 ? (
+                  <button type="button" onClick={() => loadJiraTickets(90)} disabled={jiraLoading}
+                    className="font-semibold underline disabled:opacity-60" style={{ color: '#c8985e' }}>
+                    {jiraLoading ? 'Loading…' : 'Show older tickets (90 days)'}
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => loadJiraTickets(30)} disabled={jiraLoading}
+                    className="font-semibold underline disabled:opacity-60" style={{ color: '#c8985e' }}>
+                    {jiraLoading ? 'Loading…' : 'Back to the last 30 days'}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -5,10 +5,22 @@ export type EquipmentStatus = 'pending' | 'approved' | 'delivered' | 'rejected' 
 export type Urgency = 'Low' | 'Normal' | 'High' | 'Critical';
 export type ActionType = 'success' | 'info' | 'warning' | 'error';
 export type TimesheetStatus = 'pending' | 'approved' | 'rejected';
-export const WORK_TYPES = [
-  'Development', 'Testing /QA', 'Bugfix / Troubleshooting', 'Research / Analysis',
-  'Documentation', 'Meeting', 'Client Meeting', 'Training', 'Operations',
-  'Recruitment', 'Business Development', 'Content Creation', 'Deploy / Release', 'Others',
+// The work types, in the groups the Timesheet dropdowns show them in. 'Development' stays first (it is the default).
+export const TECHNICAL_WORK_TYPES = [
+  'Development', 'Testing /QA', 'Bugfix / Troubleshooting', 'Deploy / Release', 'Research / Analysis', 'Documentation',
+] as const;
+export const NON_TECHNICAL_WORK_TYPES = [
+  'HR Operations', 'Onboarding', 'Payroll', 'Recruiting', 'Interview Scheduling', 'Interview Feedback', 'Screening',
+  'Recording', 'Editing', 'Social Media Posting', 'Scripting', 'Growth Marketing', 'Advertising', 'Content Creation',
+] as const;
+export const GENERAL_WORK_TYPES = [
+  'Meeting', 'Client Meeting', 'Training', 'Operations', 'Business Development', 'Others',
+] as const;
+export const WORK_TYPES = [...TECHNICAL_WORK_TYPES, ...NON_TECHNICAL_WORK_TYPES, ...GENERAL_WORK_TYPES] as const;
+export const WORK_TYPE_GROUPS = [
+  { label: 'Technical', types: TECHNICAL_WORK_TYPES },
+  { label: 'Non-technical', types: NON_TECHNICAL_WORK_TYPES },
+  { label: 'General', types: GENERAL_WORK_TYPES },
 ] as const;
 export type WorkType = typeof WORK_TYPES[number];
 // Limits for a timesheet entry: longest text (the page stops typing at these; the server refuses longer text)
@@ -32,6 +44,8 @@ export interface Employee {
   reporting_manager_email: string | null;
   // Who approves this person's timesheet (separate from the reporting manager, who approves leave)
   engineer_manager_email?: string | null;
+  // Jira account id, set only for people whose tickets can be picked in the Timesheet ("Add from Jira")
+  jira_account_id?: string | null;
   is_active: boolean;
   auth_user_id: string | null;
   created_at: string;

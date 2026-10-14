@@ -26,5 +26,8 @@ export default async function TimesheetPage() {
 
   const { data: entries } = await query;
 
-  return <TimesheetClient employee={employee} initialEntries={entries ?? []} canFile={access.canFile} canApprove={access.canApprove} />;
+  // The "Add from Jira" button is only for people who file timesheets and have a Jira account id set
+  const jiraEnabled = access.canFile && !!employee.jira_account_id;
+
+  return <TimesheetClient employee={employee} initialEntries={entries ?? []} canFile={access.canFile} canApprove={access.canApprove} jiraEnabled={jiraEnabled} />;
 }
