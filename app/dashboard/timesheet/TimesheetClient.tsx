@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, X, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ExternalLink, Check, Ticket, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ExternalLink, Check, Ticket, RefreshCw, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { WORK_TYPES, WORK_TYPE_GROUPS, TIMESHEET_LIMITS } from '@/types';
 import type { Employee, TimesheetEntry, WorkType } from '@/types';
@@ -34,6 +34,7 @@ type DraftRow = {
   hours: string;
   workType: WorkType;
   ticket: string;
+  comment: string;
 };
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
@@ -68,7 +69,7 @@ const cellInput =
 // What can be typed in an Hours box: up to 2 digits, then optionally a point and up to 2 more (e.g. 6, 6.5, 12.25).
 const HOURS_TYPING = /^\d{0,2}(\.\d{0,2})?$/;
 
-const isBlank = (r: DraftRow) => !r.project.trim() && !r.task.trim() && !r.hours && !r.ticket.trim();
+const isBlank = (r: DraftRow) => !r.project.trim() && !r.task.trim() && !r.hours && !r.ticket.trim() && !r.comment.trim();
 
 // Unsent rows are kept in this browser (never on the server) so a refresh or an accidental close doesn't lose them.
 const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -91,6 +92,7 @@ function loadDraft(key: string): Omit<DraftRow, 'key'>[] | null {
       hours: typeof r?.hours === 'string' && HOURS_TYPING.test(r.hours) ? r.hours : '',
       workType: (WORK_TYPES as readonly string[]).includes(r?.workType as string) ? (r.workType as WorkType) : WORK_TYPES[0],
       ticket: text(r?.ticket, TIMESHEET_LIMITS.link),
+      comment: text(r?.comment, TIMESHEET_LIMITS.comment),
     })).filter(r => !isBlank({ key: '', ...r }));
     return rows.length > 0 ? rows : null;
   } catch {
@@ -187,7 +189,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const keyRef = useRef(0);
   const nextKey = () => String(++keyRef.current);
   const blankRow = (date = '', workType: WorkType = WORK_TYPES[0]): DraftRow => ({
-    key: nextKey(), date, project: '', task: '', hours: '', workType, ticket: '',
+    key: nextKey(), date, project: '', task: '', hours: '', workType, ticket: '', comment: '',
   });
 
   const [showEntry, setShowEntry] = useState(true);
@@ -200,7 +202,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const [rejectTarget, setRejectTarget] = useState<EntryWithEmployee | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [editTarget, setEditTarget] = useState<EntryWithEmployee | null>(null);
-  const [editForm, setEditForm] = useState<DraftRow>({ key: 'edit', date: '', project: '', task: '', hours: '', workType: WORK_TYPES[0], ticket: '' });
+  const [editForm, setEditForm] = useState<DraftRow>({ key: 'edit', date: '', project: '', task: '', hours: '', workType: WORK_TYPES[0], ticket: '', comment: '' });
   const deleteDialog = useDialogFocus(!!deleteTarget);
   const rejectDialog = useDialogFocus(!!rejectTarget);
   const editDialog = useDialogFocus(!!editTarget);
@@ -257,7 +259,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
         if (filled.length === 0) localStorage.removeItem(draftKey);
         else localStorage.setItem(draftKey, JSON.stringify({
           savedAt: Date.now(),
-          rows: filled.map(({ date, project, task, hours, workType, ticket }) => ({ date, project, task, hours, workType, ticket })),
+          rows: filled.map(({ date, project, task, hours, workType, ticket, comment }) => ({ date, project, task, hours, workType, ticket, comment })),
         }));
       } catch { /* saving is blocked in some private windows; the page then works as before */ }
     }, 500);
@@ -325,6 +327,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
       hours: '',
       workType: t.workType ?? last?.workType ?? WORK_TYPES[0],
       ticket: t.url.slice(0, TIMESHEET_LIMITS.link),
+      comment: '',
     };
     // Warn (but still fill the row) if this ticket is already in your rows or already logged for that date
     const marker = `${t.key} –`;
@@ -372,7 +375,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
         body: JSON.stringify({
           entries: filledRows.map(r => ({
             date: r.date, project_client: r.project, task_activity: r.task,
-            duration_hours: Number(r.hours), ticket_link: r.ticket, work_type: r.workType,
+            duration_hours: Number(r.hours), ticket_link: r.ticket, comment: r.comment, work_type: r.workType,
           })),
         }),
       });
@@ -441,7 +444,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const openEdit = (e: EntryWithEmployee) => {
     setEditForm({
       key: 'edit', date: e.date, project: e.project_client, task: e.task_activity,
-      hours: String(Number(e.duration_hours)), workType: e.work_type, ticket: e.ticket_link ?? '',
+      hours: String(Number(e.duration_hours)), workType: e.work_type, ticket: e.ticket_link ?? '', comment: e.comment ?? '',
     });
     setEditTarget(e);
   };
@@ -469,7 +472,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           date: f.date, project_client: f.project, task_activity: f.task,
-          duration_hours: h, ticket_link: f.ticket, work_type: f.workType,
+          duration_hours: h, ticket_link: f.ticket, comment: f.comment, work_type: f.workType,
         }),
       });
       const data = await res.json();
@@ -710,6 +713,13 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
           Ref: <span className="font-semibold text-foreground">{e.ticket_link}</span>
         </div>
       ))}
+      {e.comment && (
+        <div className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
+          <MessageSquare className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
+          <span className="sr-only">Comment:</span>
+          <span style={{ wordBreak: 'break-word' }}>{e.comment}</span>
+        </div>
+      )}
       {e.status === 'rejected' && e.rejection_reason && (
         <div className="mt-1 text-xs text-[#b33a3a] dark:text-[#e57373]" style={{ wordBreak: 'break-word' }}>
           <span className="font-semibold">Reason:</span> {e.rejection_reason}
@@ -863,6 +873,16 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                         <FullTextField value={r.ticket} ariaLabel={`Link (optional), row ${idx + 1}`} placeholder="Ticket, GitHub or any link" maxLength={TIMESHEET_LIMITS.link}
                           breakAnywhere
                           onChange={v => updateRow(r.key, { ticket: v })}
+                          onEnter={() => { if (idx === rows.length - 1) addRow(); }}
+                          className={cellInput} />
+                      </label>
+                      {/* Optional comment: a second line under the row on wide screens (a 8th column would be too narrow) */}
+                      <label className="block col-span-2 max-[400px]:col-span-1 xl:col-span-full xl:order-last xl:grid xl:grid-cols-[132px_minmax(0,1fr)] xl:border-e-0 xl:border-t xl:bg-muted/20">
+                        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground xl:mb-0 xl:flex xl:flex-wrap xl:items-center xl:gap-x-1 xl:border-e xl:px-2.5 xl:py-2 xl:text-[11px] xl:leading-tight">
+                          Comment <span className="font-normal normal-case tracking-normal">(optional)</span>
+                        </span>
+                        <FullTextField value={r.comment} ariaLabel={`Comment (optional), row ${idx + 1}`} placeholder="Add a note about this work" maxLength={TIMESHEET_LIMITS.comment}
+                          onChange={v => updateRow(r.key, { comment: v })}
                           onEnter={() => { if (idx === rows.length - 1) addRow(); }}
                           className={cellInput} />
                       </label>
@@ -1174,6 +1194,12 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                 <span className="mb-1 block text-xs font-semibold text-foreground">Link (optional)</span>
                 <input type="text" value={editForm.ticket} placeholder="Ticket, GitHub or any link" maxLength={TIMESHEET_LIMITS.link}
                   onChange={ev => setEditForm(f => ({ ...f, ticket: ev.target.value }))}
+                  className={editInput} />
+              </label>
+              <label className="col-span-2 block max-[400px]:col-span-1">
+                <span className="mb-1 block text-xs font-semibold text-foreground">Comment (optional)</span>
+                <input type="text" value={editForm.comment} placeholder="Add a note about this work" maxLength={TIMESHEET_LIMITS.comment}
+                  onChange={ev => setEditForm(f => ({ ...f, comment: ev.target.value }))}
                   className={editInput} />
               </label>
             </div>

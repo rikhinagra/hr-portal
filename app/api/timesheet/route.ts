@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
       const taskActivity = typeof row.task_activity === 'string' ? row.task_activity.trim() : '';
       const workType = typeof row.work_type === 'string' ? row.work_type : '';
       const ticketLink = typeof row.ticket_link === 'string' ? row.ticket_link.trim() : '';
+      const comment = typeof row.comment === 'string' ? row.comment.trim() : '';
 
       if (!date || !projectClient || !taskActivity || !workType) {
         return NextResponse.json({ error: `${where}Date, Project/Client, Task/Activity, and Work Type are required.` }, { status: 400 });
@@ -93,6 +94,9 @@ export async function POST(request: NextRequest) {
       }
       if (ticketLink.length > TIMESHEET_LIMITS.link) {
         return NextResponse.json({ error: `${where}Link must be ${TIMESHEET_LIMITS.link} characters or fewer.` }, { status: 400 });
+      }
+      if (comment.length > TIMESHEET_LIMITS.comment) {
+        return NextResponse.json({ error: `${where}Comment must be ${TIMESHEET_LIMITS.comment} characters or fewer.` }, { status: 400 });
       }
 
       const hours = Number(row.duration_hours);
@@ -112,6 +116,7 @@ export async function POST(request: NextRequest) {
         task_activity: taskActivity,
         duration_hours: hours,
         ticket_link: ticketLink || null,
+        comment: comment || null,
         work_type: workType,
         status: 'pending',
       });

@@ -147,6 +147,7 @@ export async function PUT(
     const taskActivity = typeof body.task_activity === 'string' ? body.task_activity.trim() : '';
     const workType = typeof body.work_type === 'string' ? body.work_type : '';
     const ticketLink = typeof body.ticket_link === 'string' ? body.ticket_link.trim() : '';
+    const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
 
     if (!date || !projectClient || !taskActivity || !workType) {
       return NextResponse.json({ error: 'Date, Project/Client, Task/Activity, and Work Type are required.' }, { status: 400 });
@@ -162,6 +163,9 @@ export async function PUT(
     }
     if (ticketLink.length > TIMESHEET_LIMITS.link) {
       return NextResponse.json({ error: `Link must be ${TIMESHEET_LIMITS.link} characters or fewer.` }, { status: 400 });
+    }
+    if (comment.length > TIMESHEET_LIMITS.comment) {
+      return NextResponse.json({ error: `Comment must be ${TIMESHEET_LIMITS.comment} characters or fewer.` }, { status: 400 });
     }
     const hours = Number(body.duration_hours);
     if (!body.duration_hours || isNaN(hours) || hours < TIMESHEET_LIMITS.minHours || hours > 24) {
@@ -195,6 +199,7 @@ export async function PUT(
         task_activity: taskActivity,
         duration_hours: hours,
         ticket_link: ticketLink || null,
+        comment: comment || null,
         work_type: workType,
       })
       .eq('id', id)
