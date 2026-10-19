@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { WORK_TYPES, TIMESHEET_LIMITS } from '@/types';
+import { WORK_TYPES, OTHER_WORK_TYPE, TIMESHEET_LIMITS } from '@/types';
 import { getTimesheetAccess } from '@/lib/timesheetAccess';
 
 export async function GET() {
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       const workType = typeof row.work_type === 'string' ? row.work_type : '';
       const ticketLink = typeof row.ticket_link === 'string' ? row.ticket_link.trim() : '';
       const comment = typeof row.comment === 'string' ? row.comment.trim() : '';
+      const workTypeOther = typeof row.work_type_other === 'string' ? row.work_type_other.trim() : '';
 
       if (!date || !projectClient || !taskActivity || !workType) {
         return NextResponse.json({ error: `${where}Date, Project/Client, Task/Activity, and Work Type are required.` }, { status: 400 });
@@ -84,6 +85,14 @@ export async function POST(request: NextRequest) {
 
       if (!(WORK_TYPES as readonly string[]).includes(workType)) {
         return NextResponse.json({ error: `${where}Invalid work type.` }, { status: 400 });
+      }
+
+      // "Others" must say what the work was. For every other work type the text is ignored.
+      if (workType === OTHER_WORK_TYPE && !workTypeOther) {
+        return NextResponse.json({ error: `${where}Please say what kind of work this was (work type Others).` }, { status: 400 });
+      }
+      if (workTypeOther.length > TIMESHEET_LIMITS.workTypeOther) {
+        return NextResponse.json({ error: `${where}The work type description must be ${TIMESHEET_LIMITS.workTypeOther} characters or fewer.` }, { status: 400 });
       }
 
       if (projectClient.length > TIMESHEET_LIMITS.project) {
@@ -118,6 +127,7 @@ export async function POST(request: NextRequest) {
         ticket_link: ticketLink || null,
         comment: comment || null,
         work_type: workType,
+        work_type_other: workType === OTHER_WORK_TYPE ? workTypeOther : null,
         status: 'pending',
       });
     }

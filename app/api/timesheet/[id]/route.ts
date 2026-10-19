@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { WORK_TYPES, TIMESHEET_LIMITS } from '@/types';
+import { WORK_TYPES, OTHER_WORK_TYPE, TIMESHEET_LIMITS } from '@/types';
 import { getTimesheetAccess, canActOnEntry } from '@/lib/timesheetAccess';
 
 export async function PATCH(
@@ -148,12 +148,20 @@ export async function PUT(
     const workType = typeof body.work_type === 'string' ? body.work_type : '';
     const ticketLink = typeof body.ticket_link === 'string' ? body.ticket_link.trim() : '';
     const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
+    const workTypeOther = typeof body.work_type_other === 'string' ? body.work_type_other.trim() : '';
 
     if (!date || !projectClient || !taskActivity || !workType) {
       return NextResponse.json({ error: 'Date, Project/Client, Task/Activity, and Work Type are required.' }, { status: 400 });
     }
     if (!(WORK_TYPES as readonly string[]).includes(workType)) {
       return NextResponse.json({ error: 'Invalid work type.' }, { status: 400 });
+    }
+    // "Others" must say what the work was. For every other work type the text is ignored.
+    if (workType === OTHER_WORK_TYPE && !workTypeOther) {
+      return NextResponse.json({ error: 'Please say what kind of work this was (work type Others).' }, { status: 400 });
+    }
+    if (workTypeOther.length > TIMESHEET_LIMITS.workTypeOther) {
+      return NextResponse.json({ error: `The work type description must be ${TIMESHEET_LIMITS.workTypeOther} characters or fewer.` }, { status: 400 });
     }
     if (projectClient.length > TIMESHEET_LIMITS.project) {
       return NextResponse.json({ error: `Project/Client must be ${TIMESHEET_LIMITS.project} characters or fewer.` }, { status: 400 });
@@ -201,6 +209,7 @@ export async function PUT(
         ticket_link: ticketLink || null,
         comment: comment || null,
         work_type: workType,
+        work_type_other: workType === OTHER_WORK_TYPE ? workTypeOther : null,
       })
       .eq('id', id)
       .eq('status', 'pending')

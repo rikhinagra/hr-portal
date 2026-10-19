@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, X, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ExternalLink, Check, Ticket, RefreshCw, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { WORK_TYPES, WORK_TYPE_GROUPS, TIMESHEET_LIMITS } from '@/types';
+import { WORK_TYPES, WORK_TYPE_GROUPS, OTHER_WORK_TYPE, TIMESHEET_LIMITS } from '@/types';
 import type { Employee, TimesheetEntry, WorkType } from '@/types';
 import type { JiraTicket } from '@/lib/jira';
 import Dropdown from './Dropdown';
@@ -33,6 +33,8 @@ type DraftRow = {
   task: string;
   hours: string;
   workType: WorkType;
+  /** Only used when the work type is Others: what the work was */
+  workTypeOther: string;
   ticket: string;
   comment: string;
 };
@@ -69,7 +71,7 @@ const cellInput =
 // What can be typed in an Hours box: up to 2 digits, then optionally a point and up to 2 more (e.g. 6, 6.5, 12.25).
 const HOURS_TYPING = /^\d{0,2}(\.\d{0,2})?$/;
 
-const isBlank = (r: DraftRow) => !r.project.trim() && !r.task.trim() && !r.hours && !r.ticket.trim() && !r.comment.trim();
+const isBlank = (r: DraftRow) => !r.project.trim() && !r.task.trim() && !r.hours && !r.ticket.trim() && !r.comment.trim() && !r.workTypeOther.trim();
 
 // Unsent rows are kept in this browser (never on the server) so a refresh or an accidental close doesn't lose them.
 const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -91,6 +93,7 @@ function loadDraft(key: string): Omit<DraftRow, 'key'>[] | null {
       task: text(r?.task, TIMESHEET_LIMITS.task),
       hours: typeof r?.hours === 'string' && HOURS_TYPING.test(r.hours) ? r.hours : '',
       workType: (WORK_TYPES as readonly string[]).includes(r?.workType as string) ? (r.workType as WorkType) : WORK_TYPES[0],
+      workTypeOther: r?.workType === OTHER_WORK_TYPE ? text(r?.workTypeOther, TIMESHEET_LIMITS.workTypeOther) : '',
       ticket: text(r?.ticket, TIMESHEET_LIMITS.link),
       comment: text(r?.comment, TIMESHEET_LIMITS.comment),
     })).filter(r => !isBlank({ key: '', ...r }));
@@ -180,6 +183,10 @@ const jiraTicketKey = (link: string): string | null => {
   }
 };
 
+// "Others: Client travel" when the person said what the work was, otherwise just the work type
+const workTypeLabel = (e: { work_type: string; work_type_other: string | null }) =>
+  e.work_type === OTHER_WORK_TYPE && e.work_type_other ? `${e.work_type}: ${e.work_type_other}` : e.work_type;
+
 const GRID_COLS ='xl:grid-cols-[132px_minmax(140px,1fr)_minmax(200px,2fr)_84px_170px_minmax(130px,1fr)_40px]';
 
 export default function TimesheetClient({ employee, initialEntries, canFile, canApprove, jiraEnabled = false }: TimesheetClientProps) {
@@ -189,7 +196,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const keyRef = useRef(0);
   const nextKey = () => String(++keyRef.current);
   const blankRow = (date = '', workType: WorkType = WORK_TYPES[0]): DraftRow => ({
-    key: nextKey(), date, project: '', task: '', hours: '', workType, ticket: '', comment: '',
+    key: nextKey(), date, project: '', task: '', hours: '', workType, workTypeOther: '', ticket: '', comment: '',
   });
 
   const [showEntry, setShowEntry] = useState(true);
@@ -202,7 +209,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const [rejectTarget, setRejectTarget] = useState<EntryWithEmployee | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [editTarget, setEditTarget] = useState<EntryWithEmployee | null>(null);
-  const [editForm, setEditForm] = useState<DraftRow>({ key: 'edit', date: '', project: '', task: '', hours: '', workType: WORK_TYPES[0], ticket: '', comment: '' });
+  const [editForm, setEditForm] = useState<DraftRow>({ key: 'edit', date: '', project: '', task: '', hours: '', workType: WORK_TYPES[0], workTypeOther: '', ticket: '', comment: '' });
   const deleteDialog = useDialogFocus(!!deleteTarget);
   const rejectDialog = useDialogFocus(!!rejectTarget);
   const editDialog = useDialogFocus(!!editTarget);
@@ -259,7 +266,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
         if (filled.length === 0) localStorage.removeItem(draftKey);
         else localStorage.setItem(draftKey, JSON.stringify({
           savedAt: Date.now(),
-          rows: filled.map(({ date, project, task, hours, workType, ticket, comment }) => ({ date, project, task, hours, workType, ticket, comment })),
+          rows: filled.map(({ date, project, task, hours, workType, workTypeOther, ticket, comment }) => ({ date, project, task, hours, workType, workTypeOther, ticket, comment })),
         }));
       } catch { /* saving is blocked in some private windows; the page then works as before */ }
     }, 500);
@@ -269,6 +276,16 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   // ---------- Entry grid ----------
   const updateRow = (key: string, patch: Partial<DraftRow>) =>
     setRows(prev => prev.map(r => (r.key === key ? { ...r, ...patch } : r)));
+
+  // Picking Others opens the "Specify work type" box and puts the cursor in it. Any other type clears that text.
+  const changeRowWorkType = (key: string, idx: number, workType: WorkType) => {
+    updateRow(key, workType === OTHER_WORK_TYPE ? { workType } : { workType, workTypeOther: '' });
+    if (workType === OTHER_WORK_TYPE) {
+      setTimeout(() => {
+        gridRef.current?.querySelector<HTMLElement>(`[aria-label="Specify work type, row ${idx + 1}"]`)?.focus();
+      }, 150);
+    }
+  };
 
   const addRow = () => {
     const last = rows[rows.length - 1];
@@ -326,6 +343,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
       task: t.taskText.slice(0, TIMESHEET_LIMITS.task),
       hours: '',
       workType: t.workType ?? last?.workType ?? WORK_TYPES[0],
+      workTypeOther: '',
       ticket: t.url.slice(0, TIMESHEET_LIMITS.link),
       comment: '',
     };
@@ -360,6 +378,9 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
       if (isNaN(h) || h < TIMESHEET_LIMITS.minHours || h > 24) {
         toast.error('Invalid duration', { description: `${label}: hours must be between ${TIMESHEET_LIMITS.minHours} (15 minutes) and 24.` }); return;
       }
+      if (r.workType === OTHER_WORK_TYPE && !r.workTypeOther.trim()) {
+        toast.error('Work type needed', { description: `${label}: please say what kind of work this was.` }); return;
+      }
     }
     const overDay = dayCheck.find(d => d.over);
     if (overDay) {
@@ -376,6 +397,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
           entries: filledRows.map(r => ({
             date: r.date, project_client: r.project, task_activity: r.task,
             duration_hours: Number(r.hours), ticket_link: r.ticket, comment: r.comment, work_type: r.workType,
+            work_type_other: r.workType === OTHER_WORK_TYPE ? r.workTypeOther : '',
           })),
         }),
       });
@@ -444,7 +466,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
   const openEdit = (e: EntryWithEmployee) => {
     setEditForm({
       key: 'edit', date: e.date, project: e.project_client, task: e.task_activity,
-      hours: String(Number(e.duration_hours)), workType: e.work_type, ticket: e.ticket_link ?? '', comment: e.comment ?? '',
+      hours: String(Number(e.duration_hours)), workType: e.work_type, workTypeOther: e.work_type_other ?? '', ticket: e.ticket_link ?? '', comment: e.comment ?? '',
     });
     setEditTarget(e);
   };
@@ -458,6 +480,9 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
     }
     if (isNaN(h) || h < TIMESHEET_LIMITS.minHours || h > 24) {
       toast.error('Invalid duration', { description: `Hours must be between ${TIMESHEET_LIMITS.minHours} (15 minutes) and 24.` }); return;
+    }
+    if (f.workType === OTHER_WORK_TYPE && !f.workTypeOther.trim()) {
+      toast.error('Work type needed', { description: 'Please say what kind of work this was.' }); return;
     }
     if (editCheck?.over) {
       toast.error('Too many hours in one day', {
@@ -473,6 +498,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
         body: JSON.stringify({
           date: f.date, project_client: f.project, task_activity: f.task,
           duration_hours: h, ticket_link: f.ticket, comment: f.comment, work_type: f.workType,
+          work_type_other: f.workType === OTHER_WORK_TYPE ? f.workTypeOther : '',
         }),
       });
       const data = await res.json();
@@ -608,7 +634,7 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
       (!rangeStart || e.date >= rangeStart) &&
       (workFilter === 'all' || e.work_type === workFilter) &&
       (personFilter === 'all' || e.employee_id === personFilter) &&
-      (!q || e.project_client.toLowerCase().includes(q) || e.task_activity.toLowerCase().includes(q)),
+      (!q || e.project_client.toLowerCase().includes(q) || e.task_activity.toLowerCase().includes(q) || (e.work_type_other ?? '').toLowerCase().includes(q)),
     );
   }, [entries, rangeStart, workFilter, personFilter, search]);
 
@@ -863,11 +889,22 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                         <Dropdown
                           ariaLabel={`Work type, row ${idx + 1}`}
                           value={r.workType}
-                          onChange={v => updateRow(r.key, { workType: v as WorkType })}
+                          onChange={v => changeRowWorkType(r.key, idx, v as WorkType)}
                           groups={WORK_TYPE_GROUP_OPTIONS}
                           className="bg-background px-2.5 py-2 border rounded-lg xl:bg-transparent xl:border-0 xl:rounded-none xl:focus-visible:ring-inset"
                         />
                       </div>
+                      {/* Only for Others: what kind of work it was. A second line under the row on wide screens. */}
+                      {r.workType === OTHER_WORK_TYPE && (
+                        <label className="block col-span-2 max-[400px]:col-span-1 xl:col-span-full xl:order-last xl:grid xl:grid-cols-[132px_minmax(0,1fr)] xl:border-e-0 xl:border-t xl:bg-muted/20">
+                          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground xl:mb-0 xl:flex xl:flex-wrap xl:items-center xl:gap-x-1 xl:border-e xl:px-2.5 xl:py-2 xl:text-[11px] xl:leading-tight">
+                            Specify work type <span className="font-normal normal-case tracking-normal">(required)</span>
+                          </span>
+                          <FullTextField value={r.workTypeOther} ariaLabel={`Specify work type, row ${idx + 1}`} placeholder="For example: Client travel" maxLength={TIMESHEET_LIMITS.workTypeOther}
+                            onChange={v => updateRow(r.key, { workTypeOther: v })}
+                            className={cellInput} />
+                        </label>
+                      )}
                       <label className="block col-span-2 max-[400px]:col-span-1 xl:col-span-1">
                         <span className="xl:hidden mb-1 block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Link (optional)</span>
                         <FullTextField value={r.ticket} ariaLabel={`Link (optional), row ${idx + 1}`} placeholder="Ticket, GitHub or any link" maxLength={TIMESHEET_LIMITS.link}
@@ -1062,8 +1099,8 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                             <td className="px-4 py-3 text-foreground" style={{ wordBreak: 'break-word' }}>{e.project_client}</td>
                             <td className="px-4 py-3 text-muted-foreground" style={{ maxWidth: '300px' }}>{taskCell(e)}</td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>
-                                {e.work_type}
+                              <span className="inline-block max-w-[220px] whitespace-normal rounded-2xl px-2.5 py-0.5 text-xs font-semibold [overflow-wrap:anywhere]" style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>
+                                {workTypeLabel(e)}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-foreground whitespace-nowrap">{fmtHours(Number(e.duration_hours))}</td>
@@ -1106,8 +1143,8 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                           <StatusBadge status={e.status} />
                         </div>
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <span className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>
-                            {e.work_type}
+                          <span className="max-w-full rounded-2xl px-2 py-0.5 text-xs font-semibold [overflow-wrap:anywhere]" style={{ background: 'rgba(200,152,94,0.1)', color: '#c8985e' }}>
+                            {workTypeLabel(e)}
                           </span>
                           <span className="text-xs font-semibold text-foreground">{fmtHours(Number(e.duration_hours))}</span>
                         </div>
@@ -1185,11 +1222,24 @@ export default function TimesheetClient({ employee, initialEntries, canFile, can
                 <Dropdown
                   ariaLabel="Work type"
                   value={editForm.workType}
-                  onChange={v => setEditForm(f => ({ ...f, workType: v as WorkType }))}
+                  onChange={v => {
+                    setEditForm(f => ({ ...f, workType: v as WorkType, workTypeOther: v === OTHER_WORK_TYPE ? f.workTypeOther : '' }));
+                    if (v === OTHER_WORK_TYPE) {
+                      setTimeout(() => document.getElementById('edit-work-type-other')?.focus(), 150);
+                    }
+                  }}
                   groups={WORK_TYPE_GROUP_OPTIONS}
                   className="rounded-lg border bg-background px-3 py-2"
                 />
               </div>
+              {editForm.workType === OTHER_WORK_TYPE && (
+                <label className="col-span-2 block max-[400px]:col-span-1">
+                  <span className="mb-1 block text-xs font-semibold text-foreground">Specify work type <span className="font-normal text-muted-foreground">(required)</span></span>
+                  <input id="edit-work-type-other" type="text" value={editForm.workTypeOther} placeholder="For example: Client travel" maxLength={TIMESHEET_LIMITS.workTypeOther}
+                    onChange={ev => setEditForm(f => ({ ...f, workTypeOther: ev.target.value }))}
+                    className={editInput} />
+                </label>
+              )}
               <label className="col-span-2 block max-[400px]:col-span-1">
                 <span className="mb-1 block text-xs font-semibold text-foreground">Link (optional)</span>
                 <input type="text" value={editForm.ticket} placeholder="Ticket, GitHub or any link" maxLength={TIMESHEET_LIMITS.link}
