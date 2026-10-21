@@ -1,6 +1,7 @@
 import { getSessionEmployee } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import DashboardClient from './DashboardClient';
+import { getTeamMemberIds } from '@/lib/teamAccess';
 
 export default async function DashboardPage() {
   const employee = await getSessionEmployee();
@@ -16,7 +17,8 @@ export default async function DashboardPage() {
   if (employee.role === 'admin' || employee.role === 'hr') {
     teamCountQuery = activeEmployees;
   } else if (employee.role === 'manager') {
-    teamCountQuery = activeEmployees.eq('reporting_manager_email', employee.email);
+    const teamIds = await getTeamMemberIds(supabase, employee.email);
+    teamCountQuery = activeEmployees.in('id', teamIds);
   } else {
     // employee or IT — count teammates under same reporting manager, excluding self
     teamCountQuery = employee.reporting_manager_email

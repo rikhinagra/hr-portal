@@ -52,6 +52,7 @@ export async function PATCH(request: NextRequest) {
       if (body.join_date !== undefined && body.join_date !== '') updateData.join_date = body.join_date;
       if (body.is_active !== undefined) updateData.is_active = body.is_active;
       if (body.reporting_manager_email !== undefined) updateData.reporting_manager_email = body.reporting_manager_email || null;
+      if (body.project_manager_email !== undefined) updateData.project_manager_email = typeof body.project_manager_email === 'string' ? (body.project_manager_email.trim() || null) : null;
       if (body.employment_type !== undefined && body.employment_type !== '') updateData.employment_type = body.employment_type;
       if (body.experience_years !== undefined) {
         const val = Number(body.experience_years);
@@ -65,7 +66,7 @@ export async function PATCH(request: NextRequest) {
 
     const { data: targetEmployee } = await serviceClient
       .from('employees')
-      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, employment_type, experience_years, experience_months')
+      .select('auth_user_id, name, phone, personal_email, current_address, emergency_contact_name, emergency_contact_phone, leave_balance_casual, leave_balance_sick, dob, email, employee_code, designation, department, role, join_date, is_active, reporting_manager_email, project_manager_email, employment_type, experience_years, experience_months')
       .eq('id', employee_id)
       .single();
 
@@ -97,6 +98,7 @@ export async function PATCH(request: NextRequest) {
       join_date: 'Join Date',
       is_active: 'Status',
       reporting_manager_email: 'Reporting Manager',
+      project_manager_email: 'Project Manager',
       employment_type: 'Employment Type',
       experience_years: 'Experience (Years)',
       experience_months: 'Experience (Months)',

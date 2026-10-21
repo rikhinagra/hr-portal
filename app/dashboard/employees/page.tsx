@@ -16,7 +16,7 @@ export default async function EmployeesPage({
   const supabase = createServiceClient();
   const { data: employees } = await supabase
     .from('employees')
-    .select('id, employee_code, name, department, designation, role, email, join_date, is_active, created_at, photo_url, reporting_manager_email')
+    .select('id, employee_code, name, department, designation, role, email, join_date, is_active, created_at, photo_url, reporting_manager_email, project_manager_email')
     .order('employee_code');
 
   return (

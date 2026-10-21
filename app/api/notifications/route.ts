@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { getTeamMemberIds } from '@/lib/teamAccess';
 
 interface NotificationItem {
   id: string;
@@ -42,9 +43,7 @@ export async function GET() {
         .order('created_at', { ascending: false });
 
       if (isManager) {
-        const { data: teamMembers } = await serviceClient
-          .from('employees').select('id').eq('reporting_manager_email', employee.email).eq('is_active', true);
-        const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+        const teamIds = await getTeamMemberIds(serviceClient, employee.email);
         if (teamIds.length > 0) {
           leaveQuery.in('employee_id', teamIds);
         } else {
@@ -77,9 +76,7 @@ export async function GET() {
         .order('created_at', { ascending: false });
 
       if (isManager) {
-        const { data: teamMembers } = await serviceClient
-          .from('employees').select('id').eq('reporting_manager_email', employee.email).eq('is_active', true);
-        const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+        const teamIds = await getTeamMemberIds(serviceClient, employee.email);
         if (teamIds.length > 0) {
           compoffQuery.in('employee_id', teamIds);
         } else {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isManagedBy } from '@/lib/teamAccess';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: targetEmployee } = await serviceClient
-      .from('employees').select('role, reporting_manager_email').eq('id', employee_id).single();
+      .from('employees').select('role, reporting_manager_email, project_manager_email').eq('id', employee_id).single();
 
     if (!targetEmployee) {
       return NextResponse.json({ error: 'Employee not found.' }, { status: 404 });
@@ -57,9 +58,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admins cannot be reviewed.' }, { status: 403 });
     }
 
-    // Manager can only review their own direct reports
-    if (isManager && targetEmployee.reporting_manager_email !== reviewer.email) {
-      return NextResponse.json({ error: 'Access denied. You can only review your direct reports.' }, { status: 403 });
+    // Manager can only review their own team (reporting or project manager)
+    if (isManager && !isManagedBy(targetEmployee, reviewer.email)) {
+      return NextResponse.json({ error: 'Access denied. You can only review your own team.' }, { status: 403 });
     }
 
     const { data: review, error: insertError } = await serviceClient
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
         key_achievements, key_strengths, development_areas, notable_challenges,
         managers_remarks, overall_rating,
       })
-      .select('*, employee:employee_id(id, name, employee_code, department, reporting_manager_email), reviewer:reviewed_by(id, name)')
+      .select('*, employee:employee_id(id, name, employee_code, department, reporting_manager_email, project_manager_email), reviewer:reviewed_by(id, name)')
       .single();
 
     if (insertError) throw insertError;

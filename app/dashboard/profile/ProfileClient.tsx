@@ -72,6 +72,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
     dob: employee.dob ?? '',
     email: employee.email ?? '',
     reporting_manager_email: employee.reporting_manager_email ?? '',
+    project_manager_email: employee.project_manager_email ?? '',
     employee_code: employee.employee_code ?? '',
     designation: employee.designation ?? '',
     department: employee.department ?? '',
@@ -105,6 +106,7 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
       dob: employee.dob ?? '',
       email: employee.email ?? '',
       reporting_manager_email: employee.reporting_manager_email ?? '',
+      project_manager_email: employee.project_manager_email ?? '',
       employee_code: employee.employee_code ?? '',
       designation: employee.designation ?? '',
       department: employee.department ?? '',
@@ -433,6 +435,10 @@ export default function ProfileClient({ employee: initialEmployee, documents: in
                   editing={editing} editValue={form.personal_email} onEdit={set('personal_email')} placeholder="personal@email.com" type="email" />
                 <InfoField label="Reporting Manager Email" value={employee.reporting_manager_email ?? '—'}
                   editing={isPrivileged && editing} editValue={form.reporting_manager_email} onEdit={set('reporting_manager_email')} type="email" placeholder="manager@aadhcode.com" />
+                {(isPrivileged || employee.project_manager_email) && (
+                  <InfoField label="Project Manager Email" value={employee.project_manager_email ?? '—'}
+                    editing={isPrivileged && editing} editValue={form.project_manager_email} onEdit={set('project_manager_email')} type="email" placeholder="Optional" />
+                )}
                 <InfoField label="Emergency Contact" value={employee.emergency_contact_name}
                   editing={editing} editValue={form.emergency_contact_name} onEdit={set('emergency_contact_name')} placeholder="Name" />
                 <InfoField label="Emergency Phone" value={employee.emergency_contact_phone}

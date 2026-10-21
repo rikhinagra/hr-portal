@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isManagedBy } from '@/lib/teamAccess';
 
 export async function PATCH(
   request: NextRequest,
@@ -25,17 +26,17 @@ export async function PATCH(
 
     const { data: review } = await serviceClient
       .from('performance_reviews')
-      .select('*, employee:employee_id(reporting_manager_email)')
+      .select('*, employee:employee_id(reporting_manager_email, project_manager_email)')
       .eq('id', id)
       .single();
 
     if (!review) return NextResponse.json({ error: 'Review not found.' }, { status: 404 });
 
-    // Manager can only edit reviews for their own direct reports
+    // Manager can only edit reviews for their own team (reporting or project manager)
     if (isManager) {
-      const emp = review.employee as { reporting_manager_email?: string } | null;
-      if (emp?.reporting_manager_email !== editor.email) {
-        return NextResponse.json({ error: 'Access denied. You can only edit reviews for your direct reports.' }, { status: 403 });
+      const emp = review.employee as { reporting_manager_email?: string | null; project_manager_email?: string | null } | null;
+      if (!isManagedBy(emp, editor.email)) {
+        return NextResponse.json({ error: 'Access denied. You can only edit reviews for your own team.' }, { status: 403 });
       }
     }
 
@@ -72,7 +73,7 @@ export async function PATCH(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .select('*, employee:employee_id(id, name, employee_code, department, reporting_manager_email), reviewer:reviewed_by(id, name)')
+      .select('*, employee:employee_id(id, name, employee_code, department, reporting_manager_email, project_manager_email), reviewer:reviewed_by(id, name)')
       .single();
 
     if (updateError) throw updateError;

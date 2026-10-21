@@ -12,6 +12,7 @@ interface EmpRow {
   designation: string; role: string; email: string; join_date: string;
   is_active: boolean; created_at: string; photo_url: string | null;
   reporting_manager_email: string | null;
+  project_manager_email: string | null;
 }
 
 const roleColors: Record<string, { bg: string; color: string }> = {
@@ -139,13 +140,13 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
     }
   };
 
-  // Manager — show direct reports (employees whose reporting_manager_email = manager's email)
+  // Manager — show their team (employees whose reporting_manager_email or project_manager_email = manager's email)
   if (isManager) {
     const directReports = employees
       .filter(e =>
         e.is_active &&
         e.id !== viewerId &&
-        viewerEmail && e.reporting_manager_email === viewerEmail
+        viewerEmail && (e.reporting_manager_email === viewerEmail || e.project_manager_email === viewerEmail)
       )
       .filter(e =>
         !search ||
@@ -158,7 +159,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h1 className="page-heading text-2xl">My Team</h1>
-            <p className="text-sm text-muted-foreground mt-1">{directReports.length} direct report{directReports.length !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-muted-foreground mt-1">{directReports.length} team member{directReports.length !== 1 ? 's' : ''}</p>
           </div>
           <input
             type="text"
@@ -171,7 +172,7 @@ export default function EmployeesClient({ employees: initialEmployees, viewerRol
 
         {directReports.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground text-sm border rounded-xl bg-muted/20">
-            {viewerEmail ? 'No direct reports found.' : 'Team information not available. Please contact HR.'}
+            {viewerEmail ? 'No team members found.' : 'Team information not available. Please contact HR.'}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>

@@ -1,6 +1,7 @@
 import { getSessionEmployee } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import LeaveClient from './LeaveClient';
+import { getTeamMemberIds } from '@/lib/teamAccess';
 
 export default async function LeavePage() {
   const employee = await getSessionEmployee();
@@ -13,12 +14,7 @@ export default async function LeavePage() {
   // For manager: fetch direct reports' IDs first
   let teamMemberIds: string[] = [];
   if (isManager) {
-    const { data: teamMembers } = await supabase
-      .from('employees')
-      .select('id')
-      .eq('reporting_manager_email', employee.email)
-      .eq('is_active', true);
-    teamMemberIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+    teamMemberIds = await getTeamMemberIds(supabase, employee.email);
   }
 
   const leaveQuery = supabase

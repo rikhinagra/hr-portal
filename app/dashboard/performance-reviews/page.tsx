@@ -1,6 +1,7 @@
 import { getSessionEmployee } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import PerformanceReviewsClient from './PerformanceReviewsClient';
+import { getTeamMemberIds } from '@/lib/teamAccess';
 
 export default async function PerformanceReviewsPage() {
   const employee = await getSessionEmployee();
@@ -12,17 +13,12 @@ export default async function PerformanceReviewsPage() {
 
   let teamMemberIds: string[] = [];
   if (isManager) {
-    const { data: teamMembers } = await supabase
-      .from('employees')
-      .select('id')
-      .eq('reporting_manager_email', employee.email)
-      .eq('is_active', true);
-    teamMemberIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+    teamMemberIds = await getTeamMemberIds(supabase, employee.email);
   }
 
   const reviewsQuery = supabase
     .from('performance_reviews')
-    .select('*, employee:employee_id(id, name, employee_code, department, reporting_manager_email), reviewer:reviewed_by(id, name)')
+    .select('*, employee:employee_id(id, name, employee_code, department, reporting_manager_email, project_manager_email), reviewer:reviewed_by(id, name)')
     .order('review_month', { ascending: false });
 
   if (isAdminOrHr) {
@@ -46,11 +42,11 @@ export default async function PerformanceReviewsPage() {
       .neq('id', employee.id)
       .order('name');
     reviewableEmployees = data ?? [];
-  } else if (isManager) {
+  } else if (isManager && teamMemberIds.length > 0) {
     const { data } = await supabase
       .from('employees')
       .select('id, name, employee_code')
-      .eq('reporting_manager_email', employee.email)
+      .in('id', teamMemberIds)
       .eq('is_active', true)
       .order('name');
     reviewableEmployees = data ?? [];

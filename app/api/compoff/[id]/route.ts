@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { sendCompOffClaimStatusEmail } from '@/lib/resend';
+import { isManagedBy } from '@/lib/teamAccess';
 
 export async function PATCH(
   request: NextRequest,
@@ -34,7 +35,7 @@ export async function PATCH(
 
     const { data: claim } = await serviceClient
       .from('compoff_claims')
-      .select('*, employee:employee_id(id, name, email, reporting_manager_email)')
+      .select('*, employee:employee_id(id, name, email, reporting_manager_email, project_manager_email)')
       .eq('id', id)
       .single();
 
@@ -45,11 +46,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'You cannot approve your own comp-off claim.' }, { status: 403 });
     }
 
-    // Manager can only action direct reports' comp-off claims
+    // Manager can only action their own team's comp-off claims (reporting or project manager)
     if (isManager) {
-      const emp = claim.employee as { reporting_manager_email?: string } | null;
-      if (emp?.reporting_manager_email !== approver.email) {
-        return NextResponse.json({ error: 'Access denied. You can only manage your direct reports\' comp-off claims.' }, { status: 403 });
+      const emp = claim.employee as { reporting_manager_email?: string | null; project_manager_email?: string | null } | null;
+      if (!isManagedBy(emp, approver.email)) {
+        return NextResponse.json({ error: 'Access denied. You can only manage your team\'s comp-off claims.' }, { status: 403 });
       }
     }
 

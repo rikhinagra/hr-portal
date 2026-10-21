@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendLeaveStatusEmail } from '@/lib/resend';
+import { isManagedBy } from '@/lib/teamAccess';
 
 export async function PATCH(
   request: NextRequest,
@@ -36,7 +37,7 @@ export async function PATCH(
     // Fetch the leave request with employee details
     const { data: leave } = await serviceClient
       .from('leave_requests')
-      .select('*, employee:employee_id(name, email, employee_code, leave_balance_casual, leave_balance_sick, reporting_manager_email)')
+      .select('*, employee:employee_id(name, email, employee_code, leave_balance_casual, leave_balance_sick, reporting_manager_email, project_manager_email)')
       .eq('id', id)
       .single();
 
@@ -47,11 +48,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'You cannot approve your own leave request.' }, { status: 403 });
     }
 
-    // Manager can only action direct reports' leaves
+    // Manager can only action their own team's leaves (reporting or project manager)
     if (isManager) {
-      const emp = leave.employee as { reporting_manager_email?: string } | null;
-      if (emp?.reporting_manager_email !== approver.email) {
-        return NextResponse.json({ error: 'Access denied. You can only manage your direct reports\' leave requests.' }, { status: 403 });
+      const emp = leave.employee as { reporting_manager_email?: string | null; project_manager_email?: string | null } | null;
+      if (!isManagedBy(emp, approver.email)) {
+        return NextResponse.json({ error: 'Access denied. You can only manage your team\'s leave requests.' }, { status: 403 });
       }
     }
 

@@ -20,6 +20,8 @@ export interface Employee {
   leave_balance_compoff: number;
   photo_url: string | null;
   reporting_manager_email: string | null;
+  // Optional second manager (for example a project manager across teams), same powers as the reporting manager
+  project_manager_email: string | null;
   is_active: boolean;
   auth_user_id: string | null;
   created_at: string;
@@ -114,7 +116,7 @@ export interface PerformanceReview {
   overall_rating: number;
   created_at: string;
   updated_at: string;
-  employee?: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'reporting_manager_email'> | null;
+  employee?: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'reporting_manager_email' | 'project_manager_email'> | null;
   reviewer?: Pick<Employee, 'id' | 'name'> | null;
 }
 

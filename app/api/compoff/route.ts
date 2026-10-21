@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { sendCompOffClaimEmail } from '@/lib/resend';
+import { getTeamMemberIds } from '@/lib/teamAccess';
 
 export async function GET() {
   try {
@@ -23,12 +24,7 @@ export async function GET() {
     if (isAdminOrHr) {
       // no filter — see all
     } else if (isManager) {
-      const { data: teamMembers } = await serviceClient
-        .from('employees')
-        .select('id')
-        .eq('reporting_manager_email', employee.email)
-        .eq('is_active', true);
-      const teamIds = (teamMembers ?? []).map((m: { id: string }) => m.id);
+      const teamIds = await getTeamMemberIds(serviceClient, employee.email);
       query.in('employee_id', [...teamIds, employee.id]);
     } else {
       query.eq('employee_id', employee.id);

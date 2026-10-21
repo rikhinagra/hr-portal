@@ -5,9 +5,10 @@ import { toast } from 'sonner';
 import { ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Employee, PerformanceReview } from '@/types';
+import { isManagedBy } from '@/lib/teamAccess';
 
 type ReviewRow = PerformanceReview & {
-  employee: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'reporting_manager_email'> | null;
+  employee: Pick<Employee, 'id' | 'name' | 'employee_code' | 'department' | 'reporting_manager_email' | 'project_manager_email'> | null;
   reviewer: Pick<Employee, 'id' | 'name'> | null;
 };
 
@@ -99,7 +100,7 @@ export default function PerformanceReviewsClient({ employee, initialReviews, rev
 
   const canEditReview = (r: ReviewRow) => {
     if (isAdminOrHr) return true;
-    if (isManager) return r.employee?.reporting_manager_email === employee.email;
+    if (isManager) return isManagedBy(r.employee, employee.email);
     return false;
   };
 
