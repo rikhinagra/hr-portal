@@ -16,6 +16,17 @@ export function isManagedBy(person: Managed, managerEmail: string | null | undef
   return person.reporting_manager_email === managerEmail || person.project_manager_email === managerEmail
 }
 
+// The managers to CC when this person sends a request email: the reporting manager and the project manager,
+// without blanks and without the same address twice
+export function managerCcEmails(person: Managed): string[] {
+  if (!person) return []
+  const out: string[] = []
+  for (const email of [person.reporting_manager_email, person.project_manager_email]) {
+    if (email && !out.some((e) => e.toLowerCase() === email.toLowerCase())) out.push(email)
+  }
+  return out
+}
+
 // Ids of the active people this manager looks after, through either link
 export async function getTeamMemberIds(
   serviceClient: ReturnType<typeof createServiceClient>,

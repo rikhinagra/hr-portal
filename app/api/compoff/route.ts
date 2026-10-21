@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { sendCompOffClaimEmail } from '@/lib/resend';
-import { getTeamMemberIds } from '@/lib/teamAccess';
+import { getTeamMemberIds, managerCcEmails } from '@/lib/teamAccess';
 
 export async function GET() {
   try {
@@ -86,11 +86,10 @@ export async function POST(request: NextRequest) {
       action_type: 'info',
     });
 
-    // Email routing — TO: HR Desk, CC: employee's reporting manager
+    // Email routing — TO: HR Desk, CC: employee's reporting manager and project manager
     try {
       const hrDeskEmail = process.env.EMAIL_HR_DESK!;
-      const ccEmails: string[] = [];
-      if (employee.reporting_manager_email) ccEmails.push(employee.reporting_manager_email);
+      const ccEmails = managerCcEmails(employee);
 
       await sendCompOffClaimEmail({
         employeeName: employee.name,
